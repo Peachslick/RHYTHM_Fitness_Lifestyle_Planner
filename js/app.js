@@ -1,4 +1,4 @@
-/* RHYTHM v1.2.0 — Thai-first, optional Supabase account and cloud sync */
+/* RHYTHM v1.3.0 — Thai-first, optional Supabase account and cloud sync */
 (function(){
  'use strict';
  const C=window.FitCore,D=window.FitData;
@@ -19,7 +19,7 @@
  let cloudBooting=!!(window.RHYTHM_SUPABASE_CONFIG?.url && window.RHYTHM_SUPABASE_CONFIG?.publishableKey);
  let route=location.hash.replace('#','')||'dashboard';
  const pages={dashboard:{label:'ภาพรวม',icon:'layout',caption:'มองภาพรวมของการฝึก อาหาร และการพักฟื้น'},workouts:{label:'แผนออกกำลังกาย',icon:'dumbbell',caption:'จัดตาราง Push / Pull / Legs / Run ได้ตามชีวิตจริง'},nutrition:{label:'โภชนาการ',icon:'utensils',caption:'บันทึกอาหารและติดตามพลังงานอย่างยืดหยุ่น'},sleep:{label:'การนอน',icon:'moon',caption:'ติดตามชั่วโมงนอนและระยะการนอนจากข้อมูลที่บันทึก'},routine:{label:'ตารางชีวิต',icon:'clock',caption:'ออกแบบวันของคุณ ตั้งแต่ตื่นจนเข้านอน'},progress:{label:'แนวโน้มและเป้าหมาย',icon:'chart',caption:'เรียนรู้จากแนวโน้ม ไม่ตัดสินด้วยข้อมูลวันเดียว'},profile:{label:'โปรไฟล์และตั้งค่า',icon:'user',caption:'ปรับค่าตั้งต้น เป้าหมาย และการจัดการข้อมูล'}};
- const ui={exerciseFocus:'',authMode:'login',workoutDay:C.weekday(C.today()),workoutDate:C.today(),foodDate:C.today(),sleepDate:C.today(),routineDay:C.weekday(C.today()),weightPeriod:30,search:'',foodCategory:'ทั้งหมด',mobileOpen:false};
+ const ui={exerciseFocus:'',authMode:'login',workoutDay:C.weekday(C.today()),workoutDate:C.today(),foodDate:C.today(),sleepDate:C.today(),routineDay:C.weekday(C.today()),weightPeriod:30,search:'',foodCategory:'ทั้งหมด',foodLimit:60,mobileOpen:false};
  const FONTS={sarabun:'Sarabun · Recommended',bai:'Bai Jamjuree',noto:'Noto Sans Thai',ibm:'IBM Plex Sans Thai',leelawadee:'Leelawadee UI',tahoma:'Tahoma',segoe:'Segoe UI / System',prompt:'Prompt',kanit:'Kanit',mitr:'Mitr',anakotmai:'Anakotmai',athiti:'Athiti',trirong:'Trirong (Serif)',itim:'Itim (Handwriting)',pattaya:'Pattaya (Display)',chonburi:'Chonburi (Display)'};
  const e=C.esc,ic=C.icon,n=C.nfmt,num=C.num,fmt=C.pretty;
  const option=(value,label,selected)=>`<option value="${e(value)}" ${String(value)===String(selected)?'selected':''}>${e(label)}</option>`;
@@ -90,7 +90,7 @@
     </aside><div class="mobile-mask ${ui.mobileOpen?'visible':''}" data-action="mobile-close"></div>
     <div class="workspace"><header class="topbar"><div class="topbar-left"><button class="mob-menu icon-button" data-action="mobile-open" aria-label="เปิดเมนู">${ic('menu')}</button><div><div class="breadcrumb">RHYTHM <span>/</span> ${pg.label}</div><h1>${pg.label}</h1><p>${pg.caption}</p></div></div><div class="topbar-actions"><div class="today-chip">${ic('calendar',16)}<span>${e(fmt(C.today(),true))}</span></div><button class="icon-button theme-toggle" data-action="toggle-theme" aria-label="สลับธีม" title="สลับธีม">${ic(state.settings.theme==='dark'?'sun':'moon')}</button><button class="button button-primary top-quick" data-action="quick-add">${ic('plus',16)} <span>บันทึกน้ำหนัก</span></button></div></header>
      <div class="content">${cloudStrip()}${sync.isBlocked?cloudBlocker():state.demo?`<div class="demo-banner">${ic('info',17)} <div><strong>โหมดทดลอง:</strong> ตัวเลขและบันทึกที่เห็นเป็นข้อมูลสมมติสำหรับทดสอบเว็บ</div><button class="button button-mini" data-action="start-real">เริ่มใช้ข้อมูลของฉัน ${ic('arrow',15)}</button></div>`:''}${renderPage(m)}</div>
-     <footer class="footer"><span>RHYTHM <b>v1.2.0</b> · Personal Wellness Workspace</span><span>ประมาณการเพื่อการวางแผน ไม่ใช่คำแนะนำทางการแพทย์</span></footer>
+     <footer class="footer"><span>RHYTHM <b>v1.3.0</b> · Personal Wellness Workspace</span><span>ประมาณการเพื่อการวางแผน ไม่ใช่คำแนะนำทางการแพทย์</span></footer>
     </div></div>`;
    window.scrollTo(0,y);
  }
@@ -152,15 +152,26 @@
  function nutrition(m){
    const day=ui.foodDate,entries=C.mealsFor(state,day),food=C.foodTotals(entries),target=m.target||0,remain=target?target-food.kcal:null;
    const allFoods=[...D.FOOD_LIBRARY,...state.customFoods];
-   const query=ui.search.trim().toLocaleLowerCase();
-   const filtered=allFoods.filter(x=>(ui.foodCategory==='ทั้งหมด'||x.group===ui.foodCategory)&&(`${x.name} ${x.unit}`.toLocaleLowerCase().includes(query)));
-   const groups=['ทั้งหมด',...new Set(allFoods.map(x=>x.group))];
-   return `<div class="page-intro"><div><h2>Food Journal</h2><p>เลือกจากคลังอาหารหรือเพิ่มเมนูของตัวเอง คำนวณตามจำนวนเสิร์ฟที่รับประทานจริง</p></div>${ghost('open-meal','เพิ่มอาหารเอง')}</div>
+   const query=ui.search.trim().toLocaleLowerCase(),favorites=state.favoriteFoodIds||[];
+   const filtered=allFoods.filter(x=>(ui.foodCategory==='ทั้งหมด'||(ui.foodCategory==='รายการโปรด'?favorites.includes(x.id):x.group===ui.foodCategory))&&(`${x.name} ${x.unit} ${x.group}`.toLocaleLowerCase().includes(query)));
+   const groups=['ทั้งหมด','รายการโปรด',...new Set(allFoods.map(x=>x.group))];
+   const overview=C.nutritionSummary(state,C.today(),14),trend=C.weightTrend(state);
+   const goalTitle=D.GOALS[state.profile.goal]?.title||'เป้าหมายของคุณ';
+   const balance=overview.average!==null&&target?overview.average-target:null;
+   const guidance=overview.loggedDays<10?'บันทึกอาหารให้ครบอย่างน้อย 10 จาก 14 วันก่อนประเมินแนวโน้ม (วันที่ไม่มีรายการไม่ได้แปลว่ากิน 0 kcal)'
+     :!trend.ready?'อาหารเริ่มมีข้อมูลแล้ว ควรบันทึกน้ำหนักอย่างน้อย 2 วันในแต่ละสัปดาห์เพื่อเทียบแนวโน้มอย่างระมัดระวัง'
+     :`น้ำหนักเฉลี่ย 7 วันล่าสุด ${trend.delta>=0?'เพิ่ม':'ลด'}ประมาณ ${n(Math.abs(trend.delta),2)} kg เมื่อเทียบกับ 7 วันก่อน · ค่าเฉลี่ยพลังงานจากวันที่บันทึก ${n(overview.average)} kcal/วัน${balance===null?'':` (${balance>=0?'+':''}${n(balance)} จากเป้าหมาย)`} · ทบทวนร่วมกับความครบถ้วนของมื้ออาหาร การฝึก และความพร้อมของร่างกายก่อนปรับแผน`;
+   const yesterday=C.shift(day,-1),previous=C.mealsFor(state,yesterday);
+   return `<div class="page-intro"><div><h2>Smart Nutrition</h2><p>เลือกอาหารไทยและวัตถุดิบ บันทึกตามกรัมหรือเสิร์ฟ และติดตามน้ำหนักเทียบกับแผน</p></div>${ghost('open-meal','เพิ่มอาหารเอง')}</div>
     <div class="nutrition-overview"><div class="panel food-total"><div class="food-total-top"><span>พลังงานที่บันทึก</span><label class="date-compact">${ic('calendar',16)} <input type="date" value="${e(day)}" data-picker="foodDate" max="${C.today()}" aria-label="วันที่อาหาร" /></label></div><strong>${n(food.kcal)}<small> / ${target?n(target):'—'} kcal</small></strong><div class="progress-track large"><div class="progress-fill" style="width:${target?C.clamp(food.kcal/target*100,0,100):0}%"></div></div><p>${remain===null?'กรอกโปรไฟล์เพื่อดูเป้าหมายพลังงาน':remain>=0?`ยังห่างจากเป้าหมายประมาณ ${n(remain)} kcal`:`มากกว่าเป้าหมายประมาณ ${n(-remain)} kcal`}</p></div><div class="panel food-macro-total">${macroRow('โปรตีน',food.protein,m.protein||0,'protein')}${macroRow('คาร์บ',food.carbs,m.carbs||0,'carbs')}${macroRow('ไขมัน',food.fat,m.fat||0,'fat')}</div></div>
-    <div class="nutrition-layout"><section class="panel">${sectionHead('คลังอาหาร','คุณสามารถปรับค่าทางโภชนาการก่อนบันทึกได้')}<div class="food-filter"><label class="search-field">${ic('search',18)}<input id="food-search" type="search" placeholder="ค้นหาเมนู / วัตถุดิบ..." value="${e(ui.search)}" autocomplete="off" /></label><select id="food-group" aria-label="หมวดอาหาร">${groups.map(g=>option(g,g,ui.foodCategory)).join('')}</select></div><div class="food-library-list" id="food-library-list">${renderFoodList(filtered)}</div><p class="source-hint">* ค่าพลังงานและสารอาหารในคลังเป็นตัวอย่างประมาณการต่อเสิร์ฟ อาจแตกต่างตามสูตร ปริมาณ และยี่ห้อ</p></section>
-     <section class="panel food-diary">${sectionHead('บันทึกประจำวัน',`${entries.length} รายการ · ${fmt(day)}`,`<button class="tiny-square" data-action="open-meal" title="เพิ่มอาหาร">${ic('plus',19)}</button>`)}${entries.length?Object.keys(D.MEALTYPES).map(meal=>{const rows=entries.filter(x=>x.meal===meal);return rows.length?`<div class="meal-group"><h3>${D.MEALTYPES[meal]} <span>${n(C.foodTotals(rows).kcal)} kcal</span></h3>${rows.map(x=>`<div class="meal-item"><div><strong>${e(x.name)}</strong><small>${n(x.servings,2)} × ${e(x.unit||'เสิร์ฟ')}</small></div><div class="meal-right"><strong>${n(num(x.kcal)*num(x.servings))}</strong><button class="tiny-icon" data-action="edit-meal" data-id="${e(x.id)}" aria-label="แก้ไขอาหาร">${ic('edit',15)}</button><button class="tiny-icon danger" data-action="delete-meal" data-id="${e(x.id)}" aria-label="ลบอาหาร">${ic('trash',15)}</button></div></div>`).join('')}</div>`:'';}).join(''):empty('utensils','ยังไม่มีมื้ออาหาร','เลือกอาหารจากคลังด้านซ้ายเพื่อเริ่มบันทึก')}</section></div>`;
+    <section class="panel nutrition-insights">${sectionHead('Nutrition & Weight Goals',goalTitle+' · ค่าประมาณจากบันทึกของคุณ')}<div class="nutrition-insight-grid"><div><span>อาหารเฉลี่ย 14 วัน</span><strong>${overview.average===null?'—':n(overview.average)} <small>kcal / วันที่บันทึก</small></strong><small>มีข้อมูล ${overview.loggedDays} / 14 วัน</small></div><div><span>น้ำหนักเฉลี่ย 7 วัน</span><strong>${trend.currentAverage===null?'—':n(trend.currentAverage,2)} <small>kg</small></strong><small>ชั่ง ${trend.currentDays} วัน (ก่อนหน้า ${trend.previousDays} วัน)</small></div><div><span>เป้าหมายพลังงาน</span><strong>${target?n(target):'—'} <small>kcal / วัน</small></strong><small>${m.ready?'คำนวณจากโปรไฟล์และกิจกรรม':'กรอกโปรไฟล์ก่อน'}</small></div></div><div class="insight-inline nutrition-advice">${ic('sparkles',18)}<p>${e(guidance)}</p></div><p class="source-hint">เป็นแนวโน้มเชิงข้อมูล ไม่ใช่การวินิจฉัยหรือคำสั่งปรับแคลอรี่อัตโนมัติ ค่าเฉลี่ยอาหารนับเฉพาะวันที่มีบันทึกและอาจต่ำกว่าที่กินจริงหากบันทึกไม่ครบ</p></section>
+    <div class="nutrition-layout"><section class="panel">${sectionHead('คลังอาหาร',`${allFoods.length} รายการ · เลือก ⭐ เพื่อเก็บรายการโปรด`)}<div class="food-filter"><label class="search-field">${ic('search',18)}<input id="food-search" type="search" placeholder="ค้นหาเมนู วัตถุดิบ หรือหมวด..." value="${e(ui.search)}" autocomplete="off" /></label><select id="food-group" aria-label="หมวดอาหาร">${groups.map(g=>option(g,g,ui.foodCategory)).join('')}</select></div><p class="food-count">แสดง ${Math.min(filtered.length,ui.foodLimit)} จาก ${filtered.length} รายการ · ${favorites.length} รายการโปรด</p><div class="food-library-list" id="food-library-list">${renderFoodList(filtered)}</div><p class="source-hint">* ค่าสารอาหารทั้งหมดในคลังเป็นตัวเลขตัวอย่างโดยประมาณ ไม่ใช่ฐานข้อมูลโภชนาการที่ผ่านการรับรอง โดยเฉพาะเมนูปรุงสำเร็จอาจต่างกันมากตามสูตร/น้ำมัน/ปริมาณ ควรแก้ตามฉลากหรือชั่งจริง</p></section>
+     <section class="panel food-diary">${sectionHead('บันทึกประจำวัน',`${entries.length} รายการ · ${fmt(day)}`,`<button class="tiny-square" data-action="open-meal" title="เพิ่มอาหาร">${ic('plus',19)}</button>`)}<div class="food-diary-actions"><button class="button button-outline" data-action="copy-yesterday" ${previous.length?'':'disabled'}>${ic('calendar',15)} คัดลอกอาหารจาก ${e(C.shortDate(yesterday))} (${previous.length})</button></div>${entries.length?Object.keys(D.MEALTYPES).map(meal=>{const rows=entries.filter(x=>x.meal===meal);return rows.length?`<div class="meal-group"><h3>${D.MEALTYPES[meal]} <span>${n(C.foodTotals(rows).kcal)} kcal</span></h3>${rows.map(x=>`<div class="meal-item"><div><strong>${e(x.name)}</strong><small>${x.quantityMode==='grams'&&x.quantityGrams?`${n(x.quantityGrams,1)} กรัม`:n(x.servings,2)+' × '+e(x.unit||'เสิร์ฟ')}</small></div><div class="meal-right"><strong>${n(num(x.kcal)*num(x.servings))}</strong><button class="tiny-icon" data-action="edit-meal" data-id="${e(x.id)}" aria-label="แก้ไขอาหาร">${ic('edit',15)}</button><button class="tiny-icon danger" data-action="delete-meal" data-id="${e(x.id)}" aria-label="ลบอาหาร">${ic('trash',15)}</button></div></div>`).join('')}</div>`:'';}).join(''):empty('utensils','ยังไม่มีมื้ออาหาร','เลือกอาหารจากคลังด้านซ้ายเพื่อเริ่มบันทึก')}</section></div>`;
  }
- function renderFoodList(foods){return foods.length?foods.slice(0,60).map(f=>`<div class="food-list-item"><div class="food-square">${ic('utensils',19)}</div><div class="food-title"><strong>${e(f.name)}</strong><small>${e(f.unit)} · ${e(f.group)}</small></div><div class="food-number"><strong>${n(f.kcal)}</strong><span>kcal</span></div><button class="add-circle" data-action="food-add" data-id="${e(f.id)}" aria-label="เพิ่ม ${e(f.name)}">${ic('plus',17)}</button></div>`).join(''):empty('search','ไม่พบเมนู','ลองเปลี่ยนคำค้นหาหรือเพิ่มเมนูของตัวเอง');}
+ function renderFoodList(foods){
+   const favs=state.favoriteFoodIds||[];
+   return foods.length?`${foods.slice(0,ui.foodLimit).map(f=>`<div class="food-list-item"><button class="food-star ${favs.includes(f.id)?'selected':''}" data-action="food-favorite" data-id="${e(f.id)}" aria-label="${favs.includes(f.id)?'เอาออกจากรายการโปรด':'เพิ่มในรายการโปรด'}: ${e(f.name)}" title="${favs.includes(f.id)?'เอาออกจากรายการโปรด':'เพิ่มในรายการโปรด'}">${favs.includes(f.id)?'★':'☆'}</button><div class="food-title"><strong>${e(f.name)}</strong><small>${e(f.unit)} · ${e(f.group)}</small></div><div class="food-number"><strong>${n(f.kcal)}</strong><span>kcal</span></div><button class="add-circle" data-action="food-add" data-id="${e(f.id)}" aria-label="เพิ่ม ${e(f.name)}">${ic('plus',17)}</button></div>`).join('')}${foods.length>ui.foodLimit?`<button class="button button-outline food-more" data-action="food-more">แสดงเพิ่มอีก ${Math.min(60,foods.length-ui.foodLimit)} รายการ (${ui.foodLimit}/${foods.length})</button>`:''}`:empty('search','ไม่พบเมนู','ลองเปลี่ยนคำค้นหาหรือเพิ่มเมนูของตัวเอง');
+ }
  function sleep(){
    const entries=C.sorted(state.sleeps),avg=C.sleepStats(state),latest=entries[0],goal=num(state.profile.sleepGoal,8);
    const day=ui.sleepDate,selected=state.sleeps.find(x=>x.date===day),smin=selected?C.sleepDuration(selected):null;
@@ -184,7 +195,10 @@
    const first=arr[0],last=arr.at(-1),diff=first&&last&&arr.length>=2?(num(last.weight)-num(first.weight)):null;
    const dated=arr.length>=2?(new Date(`${last.date}T12:00:00`)-new Date(`${first.date}T12:00:00`))/864e5:0;
    const perWeek=diff!==null&&dated>=7?diff/dated*7:null;
+   const windowTrend=C.weightTrend(state),nutrition14=C.nutritionSummary(state,C.today(),14);
    let insights=[];
+   if(windowTrend.ready)insights.push(['เปรียบเทียบน้ำหนักเฉลี่ย 7 วัน',`สัปดาห์ล่าสุด ${n(windowTrend.currentAverage,2)} kg เทียบกับสัปดาห์ก่อน ${n(windowTrend.previousAverage,2)} kg (${windowTrend.delta>=0?'+':''}${n(windowTrend.delta,2)} kg) ใช้ค่าเฉลี่ยลดผลการแกว่งตัวรายวัน · เป็นแนวโน้มไม่ใช่การเปลี่ยนไขมันโดยตรง`]);
+   if(nutrition14.loggedDays<10)insights.push(['ความครบถ้วนของ Food Journal',`มีบันทึกอาหาร ${nutrition14.loggedDays}/14 วัน ระบบไม่นับวันที่ไม่มีข้อมูลว่าได้รับพลังงาน 0 kcal`]);
    if(!m.ready)insights.push(['เริ่มจากโปรไฟล์','กรอกอายุ ส่วนสูง น้ำหนัก และกิจกรรมก่อน เพื่อดูค่าประมาณพลังงาน']);
    if(perWeek!==null)insights.push(['น้ำหนักเปลี่ยนอย่างไร',`จากข้อมูลที่บันทึก น้ำหนัก ${perWeek>=0?'เพิ่ม':'ลด'}เฉลี่ยประมาณ ${n(Math.abs(perWeek),2)} กก./สัปดาห์ (${dated} วัน) ควรดูร่วมกับความสม่ำเสมอของการชั่ง`]);
    else insights.push(['เก็บน้ำหนักต่อเนื่อง','บันทึกน้ำหนักห่างกันอย่างน้อย 7 วัน จึงจะแสดงอัตราการเปลี่ยนต่อสัปดาห์']);
@@ -232,7 +246,18 @@
    const existing=mealId?state.meals.find(x=>x.id===mealId):null;
    const base=foodId?[...D.FOOD_LIBRARY,...state.customFoods].find(x=>x.id===foodId):null;
    const f=existing||base||{name:'',unit:'1 เสิร์ฟ',kcal:0,protein:0,carbs:0,fat:0,servings:1,meal:'lunch',date:ui.foodDate};
-   showModal(existing?'แก้ไขอาหารที่บันทึก':'เพิ่มรายการอาหาร',`<form id="meal-form" data-id="${e(existing?.id||'')}" data-foodid="${e(foodId||'')}"><div class="form-grid"><div class="form-grid two"><label class="field"><span>วันที่ *</span><input name="date" type="date" value="${e(existing?.date||ui.foodDate)}" max="${C.today()}" required /></label><label class="field"><span>มื้ออาหาร *</span><select name="meal">${Object.entries(D.MEALTYPES).map(([k,v])=>option(k,v,f.meal||'lunch')).join('')}</select></label></div><label class="field"><span>ชื่ออาหาร *</span><input name="name" required maxlength="100" value="${e(f.name)}" placeholder="เช่น ข้าวสวย / ไข่ต้ม" /></label><div class="form-grid two"><label class="field"><span>หน่วยต่อเสิร์ฟ</span><input name="unit" maxlength="70" value="${e(f.unit||'1 เสิร์ฟ')}" required /></label><label class="field"><span>จำนวนเสิร์ฟ *</span><input name="servings" type="number" min="0.1" max="30" step="0.1" value="${e(f.servings||1)}" required /></label></div><p class="form-help bold-help">ข้อมูลโภชนาการต่อ 1 เสิร์ฟ (ปรับแก้จากฉลากอาหารได้)</p><div class="form-grid two"><label class="field"><span>พลังงาน (kcal)</span><input name="kcal" type="number" required min="0" max="10000" step="0.1" value="${e(f.kcal)}" /></label><label class="field"><span>โปรตีน (g)</span><input name="protein" type="number" min="0" max="1000" step="0.1" value="${e(f.protein)}" required /></label><label class="field"><span>คาร์โบไฮเดรต (g)</span><input name="carbs" type="number" min="0" max="1000" step="0.1" value="${e(f.carbs)}" required /></label><label class="field"><span>ไขมัน (g)</span><input name="fat" type="number" min="0" max="1000" step="0.1" value="${e(f.fat)}" required /></label></div>${!existing&&!foodId?'<label class="check-field"><input type="checkbox" name="remember" checked /><span>บันทึกเมนูนี้ไว้ในคลังส่วนตัว</span></label>':''}</div>${modalButtons(existing?'อัปเดตรายการ':'เพิ่มลงในบันทึก')}</form>`,'ตัวเลขต่อหนึ่งเสิร์ฟจะคูณกับจำนวนที่รับประทาน');
+   const baseGrams=num(f.baseGrams,0),mode=f.quantityMode==='grams'?'grams':'servings';
+   const quantity=mode==='grams'?num(f.quantityGrams,baseGrams*num(f.servings,1)):num(f.servings,1);
+   showModal(existing?'แก้ไขอาหารที่บันทึก':'เพิ่มรายการอาหาร',`<form id="meal-form" data-id="${e(existing?.id||'')}" data-foodid="${e(existing?.foodId||foodId||'')}"><div class="form-grid"><div class="form-grid two"><label class="field"><span>วันที่ *</span><input name="date" type="date" value="${e(existing?.date||ui.foodDate)}" max="${C.today()}" required /></label><label class="field"><span>มื้ออาหาร *</span><select name="meal">${Object.entries(D.MEALTYPES).map(([k,v])=>option(k,v,f.meal||'lunch')).join('')}</select></label></div><label class="field"><span>ชื่ออาหาร *</span><input name="name" required maxlength="100" value="${e(f.name)}" placeholder="เช่น ข้าวสวย / ไข่ต้ม" /></label><div class="form-grid two"><label class="field"><span>หน่วยต่อเสิร์ฟ</span><input name="unit" maxlength="70" value="${e(f.unit||'1 เสิร์ฟ')}" required /></label><label class="field"><span>น้ำหนักต่อหนึ่งเสิร์ฟ (กรัม) · ถ้าทราบ</span><input name="baseGrams" type="number" min="1" max="10000" step="0.1" value="${baseGrams?e(baseGrams):''}" placeholder="เช่น 100" /></label></div><div class="form-grid two"><label class="field"><span>กรอกปริมาณแบบ</span><select name="quantityMode" id="meal-quantity-mode">${option('servings','จำนวนเสิร์ฟ',mode)}${option('grams','น้ำหนักเป็นกรัม',mode)}</select></label><label class="field"><span id="meal-quantity-label">${mode==='grams'?'ปริมาณที่กิน (กรัม)':'จำนวนเสิร์ฟ'} *</span><input id="meal-quantity" name="quantity" type="number" min="0.1" max="${mode==='grams'?'3000':'30'}" step="0.1" value="${e(quantity)}" required /></label></div><p class="form-help">ถ้ากรอกเป็นกรัม กรุณาใส่ “น้ำหนักต่อหนึ่งเสิร์ฟ” ก่อน เช่น 100 กรัมต่อเสิร์ฟ → กิน 150 กรัม = 1.5 เสิร์ฟ</p><p class="form-help bold-help">สารอาหารต่อ 1 เสิร์ฟ (แก้ตามฉลาก/สูตรของคุณได้)</p><div class="form-grid two"><label class="field"><span>พลังงาน (kcal)</span><input name="kcal" type="number" required min="0" max="10000" step="0.1" value="${e(f.kcal)}" /></label><label class="field"><span>โปรตีน (g)</span><input name="protein" type="number" min="0" max="1000" step="0.1" value="${e(f.protein)}" required /></label><label class="field"><span>คาร์โบไฮเดรต (g)</span><input name="carbs" type="number" min="0" max="1000" step="0.1" value="${e(f.carbs)}" required /></label><label class="field"><span>ไขมัน (g)</span><input name="fat" type="number" min="0" max="1000" step="0.1" value="${e(f.fat)}" required /></label></div><div id="meal-preview" class="meal-preview" role="status" aria-live="polite">คำนวณพลังงานตามปริมาณที่กรอก</div>${!existing&&!foodId?'<label class="check-field"><input type="checkbox" name="remember" checked /><span>บันทึกเมนูนี้ไว้ในคลังส่วนตัว</span></label>':''}</div>${modalButtons(existing?'อัปเดตรายการ':'เพิ่มลงในบันทึก')}</form>`,'ค่าต่อหนึ่งเสิร์ฟจะคูณกับปริมาณจริง · ตรวจฉลากก่อนบันทึก');
+   refreshMealPreview();
+ }
+ function refreshMealPreview(){
+   const form=document.getElementById('meal-form');if(!form)return;
+   const mode=form.elements.quantityMode.value,grams=num(form.elements.baseGrams.value),quantity=num(form.elements.quantity.value);
+   const out=document.getElementById('meal-preview');if(!out)return;
+   if(mode==='grams'&&grams<=0){out.textContent='กรุณาระบุน้ำหนักต่อหนึ่งเสิร์ฟก่อนกรอกเป็นกรัม';return;}
+   const servings=mode==='grams'?quantity/grams:quantity;
+   out.textContent=servings>0?`ปริมาณที่กิน ≈ ${n(servings,2)} เสิร์ฟ · ${n(num(form.elements.kcal.value)*servings)} kcal · โปรตีน ${n(num(form.elements.protein.value)*servings,1)} g · คาร์บ ${n(num(form.elements.carbs.value)*servings,1)} g · ไขมัน ${n(num(form.elements.fat.value)*servings,1)} g`:'กรอกปริมาณเพื่อดูสารอาหารรวม';
  }
  function openSleep(){
    const x=state.sleeps.find(s=>s.date===ui.sleepDate)||{date:ui.sleepDate,bed:'23:00',wake:'07:00',awake:0,deep:null,light:null,rem:null,note:'',stageUnit:'percent'};
@@ -313,6 +338,24 @@
    if(a==='today-workout'){ui.workoutDate=C.today();ui.workoutDay=C.weekday(C.today());openSession();return;}
    if(a==='edit-session-date'){ui.workoutDate=date;ui.workoutDay=C.weekday(date);openSession();return;}
    if(a==='delete-session'){removeItem('sessions',x=>x.date===ui.workoutDate,'ลบบันทึกการฝึกของวันที่เลือก?');return;}
+   if(a==='food-favorite'){
+     if(!id)return;
+     const all=[...D.FOOD_LIBRARY,...state.customFoods];if(!all.some(x=>x.id===id))return;
+     state.favoriteFoodIds=state.favoriteFoodIds||[];
+     state.favoriteFoodIds=state.favoriteFoodIds.includes(id)?state.favoriteFoodIds.filter(x=>x!==id):[...state.favoriteFoodIds,id];
+     update();return;
+   }
+   if(a==='food-more'){ui.foodLimit+=60;render(true);return;}
+   if(a==='copy-yesterday'){
+     const sourceDate=C.shift(ui.foodDate,-1),source=C.mealsFor(state,sourceDate);
+     if(!source.length){toast('วันก่อนหน้ายังไม่มีอาหารที่บันทึก','error');return;}
+     if(C.mealsFor(state,ui.foodDate).length&&!confirmed(`เพิ่มรายการจาก ${C.shortDate(sourceDate)} เข้าไปในวันที่ ${C.shortDate(ui.foodDate)} โดยไม่ลบรายการเดิม?`))return;
+     let added=0;
+     for(const row of source){if(state.meals.some(x=>x.date===ui.foodDate&&x.copiedFrom===row.id))continue;
+       state.meals.push({...row,id:C.uid(),date:ui.foodDate,copiedFrom:row.id});added++;
+     }
+     if(added){update();toast(`คัดลอกอาหาร ${added} รายการแล้ว`);}else toast('คัดลอกไว้แล้ว ไม่มีรายการใหม่');return;
+   }
    if(a==='open-meal'){openMeal();return;}
    if(a==='food-add'){openMeal(id);return;}
    if(a==='edit-meal'){openMeal(null,id);return;}
@@ -336,12 +379,15 @@
    }
  });
  document.addEventListener('input',event=>{
+   if(event.target.closest('#meal-form')){refreshMealPreview();return;}
    if(event.target.id==='food-search'){
      ui.search=event.target.value;
      const all=[...D.FOOD_LIBRARY,...state.customFoods];
      const q=ui.search.toLocaleLowerCase().trim();
-     const arr=all.filter(x=>(ui.foodCategory==='ทั้งหมด'||x.group===ui.foodCategory)&&(`${x.name} ${x.unit}`.toLocaleLowerCase().includes(q)));
+     const favs=state.favoriteFoodIds||[];ui.foodLimit=60;
+     const arr=all.filter(x=>(ui.foodCategory==='ทั้งหมด'||(ui.foodCategory==='รายการโปรด'?favs.includes(x.id):x.group===ui.foodCategory))&&(`${x.name} ${x.unit} ${x.group}`.toLocaleLowerCase().includes(q)));
      const list=document.getElementById('food-library-list');if(list)list.innerHTML=renderFoodList(arr);
+     const count=document.querySelector('.food-count');if(count)count.textContent=`แสดง ${Math.min(arr.length,ui.foodLimit)} จาก ${arr.length} รายการ · ${(state.favoriteFoodIds||[]).length} รายการโปรด`;
    }
  });
  document.addEventListener('change',async event=>{
@@ -353,7 +399,8 @@
      form.querySelectorAll('[data-unit-label]').forEach(node=>node.textContent=el.value==='percent'?'%':'นาที');
      const help=form.querySelector('#sleep-stage-help');if(help)help.textContent='เปลี่ยนหน่วยแล้วระบบล้างตัวเลขเดิมในฟอร์มเพื่อป้องกันการตีความผิด กรุณากรอกข้อมูลจากอุปกรณ์ใหม่ (Deep + Light + REM รวมได้ไม่เกิน '+(el.value==='percent'?'100%':'เวลานอนจริง')+')';return;
    }
-   if(el.id==='food-group'){ui.foodCategory=el.value;render(true);return;}
+   if(el.id==='food-group'){ui.foodCategory=el.value;ui.foodLimit=60;render(true);return;}
+   if(el.id==='meal-quantity-mode'){const f=el.closest('form'),input=f?.elements.quantity;if(input){input.value=el.value==='grams'?(num(f.elements.baseGrams.value,0)*num(input.value,1)||''):num(input.value)/(num(f.elements.baseGrams.value)||1);input.max=el.value==='grams'?'3000':'30';const lab=f.querySelector('#meal-quantity-label');if(lab)lab.textContent=el.value==='grams'?'ปริมาณที่กิน (กรัม) *':'จำนวนเสิร์ฟ *';}refreshMealPreview();return;}
    if(el.id==='font-select'){const preview=document.getElementById('font-preview');if(preview)preview.style.fontFamily=({sarabun:'Sarabun',bai:'Bai Jamjuree',noto:'Noto Sans Thai',ibm:'IBM Plex Sans Thai',leelawadee:'Leelawadee UI',tahoma:'Tahoma',segoe:'Segoe UI',prompt:'Prompt',kanit:'Kanit',mitr:'Mitr',anakotmai:'Anakotmai',athiti:'Athiti',trirong:'Trirong',itim:'Itim',pattaya:'Pattaya',chonburi:'Chonburi'})[el.value]||'inherit';return;}
    if(el.id==='intelligence-exercise'){ui.exerciseFocus=el.value;render(true);return;}
    if(el.id==='goal-select'){const adj=document.getElementById('calorie-adjust');if(adj)adj.value=D.GOALS[el.value]?.adjust??0;return;}
@@ -434,12 +481,18 @@
      ui.workoutDate=date;ui.workoutDay=day;closeModal();update();toast('บันทึกการฝึกแล้ว');return;
    }
    if(form.id==='meal-form'){
-     const food={name:get('name'),unit:get('unit'),servings:metric('servings'),kcal:metric('kcal'),protein:metric('protein'),carbs:metric('carbs'),fat:metric('fat'),date:get('date'),meal:get('meal')};
-     if(!food.name||!food.unit||!C.isDate(food.date)||food.date>C.today()||food.servings<=0||food.servings>30||!D.MEALTYPES[food.meal]||['kcal','protein','carbs','fat'].some(k=>food[k]<0||!Number.isFinite(food[k]))){toast('กรุณาตรวจสอบรายการอาหาร','error');return;}
+     const mode=get('quantityMode'),quantity=metric('quantity'),baseGrams=get('baseGrams')===''?null:metric('baseGrams');
+     if(!['grams','servings'].includes(mode)||!Number.isFinite(quantity)||quantity<0.1||(mode==='grams'&&quantity>3000)||(mode==='servings'&&quantity>30)||(baseGrams!==null&&(!Number.isFinite(baseGrams)||baseGrams<1||baseGrams>10000))||(mode==='grams'&&baseGrams===null)){
+       toast('ตรวจสอบปริมาณอาหารและน้ำหนักต่อหนึ่งเสิร์ฟ','error');return;
+     }
+     const servings=mode==='grams'?Number((quantity/baseGrams).toFixed(6)):quantity;
+     if(servings<=0||servings>30){toast('ปริมาณอาหารเกินขอบเขตที่รองรับ','error');return;}
+     const food={name:get('name'),unit:get('unit'),servings,baseGrams,quantityMode:mode,quantityGrams:mode==='grams'?quantity:null,kcal:metric('kcal'),protein:metric('protein'),carbs:metric('carbs'),fat:metric('fat'),date:get('date'),meal:get('meal')};
+     if(!food.name||!food.unit||!C.isDate(food.date)||food.date>C.today()||!D.MEALTYPES[food.meal]||['kcal','protein','carbs','fat'].some(k=>food[k]<0||!Number.isFinite(food[k]))){toast('กรุณาตรวจสอบรายการอาหาร','error');return;}
      const prev=state.meals.find(x=>x.id===form.dataset.id);
      state.meals=state.meals.filter(x=>x.id!==form.dataset.id);
-     state.meals.push({id:prev?.id||C.uid(),foodId:prev?.foodId||form.dataset.foodid||null,...food});
-     if(!prev&&!form.dataset.foodid&&fd.has('remember'))state.customFoods.push({id:C.uid(),name:food.name,unit:food.unit,kcal:food.kcal,protein:food.protein,carbs:food.carbs,fat:food.fat,group:'เมนูของฉัน'});
+     state.meals.push({id:prev?.id||C.uid(),foodId:prev?.foodId||form.dataset.foodid||null,copiedFrom:prev?.copiedFrom,...food});
+     if(!prev&&!form.dataset.foodid&&fd.has('remember'))state.customFoods.push({id:C.uid(),name:food.name,unit:food.unit,baseGrams:food.baseGrams,kcal:food.kcal,protein:food.protein,carbs:food.carbs,fat:food.fat,group:'เมนูของฉัน'});
      ui.foodDate=food.date;closeModal();update();toast('บันทึกอาหารเรียบร้อย');return;
    }
    if(form.id==='sleep-form'){

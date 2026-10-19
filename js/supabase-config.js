@@ -4,6 +4,6 @@
  * This file is deployed publicly with the site; the keys here are intentionally public.
  */
 window.RHYTHM_SUPABASE_CONFIG = Object.freeze({
-  url: 'https://aliepwmcyoafaypbwezf.supabase.co', // example: https://xxxxxxxxxxxx.supabase.co
-  publishableKey: 'sb_publishable_a82SNwouv0TBAr7T1FcNrg_K8HZHfFS' // example: sb_publishable_...  or legacy anon JWT
+  url: '',                 // example: https://xxxxxxxxxxxx.supabase.co
+  publishableKey: ''      // example: sb_publishable_...  or legacy anon JWT
 });

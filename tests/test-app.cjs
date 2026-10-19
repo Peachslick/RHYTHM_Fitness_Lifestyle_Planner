@@ -52,7 +52,7 @@ click({action:'quick-add'});
 submit('weight-form',{date,weight:'80.5',bodyFat:'20'});
 assert.equal(JSON.parse(local.get('rhythm_fitness_v1')).weights.length,1,'weight saved');
 click({route:'nutrition'});
-submit('meal-form',{date,meal:'lunch',name:'ข้าวเทส',unit:'1 จาน',servings:'2',kcal:'300',protein:'20',carbs:'30',fat:'10',remember:'on'});
+submit('meal-form',{date,meal:'lunch',name:'ข้าวเทส',unit:'1 จาน',quantity:'2',quantityMode:'servings',kcal:'300',protein:'20',carbs:'30',fat:'10',remember:'on'});
 const diet=JSON.parse(local.get('rhythm_fitness_v1'));
 assert.equal(diet.meals[0].name,'ข้าวเทส');
 assert.equal(ctx.FitCore.foodTotals(diet.meals).kcal,600);

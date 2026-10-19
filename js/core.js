@@ -1,4 +1,4 @@
-/* RHYTHM v1.2.0 — pure calculations, dates, local persistence and icons */
+/* RHYTHM v1.3.0 — pure calculations, dates, local persistence and icons */
 (function(){
   'use strict';
   const KEY='rhythm_fitness_v1';
@@ -63,6 +63,22 @@
   function workoutStats(state,days=7){const dates=Array.from({length:days},(_,i)=>shift(today(),-(days-1-i)));const planned=dates.filter(d=>!['rest','recovery'].includes(planOn(state,d)?.type));const completed=planned.filter(d=>state.sessions.some(s=>s.date===d));return {planned:planned.length,completed:completed.length,rate:planned.length?completed.length/planned.length:null};}
   const avg=(arr)=>arr.length?arr.reduce((a,b)=>a+b,0)/arr.length:null;
   function calorieAverage(state,days=7){const dates=Array.from({length:days},(_,i)=>shift(today(),-i));const logged=dates.filter(d=>state.meals.some(m=>m.date===d));return {days:logged.length,value:avg(logged.map(d=>foodTotals(mealsFor(state,d)).kcal))};}
+  // Compare two independent 7-day calendar windows, not just the first/last noisy weigh-ins.
+  // Multiple weigh-ins on one day use the latest entry; never invent unrecorded values.
+  function weightTrend(state,asOf=today()){
+    const lastByDay=new Map();
+    for(const row of state.weights||[]){if(isDate(row.date)&&row.date<=asOf&&num(row.weight)>0)lastByDay.set(row.date,num(row.weight));}
+    const values=(start,end)=>[...lastByDay].filter(([d])=>d>=start&&d<=end).map(([,v])=>v);
+    const current=values(shift(asOf,-6),asOf),previous=values(shift(asOf,-13),shift(asOf,-7));
+    const now=avg(current),before=avg(previous),ready=current.length>=2&&previous.length>=2;
+    return {ready,currentDays:current.length,previousDays:previous.length,currentAverage:now,previousAverage:before,delta:ready?now-before:null};
+  }
+  function nutritionSummary(state,asOf=today(),days=14){
+    const from=shift(asOf,1-days),dates=[...new Set((state.meals||[]).filter(x=>isDate(x.date)&&x.date>=from&&x.date<=asOf).map(x=>x.date))].sort();
+    const kcal=dates.map(d=>foodTotals(mealsFor(state,d)).kcal);
+    const last7=dates.filter(d=>d>=shift(asOf,-6));
+    return {days,loggedDays:dates.length,average:avg(kcal),sevenDayLogged:last7.length,sevenDayAverage:avg(last7.map(d=>foodTotals(mealsFor(state,d)).kcal)),daily:dates.map((date,i)=>({date,value:kcal[i]}))};
+  }
   function sorted(arr,field='date'){return [...arr].sort((a,b)=>String(b[field]||'').localeCompare(String(a[field]||'')));}
   function validateImported(data){
     if(!data||typeof data!=='object'||Array.isArray(data)||data.version!==1)return false;
@@ -86,6 +102,10 @@
     if(!data.weights.every(x=>dated(x)&&nonNeg(x.weight)&&(x.bodyFat===null||x.bodyFat===''||nonNeg(x.bodyFat))))return false;
     if(!data.routines.every(x=>record(x)&&shortText(x.id,100)&&shortText(x.title,120)&&shortText(x.start,5)&&shortText(x.end,5)&&timeMin(x.start)!==null&&timeMin(x.end)!==null&&Object.hasOwn(FitData.CATEGORIES,x.category)&&Array.isArray(x.days)&&x.days.length<=7&&x.days.every(d=>Number.isInteger(d)&&d>=0&&d<=6)))return false;
     if(!data.customFoods.every(x=>record(x)&&shortText(x.id,100)&&shortText(x.name,120)&&shortText(x.unit,100)&&shortText(x.group,60)&&['kcal','protein','carbs','fat'].every(k=>nonNeg(x[k]))))return false;
+    // V1.3 fields are optional so old V1.0–V1.2 exports remain importable.
+    if(data.favoriteFoodIds!==undefined&&(!Array.isArray(data.favoriteFoodIds)||data.favoriteFoodIds.length>2000||data.favoriteFoodIds.some(id=>!shortText(id,100))))return false;
+    if(!data.meals.every(x=>(x.baseGrams===undefined||x.baseGrams===null||(nonNeg(x.baseGrams)&&Number(x.baseGrams)>0&&Number(x.baseGrams)<=10000))&&(x.quantityMode===undefined||['servings','grams'].includes(x.quantityMode))&&(x.quantityGrams===undefined||x.quantityGrams===null||(nonNeg(x.quantityGrams)&&Number(x.quantityGrams)<=3000))&&(x.copiedFrom===undefined||shortText(x.copiedFrom,100))))return false;
+    if(!data.customFoods.every(x=>x.baseGrams===undefined||x.baseGrams===null||(nonNeg(x.baseGrams)&&Number(x.baseGrams)>0&&Number(x.baseGrams)<=10000)))return false;
     return true;
   }
   function load(){try {const raw=localStorage.getItem(KEY);if(raw){const p=JSON.parse(raw);if(validateImported(p))return p;}}catch(e){console.warn('RHYTHM storage unavailable:',e.message);}return FitData.demoState();}
@@ -143,5 +163,5 @@
     const dots=clean.map((p,i)=>`<circle cx="${x(i)}" cy="${y(p.value)}" r="4.4" fill="var(--accent-deep)" stroke="var(--surface)" stroke-width="2"><title>${esc(pretty(p.date))} • ${nfmt(p.value,1)}</title></circle>`).join('');
     return `<svg role="img" aria-label="${esc(opts.label||'กราฟแนวโน้ม')}" class="line-chart" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet"><defs><linearGradient id="${guid}" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="var(--accent-deep)" stop-opacity=".21"/><stop offset="100%" stop-color="var(--accent-deep)" stop-opacity="0"/></linearGradient></defs>${grid}${target}<path d="${fill}" fill="url(#${guid})"/><path d="${path}" stroke="var(--accent-deep)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>${dots}${labels}</svg>`;
   }
-  window.FitCore={KEY,$,$$,esc,num,nfmt,clamp,uid,today,isDate,shift,weekday,weekDates,pretty,shortDate,timeMin,sleepDuration,sleepStageMinutes,sleepStagePercent,validSleepStages,planOn,trainingStats,ageValid,metrics,mealsFor,foodTotals,weightSeries,recentSleep,sleepStats,workoutStats,calorieAverage,sorted,validateImported,load,save,exportData,icon,lineChart};
+  window.FitCore={KEY,$,$$,esc,num,nfmt,clamp,uid,today,isDate,shift,weekday,weekDates,pretty,shortDate,timeMin,sleepDuration,sleepStageMinutes,sleepStagePercent,validSleepStages,planOn,trainingStats,ageValid,metrics,mealsFor,foodTotals,weightSeries,recentSleep,sleepStats,workoutStats,calorieAverage,weightTrend,nutritionSummary,sorted,validateImported,load,save,exportData,icon,lineChart};
 })();

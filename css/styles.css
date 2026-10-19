@@ -68,3 +68,22 @@
 .set-entry label>span{display:block;font-size:11px;font-weight:650;margin-bottom:5px}.set-entry input[type="number"]{width:100%;min-width:0;padding:9px;height:41px}.set-warmup{display:flex;align-items:center;gap:6px;min-height:41px;white-space:nowrap}.set-warmup input{width:16px;height:16px}.set-warmup span{margin:0!important}.set-add{margin-top:4px}
 @media(max-width:850px){.insight-layout{grid-template-columns:1fr}}
 @media(max-width:630px){.intelligence-kpis{grid-template-columns:1fr}.set-entry{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}.set-warmup{min-height:32px}.set-entry>.remove-set{justify-self:end}.font-panel{padding:14px}}
+
+/* RHYTHM V1.3.0 — smart food library & nutrition trends */
+.nutrition-insights{margin:0 0 17px;min-width:0}
+.nutrition-insight-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.nutrition-insight-grid>div{padding:16px;border:1px solid var(--line);border-radius:13px;background:var(--surface-2);min-width:0;display:flex;flex-direction:column;gap:6px}
+.nutrition-insight-grid span{font-size:11px;color:var(--muted)}
+.nutrition-insight-grid strong{font-size:22px;line-height:1.45;font-variant-numeric:tabular-nums;color:var(--ink);overflow-wrap:anywhere}
+.nutrition-insight-grid strong small{font-size:10px;font-weight:600;color:var(--muted)}
+.nutrition-insight-grid>div>small{font-size:10px;color:var(--muted)}
+.nutrition-advice{margin-top:13px}.nutrition-advice p{margin:0}
+.food-count{font-size:11px;color:var(--muted);margin:8px 0 2px}
+.food-star{width:34px;height:34px;flex:0 0 34px;border:1px solid var(--line);background:var(--surface-2);color:var(--muted);border-radius:10px;cursor:pointer;font-size:24px;line-height:1;display:grid;place-items:center;transition:background .2s,color .2s}
+.food-star:hover,.food-star:focus-visible,.food-star.selected{color:#d49a37;background:var(--surface-3)}
+.food-list-item .food-title strong{font-size:12px;overflow-wrap:anywhere}
+.food-more{width:100%;margin:14px auto 0;justify-content:center}
+.food-diary-actions{margin:-2px 0 13px}.food-diary-actions .button{font-size:11px;max-width:100%;white-space:normal;text-align:left}
+.meal-preview{border-radius:10px;background:var(--surface-2);border:1px solid var(--line);padding:12px 15px;font-size:12px;color:var(--ink-soft);line-height:1.7;font-weight:650}
+@media(max-width:800px){.nutrition-insight-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.nutrition-insight-grid{grid-template-columns:1fr}.food-list-item{gap:8px}.food-star{width:30px;height:30px;flex-basis:30px}.food-list-item .food-number strong{font-size:12px}.food-list-item .food-number span{font-size:10px}}
