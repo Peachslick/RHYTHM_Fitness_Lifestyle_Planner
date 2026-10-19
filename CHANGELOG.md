@@ -1,27 +1,29 @@
-# RHYTHM — CHANGELOG
+# RHYTHM Changelog
 
-## V1.3.0 — Smart Nutrition & Weight Goals (2026-10-19)
+## V1.4.0 — Recovery & Lifestyle Intelligence + Identity (2026-10-19)
 
-### New
-- Expand food reference library 18 -> **154 foods** across Thai meals, common proteins, fruit, vegetables, grains, fats, dessert and drinks; keep all legacy IDs unchanged.
-- Search, category filters, favorites per user (`favoriteFoodIds`) and progressively reveal the full library in groups of 60.
-- Record grams or servings; per-serving reference weight, live macros preview, persisted gram snapshot and saved custom-food reference grams.
-- Copy previous day's journal into selected day with duplicate-source guard and confirmation when target already contains entries.
-- Analyze 14-day food log completion / average of logged days and independent 7-day average weight windows; give contextual rather than prescriptive advice.
-- Add 7-day moving-window insight on Progress page.
+### Added
+- New **Recovery & Lifestyle** page in main sidebar; works offline / guest and Cloud mode.
+- Daily Recovery Check-in, dated by the user's local day, with 5 self-reported inputs (energy, fatigue, muscle soreness, stress, mood, all 1–5), optional water (mL), optional steps, and notes. A date has at most one Check-in; add, edit, delete, and backdate supported.
+- Descriptive subjective balance (1–5) with explicit non-clinical wording; intentionally **not** a medical readiness/risk diagnostic. Missing logs remain missing rather than zero.
+- Sleep rolling-average (recorded nights only), bedtime deviation (3+ logged nights, circular midnight-safe), average workout RPE based on sessions with RPE, 14-day subjective feeling trend, 7-day lifestyle log view.
+- Carefully bounded and transparent suggestions based on user's logged inputs (low self-reported feeling, higher muscle soreness, sleep more than 60 minutes below user's target, 2+ high-RPE sessions within 3 days). No automatic edits to training schedule or TDEE.
+- New original branded icon featuring a calendar and dumbbell. Sidebar, top header, loading indicator, modern browser favicon (PNG + ICO), and Apple touch icon.
+- `js/recovery.js` focused pure analysis module, plus `tests/test-v14.cjs`.
 
-### Compatibility / Security
-- Uses the existing `version:1` JSON document, Supabase table, CAS Revision and RLS architecture; **no Supabase SQL migration**.
-- Old meals, custom foods, backups and account records remain compatible; optional new fields are validated.
-- Catalog is versioned Static JS, not replicated per account to the Cloud.
-- Does not overwrite user's Supabase configuration in Update Only package.
+### Compatibility and safety
+- `checkins` is an **optional field** in the version-1 JSON payload, so older V1.0–V1.3 documents/imports still validate. Fresh and demo state have the field initialized. No SQL change / no added Supabase table: existing CAS + RLS document sync remains in use.
+- Import validation limits the Recovery entries, dates, values, optional quantity fields, note lengths, and duplicate dates. UI prevents future dates. Untrusted notes rendered HTML-escaped.
+- Existing profile, nutrition, sleeps, workout planning, training intelligence, sync, and font customization preserved.
+- Source logo files and versioned URL query parameters support correct new assets after Vercel deployment.
 
-### Notes
-- The 154 foods have illustrative/approximate nutrient data, not verified nutrition-database entries; users should edit values according to exact product/restaurant/portion.
-- No automatic calorie target adjustment. `NutritionSummary` explicitly excludes missing days instead of treating them as zero.
-- Browser integration checked with locally injected source due restricted browser-to-localhost navigation; real Supabase connection remains to be validated by owner.
+### Validation
+- 39 dedicated new V1.4.0 assertions, and all existing suites rerun (23 calculator/local, 32 V1.2, 44 V1.3, 29 app, 70 sync); Browser plugin was unavailable and localhost navigation was blocked in Chromium, so rendered QA used Playwright Chromium `set_content` with inline scripts/styles and a test-only LocalStorage shim.
+- Tested Recovery page desktop/mobile rendering, edits, delete, and no JavaScript errors / page-level horizontal overflow.
+- Not yet exercised against user's live Supabase credentials, network failures from their Vercel site, or cross-device account session.
 
-## Earlier versions
-- **V1.2.0** — Workout Intelligence, Adaptive Planner, sleep-stage percentage input, font personalization.
-- **V1.1.0** — Account & Cloud Sync with Supabase Auth, RLS, offline draft, CAS revision conflict checking and JSON backup.
-- **V1.0.0** — Core dashboard, workouts, nutrition, sleep, routine, progress and profile.
+## Previous versions
+- **V1.3.0:** Expanded food catalog, gram/serving tracking, favorites, copy meals, weight goal insights.
+- **V1.2.0:** Workout sets / training analytics / flexible planner, sleep % stages, Thai font choice.
+- **V1.1.0:** Optional Supabase Auth, RLS, revisioned Cloud Sync, recovery draft/backup and conflict safeguards.
+- **V1.0.0:** Baseline fitness, food, sleep, schedule, profile and local persistence.

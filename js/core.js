@@ -1,4 +1,4 @@
-/* RHYTHM v1.3.0 — pure calculations, dates, local persistence and icons */
+/* RHYTHM v1.4.0 — pure calculations, dates, local persistence and icons */
 (function(){
   'use strict';
   const KEY='rhythm_fitness_v1';
@@ -106,6 +106,11 @@
     if(data.favoriteFoodIds!==undefined&&(!Array.isArray(data.favoriteFoodIds)||data.favoriteFoodIds.length>2000||data.favoriteFoodIds.some(id=>!shortText(id,100))))return false;
     if(!data.meals.every(x=>(x.baseGrams===undefined||x.baseGrams===null||(nonNeg(x.baseGrams)&&Number(x.baseGrams)>0&&Number(x.baseGrams)<=10000))&&(x.quantityMode===undefined||['servings','grams'].includes(x.quantityMode))&&(x.quantityGrams===undefined||x.quantityGrams===null||(nonNeg(x.quantityGrams)&&Number(x.quantityGrams)<=3000))&&(x.copiedFrom===undefined||shortText(x.copiedFrom,100))))return false;
     if(!data.customFoods.every(x=>x.baseGrams===undefined||x.baseGrams===null||(nonNeg(x.baseGrams)&&Number(x.baseGrams)>0&&Number(x.baseGrams)<=10000)))return false;
+    // Recovery check-ins are optional: previous V1.0–V1.3 JSON exports remain valid.
+    if(data.checkins!==undefined){
+      if(!Array.isArray(data.checkins)||data.checkins.length>20000||!data.checkins.every(x=>dated(x)&&['energy','fatigue','soreness','stress','mood'].every(k=>Number.isInteger(Number(x[k]))&&Number(x[k])>=1&&Number(x[k])<=5)&&['waterMl','steps'].every(k=>x[k]===null||x[k]===undefined||x[k]===''||(Number.isInteger(Number(x[k]))&&Number(x[k])>=0&&Number(x[k])<=(k==='steps'?100000:12000)))&&shortText(x.note||'',600)))return false;
+      if(new Set(data.checkins.map(x=>x.date)).size!==data.checkins.length)return false;
+    }
     return true;
   }
   function load(){try {const raw=localStorage.getItem(KEY);if(raw){const p=JSON.parse(raw);if(validateImported(p))return p;}}catch(e){console.warn('RHYTHM storage unavailable:',e.message);}return FitData.demoState();}

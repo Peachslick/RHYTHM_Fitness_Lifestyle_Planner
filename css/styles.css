@@ -87,3 +87,55 @@
 .meal-preview{border-radius:10px;background:var(--surface-2);border:1px solid var(--line);padding:12px 15px;font-size:12px;color:var(--ink-soft);line-height:1.7;font-weight:650}
 @media(max-width:800px){.nutrition-insight-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:480px){.nutrition-insight-grid{grid-template-columns:1fr}.food-list-item{gap:8px}.food-star{width:30px;height:30px;flex-basis:30px}.food-list-item .food-number strong{font-size:12px}.food-list-item .food-number span{font-size:10px}}
+
+/* v1.4.0 — brand identity and Recovery & Lifestyle Intelligence */
+.brand-logo{height:48px;width:48px;object-fit:cover;border-radius:15px;flex-shrink:0;box-shadow:0 6px 17px rgba(4,25,30,.22)}
+.topbar-logo{width:19px;height:19px;vertical-align:middle;object-fit:cover;border-radius:5px;margin-right:5px}
+.boot-logo{display:block;width:74px;height:74px;border-radius:20px;object-fit:cover;margin:0 auto 12px;box-shadow:0 10px 28px #0002}
+.recovery-intro{display:flex;align-items:center;justify-content:space-between;gap:24px;border-radius:20px;padding:27px 31px;margin:0 0 18px;background:linear-gradient(110deg,#163a33,#186e66 65%,#149d95);color:#f6fffd;overflow:hidden;position:relative}
+.recovery-intro:after{content:'';position:absolute;right:17%;top:-70px;width:230px;height:230px;border:1px solid #ffffff2d;border-radius:50%;pointer-events:none}
+.recovery-intro h2{font-size:25px;line-height:1.27;letter-spacing:-.02em;margin:6px 0 8px;color:#fff}
+.recovery-intro p{font-size:12px;line-height:1.75;max-width:580px;margin:0;color:#d9f5ea}
+.recovery-intro .section-overline{font-size:10px;letter-spacing:.11em;color:#92f2d5;font-weight:750}
+.recovery-intro .button{flex-shrink:0;position:relative;z-index:2;border:1px solid #ffffff3a;background:#d7f6dd;color:#174332}
+.recovery-intro .button:hover{background:#fff}
+.recovery-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:0 0 17px}
+.recovery-kpi{min-width:0;min-height:157px;padding:20px}
+.recovery-kpi>span{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:11px;font-weight:700}
+.recovery-kpi>span svg{color:var(--accent-deep)}
+.recovery-kpi>strong{display:block;font-size:29px;line-height:1.2;letter-spacing:-.02em;margin:15px 0 5px;color:var(--ink)}
+.recovery-kpi>strong small{font-size:14px;color:var(--muted);font-weight:600}
+.recovery-kpi>p{margin:0;color:var(--muted);font-size:11px;line-height:1.65}
+.recovery-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px;margin:0 0 17px;align-items:stretch}
+.recovery-columns>.panel{min-width:0}
+.recovery-datebox{display:flex;align-items:flex-end;gap:9px;margin:0 0 17px}
+.recovery-datebox .field{flex:1}
+.recovery-datebox .button{white-space:nowrap;min-height:41px}
+.recovery-feelings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-bottom:12px}
+.recovery-feelings>div{min-width:0;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:13px}
+.recovery-feelings>div>span{font-size:11px;color:var(--muted)}
+.recovery-feelings>div>strong{font-size:13px;float:right}
+.recovery-track{height:6px;border-radius:6px;background:var(--line);margin-top:12px;overflow:hidden;clear:both}
+.recovery-track i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#50b5c4,#55c99b)}
+.recovery-meta{color:var(--muted);font-size:11px;margin:8px 0 14px}
+.recovery-note{font-size:12px;line-height:1.7;color:var(--ink-soft);padding:12px;background:var(--surface-2);border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere}
+.recovery-advice{display:grid;gap:10px;margin-bottom:17px}
+.recovery-advice-item{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);padding:13px;border-radius:12px;background:var(--surface-2)}
+.recovery-advice-item>span{color:var(--accent-deep);flex-shrink:0}
+.recovery-advice-item p{margin:0;font-size:12px;line-height:1.8;color:var(--ink-soft)}
+.recovery-context{border-top:1px solid var(--line);margin:11px 0 14px}
+.recovery-context>div{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);font-size:11px}
+.recovery-context span{color:var(--muted)}
+.recovery-context b{text-align:right;font-size:12px;color:var(--ink)}
+.recovery-calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.recovery-calendar-day{min-width:0;padding:13px 4px;border:1px solid var(--line);background:var(--surface-2);border-radius:12px;text-align:center;display:flex;flex-direction:column;gap:7px;align-items:center}
+.recovery-calendar-day strong{font-size:12px}
+.recovery-calendar-day small{font-size:10px;color:var(--muted)}
+.recovery-calendar-day span:not(.rc-dot){font-size:9px;color:var(--muted);line-height:1.4;overflow-wrap:anywhere}
+.rc-dot{height:8px;width:8px;border-radius:50%;background:var(--line);display:block}
+.rc-dot.has{background:#4ac59b;box-shadow:0 0 0 4px #4ac59b22}
+.checkin-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media(max-width:1240px){.recovery-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.recovery-columns{grid-template-columns:1fr}}
+@media(max-width:630px){.brand-logo{width:43px;height:43px}.recovery-intro{padding:24px 18px;flex-direction:column;align-items:stretch;gap:16px}.recovery-intro h2{font-size:21px}.recovery-intro .button{width:100%;justify-content:center}.recovery-kpis{gap:10px}.recovery-kpi{padding:14px;min-height:144px}.recovery-kpi>strong{font-size:24px}.recovery-kpi>span{font-size:10px}.recovery-feelings{gap:7px}.recovery-feelings>div{padding:10px}.recovery-calendar{gap:3px}.recovery-calendar-day{padding:10px 2px}.recovery-calendar-day span:not(.rc-dot){font-size:8px}.recovery-datebox{flex-direction:column;align-items:stretch}.recovery-datebox .field{width:100%}.recovery-datebox .button{width:100%;justify-content:center}.checkin-fields{grid-template-columns:1fr}}
+
+@media(max-width:630px){.recovery-calendar{grid-template-columns:repeat(7,92px);overflow-x:auto;padding-bottom:11px;scroll-snap-type:x proximity}.recovery-calendar-day{scroll-snap-align:start;min-width:88px}.recovery-calendar-day strong{font-size:11px}.recovery-calendar-day span:not(.rc-dot){font-size:10px}}

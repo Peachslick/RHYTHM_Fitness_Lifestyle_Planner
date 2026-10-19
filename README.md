@@ -1,93 +1,82 @@
-# RHYTHM V1.3.0 — Smart Nutrition & Weight Goals
+# RHYTHM V1.4.0 — Recovery & Lifestyle Intelligence
 
-RHYTHM เป็นเว็บบันทึกการออกกำลังกาย โภชนาการ การนอน และกิจวัตรส่วนตัว (HTML / CSS / Vanilla JavaScript) รองรับ Supabase Auth + Cloud Sync ที่เพิ่มไว้ตั้งแต่ V1.1.0 โดย **V1.3.0 ไม่ต้องรัน SQL Migration** และไม่ต้องเปลี่ยนตาราง `rhythm_user_data` เดิม
+เว็บส่วนตัวสำหรับออกกำลังกายและวางแผนสุขภาพด้วย HTML/CSS/Vanilla JavaScript ต่อจาก RHYTHM V1.3.0 โดยยังรองรับบัญชี Supabase, Cloud Sync, Backup / Restore และตั้งค่าฟอนต์จาก Workday Journey เช่นเดิม
 
-## ของใหม่ใน V1.3.0
+## ของใหม่ V1.4.0
 
-- **คลังอาหาร 154 รายการ** (18 รายการเดิม + 136 รายการใหม่) ครอบคลุมอาหารไทยจานเดียว กับข้าว วัตถุดิบ โปรตีน ไขมัน ข้าวแป้ง ผัก ผลไม้ ของหวาน และเครื่องดื่ม
-- ค้นหาชื่อ/หมวด กรองหมวด **รายการโปรด ⭐** และแสดงเพิ่มทีละ 60 รายการโดยไม่ตัดรายการที่เหลือ
-- **บันทึกเป็นกรัมหรือจำนวนเสิร์ฟ**: กรอกน้ำหนักอ้างอิงต่อหนึ่งเสิร์ฟ แล้วระบบแปลงกรัมเป็นจำนวนเสิร์ฟและคำนวณ kcal / โปรตีน / คาร์บ / ไขมันให้โดยอัตโนมัติ พร้อม Preview ก่อนบันทึก
-- **เมนูส่วนตัว** รองรับน้ำหนักอ้างอิงต่อเสิร์ฟด้วย หากผู้ใช้ไม่รู้ปริมาณเป็นกรัมสามารถใช้เสิร์ฟเหมือนเดิม
-- **คัดลอกมื้ออาหารจากวันก่อนหน้า** พร้อมยืนยันก่อนเพิ่มเข้าในวันที่มีข้อมูล และป้องกันรายการที่คัดลอกซ้ำจากบันทึกต้นทางเดียวกัน
-- **Nutrition & Weight Goals** แสดงค่าเฉลี่ยแคลอรี่จากวันที่มีบันทึกใน 14 วัน, จำนวนวันมีบันทึก, น้ำหนักเฉลี่ยสองช่วงเวลา 7 วัน (ต้องมีข้อมูล >= 2 วันต่อช่วง), TDEE target และข้อความช่วยตีความข้อมูลโดยไม่สั่งปรับแคลอรี่เอง
-- เพิ่ม Weight Trend เฉลี่ยสองช่วงสัปดาห์ในหน้า **แนวโน้มและเป้าหมาย**
-- เก็บ Account / Cloud Sync, RLS, Workout Intelligence, แผนออกกำลัง, Sleep Stages %, แบบอักษร และ Backup / Restore เดิม
+- เพิ่มหน้า **Recovery & Lifestyle** ในเมนูด้านซ้าย เพื่อบันทึก **Recovery Check-in** รายวัน ย้อนหลังได้: ความสดชื่น/พลังงาน (1–5), ความเหนื่อยล้า (1–5), ความปวดเมื่อยกล้ามเนื้อ (1–5), ความเครียด (1–5), อารมณ์ (1–5), น้ำดื่มและก้าวเดิน (ไม่บังคับ), โน้ต รายการเก่ารองรับการแก้ไข/ลบ
+- แสดง **ความรู้สึกเฉลี่ย** จากแบบประเมินตัวเอง (คะแนน 1–5; ไม่ใช่คะแนนตรวจสุขภาพ), กราฟแนวโน้ม 14 วัน, ปฏิทินย่อ 7 วัน, ชั่วโมงนอนเฉลี่ยจากบันทึกที่มีจริง, ความแปรปรวนของเวลาเข้านอนที่เคยบันทึกอย่างน้อย 3 คืน, RPE เฉลี่ยการฝึก 14 วัน
+- สร้าง **ข้อสังเกตเชิงพฤติกรรม** เช่น มีข้อมูลว่าคืนล่าสุดนอนต่ำกว่าเป้าหมายเกิน 1 ชั่วโมง, เหนื่อย/ปวดกล้ามเนื้อสูง, ฝึกหนัก RPE ≥ 8 มากกว่า 1 ครั้งใน 3 วัน ทั้งหมดเป็นเงื่อนไขโปร่งใส แสดงเพื่อให้ผู้ใช้ตัดสินใจเอง **ไม่ปรับตารางฝึกหรือแคลอรี่ให้อัตโนมัติ**
+- เพิ่มโลโก้ **ดัมเบลล์ + ปฏิทิน** ใน Sidebar, แถบหัวเว็บ, หน้า Loading และ Favicon บน Browser Tab พร้อม Apple Touch Icon
 
-### ข้อควรทราบเกี่ยวกับสารอาหาร
+> **สำคัญ:** การประเมินความรู้สึก, ระยะการนอนจากนาฬิกา และข้อสังเกตเชิงการฝึกเป็นข้อมูลประกอบการวางแผน ไม่ใช่การประเมินโรคหรือบาดเจ็บ หากมีอาการเจ็บปวดผิดปกติหรือปัญหาสุขภาพ ให้ปรึกษาบุคลากรสุขภาพที่เหมาะสม
 
-**ตัวเลขโภชนาการของทั้ง 154 เมนูเป็นตัวอย่างประมาณการ** ไม่ได้ดึงมาจากฐานข้อมูลโภชนาการที่ผ่านการรับรอง ไม่ควรนำไปถือเป็นข้อมูลตรวจวัดจริง โดยเฉพาะเมนูร้านอาหาร สารอาหารต่างกันมากตามสูตรอาหาร น้ำมัน การปรุง น้ำหนักอาหาร และยี่ห้อ ผู้ใช้สามารถแก้ตัวเลขอาหารต่อเสิร์ฟตามฉลาก โภชนาการจากร้าน หรือการชั่งจริงก่อนบันทึกได้
+## การอัปเดตจาก V1.3.0 (แนะนำ)
 
-สำหรับการบันทึกแบบกรัม ระบบคูณตัวเลขต่อเสิร์ฟด้วย `น้ำหนักอาหารที่กิน / น้ำหนักอ้างอิงต่อหนึ่งเสิร์ฟ` เช่น อาหาร 620 kcal ต่อ 400 กรัม หากกิน 200 กรัมจะคำนวณ 310 kcal **สูตรจะถูกต้องเท่ากับความถูกต้องของค่าตั้งต้นและการชั่งเท่านั้น**
+1. เปิด RHYTHM V1.3.0 ของคุณ แล้วเข้า **โปรไฟล์และตั้งค่า → สำรองข้อมูล (.json)** ก่อนทุกครั้ง
+2. สำหรับ Cloud ให้ตรวจสถานะซิงค์ว่าไม่มี **Pending** หรือ **Conflict** ก่อนอัปเดต และสำรองฝั่ง Cloud/เครื่องหากมีความขัดแย้ง
+3. แตก `RHYTHM_v1.4.0_UPDATE_ONLY.zip` แล้วคัดลอก **ไฟล์ภายใน** ไปทับ root ของ GitHub repo/Vercel project เดิม โดยให้ `index.html` อยู่ชั้นบนสุด ไม่ต้องสร้างโฟลเดอร์ซ้อน
+4. ไฟล์ที่จะอัปเดต: `index.html`, `css/styles.css`, `js/app.js`, `js/core.js`, `js/data.js`, `js/recovery.js` (ใหม่), `assets/*` (ใหม่), `tests/test-v14.cjs` (ใหม่), `README.md`, `CHANGELOG.md`
+5. **ห้ามทับ `js/supabase-config.js` เดิม** — ไฟล์ดังกล่าวไม่อยู่ใน Update Only ZIP
+6. Git commit/Push แล้วให้ Vercel Deploy อัตโนมัติ (`Framework Preset: Other`, Static Site ไม่มี Build Command)
+7. กด Refresh หรือ Hard Refresh หาก Favicon เดิมยังอยู่ (ไอคอนมี `?v=1.4.0` สำหรับแยก cache)
+8. เปิดหน้า **Recovery & Lifestyle** เพิ่ม Check-in ทดสอบ, Refresh, เช็กข้อมูลเดิม, ทดสอบ Sync, Login บัญชีเดิมและทดสอบจากอีกอุปกรณ์
 
-การเปรียบเทียบน้ำหนักเฉลี่ยไม่ได้ยืนยันการเปลี่ยนแปลงของไขมัน/กล้ามเนื้อ และค่าเฉลี่ยแคลอรี่จะนับ **เฉพาะวันที่มีบันทึก** (ไม่ได้แทนวันที่ขาดด้วย 0) ควรเก็บข้อมูลให้ต่อเนื่องก่อนตัดสินใจปรับแผน สุขภาพส่วนบุคคลหรือภาวะทางการแพทย์ควรปรึกษาผู้เชี่ยวชาญที่เหมาะสม
+**ไม่มี SQL Migration ใน V1.4.0**: Check-in เก็บใน `checkins` ภายใน JSON payload รุ่น `version:1` เดิม; ตัวตรวจข้อมูลรองรับ `checkins` ที่ไม่มีอยู่ใน export ของเวอร์ชันก่อน ข้อมูลยังคงแยก per-user ตาม Supabase RLS เดิม
 
-## อัปเดตจาก V1.2.0 โดยไม่ทำข้อมูลหาย
+## ติดตั้งใหม่ด้วย Full Source
 
-1. **สำรอง JSON ก่อนทุกครั้ง** จากหน้าโปรไฟล์ และเมื่อใช้ Cloud ให้ตรวจว่าไม่มี Pending/Conflict ก่อน
-2. ดาวน์โหลด ZIP `RHYTHM_v1.3.0_UPDATE_ONLY.zip` แล้วคัดลอกไฟล์เหล่านี้ไปทับ **ระดับ root ของเว็บเดิม**:
-   - `index.html`
-   - `css/styles.css`
-   - `js/app.js`
-   - `js/core.js`
-   - `js/foods-expanded.js` (**ไฟล์ใหม่**)
-   - `tests/test-app.cjs`, `tests/test-v13.cjs`, `README.md`, `CHANGELOG.md`
-3. **เก็บ `js/supabase-config.js` เดิมไว้** อย่าแทนที่ด้วยตัวอย่างใน Full Source Code
-4. Commit/Push ขึ้น GitHub และรอให้ Vercel Deploy เสร็จ แล้ว Refresh หน้าเว็บ
-5. ลองใช้บันทึกอาหารเดิม, เพิ่มอาหารเป็นกรัม, favorite, คัดลอกวันก่อน, เปิดหน้า Progress และตรวจ Cloud Sync ข้ามเครื่องด้วยข้อมูลทดสอบ
+1. แตก `RHYTHM_Fitness_Lifestyle_Planner_v1.4.0_FULL.zip` แล้วนำเนื้อหาโฟลเดอร์ `RHYTHM_v1.4.0` ไปใส่ root ของ GitHub repo
+2. เปิด `index.html` โดยตรงหรือผ่าน local static server/XAMPP ได้ ส่วนการเข้าสู่ระบบ Cloud ต้องใช้งานผ่านโดเมน https ที่กำหนดใน Supabase
+3. หากต้องการ Cloud ให้สร้าง Supabase project และใช้ `supabase/001_init.sql` **เพียงครั้งแรกของโปรเจกต์ใหม่เท่านั้น** แล้วตรวจ `supabase/VERIFY_SETUP.md`
+4. กรอก URL และ **Publishable Key** ใน `js/supabase-config.js` (ห้ามใช้ `service_role`, secret key หรือใส่รหัสผ่านฐานข้อมูล)
+5. กำหนด Authentication URL Configuration และ Redirect URLs ให้รองรับ URL Vercel ที่ใช้งาน แล้วทดสอบการยืนยันอีเมล/รีเซ็ตรหัสผ่าน
 
-**ไม่ต้องสร้างตารางใหม่/รัน SQL ใหม่** เพราะข้อมูล V1.3 ใหม่บันทึกเป็นฟิลด์เพิ่มเติมภายใน JSON Document เดิม (`favoriteFoodIds`, ข้อมูล gram ในรายการอาหาร) และตัวคลังอาหารทั้งหมดเป็นข้อมูล Static ไม่ได้อัปโหลดทั้งคลังไปยัง Cloud
+**หมายเหตุ:** ถ้าใช้ Full Source เพื่อทับโปรเจกต์เก่าที่ตั้งค่า Supabase แล้ว จะต้องเก็บ `js/supabase-config.js` เดิมไว้เอง มิฉะนั้น Cloud จะกลับเป็นโหมดไม่ได้ตั้งค่า และ **อย่ารัน `001_init.sql` ซ้ำในโปรเจกต์เดิมโดยไม่ตรวจสอบ**
 
-## Deploy โปรเจกต์ใหม่
-
-1. นำโฟลเดอร์ Full Source Code ที่มี `index.html` อยู่ระดับ Root ขึ้น GitHub
-2. ใน Vercel เลือก Framework Preset `Other` ไม่ต้องใส่ Build Command
-3. ตั้ง Supabase Project URL และ Publishable Key ที่ไฟล์ `js/supabase-config.js` (ไม่ใช่ service_role / secret key)
-4. หากยังไม่ได้ติดตั้งตั้งแต่ V1.1 ให้รัน `supabase/001_init.sql` จากชุด Full **ครั้งเดียว** และตั้ง Auth URL / Redirect URL ให้รองรับ Vercel
-5. **ห้าม** Commit secret key, database password หรือ service-role credential ขึ้น GitHub
-
-### การตรวจสอบความปลอดภัย Cloud ก่อนใช้จริง
-
-ใช้บัญชีทดสอบ A/B และอุปกรณ์ 2 เครื่อง: A ต้องไม่เห็นข้อมูล B, บันทึก Offline แล้ว Sync ใหม่, ทดลองแก้ไขพร้อมกันเพื่อให้เกิด Conflict และทดสอบ backup / restore ข้อมูลจำลอง หากมี Pending/Conflict **อย่ากดย้ายหรือแทนที่ข้อมูล Cloud** จนกว่าจะดาวน์โหลดสำรองและตรวจสอบข้อมูลทั้งสองฝั่งแล้ว
-
-## โครงสร้างสำคัญ
+## โครงสร้าง
 
 ```text
-RHYTHM_v1.3.0/
-  index.html
-  css/styles.css
-  js/data.js                    # 18 foods + templates เดิม (ไม่แก้)
-  js/foods-expanded.js          # 136 foods ใหม่ + reference grams
-  js/core.js                    # weightTrend / nutritionSummary / data validation
-  js/app.js                     # หน้าโภชนาการ, modal, favorites และ copy
-  js/sync.js                    # account/cloud เดิม (ไม่แก้)
-  js/supabase-config.js         # ตัวอย่างตั้งค่า Supabase; ระวังเมื่อใช้ ZIP Full
-  supabase/001_init.sql         # เฉพาะกรณีติดตั้ง Supabase ใหม่
-  supabase/VERIFY_SETUP.md
-  tests/test-*.cjs
-  README.md
-  CHANGELOG.md
+RHYTHM_v1.4.0/
+├── index.html                   # favicon, styles, scripts
+├── assets/
+│   ├── rhythm-logo.png          # original 512×512 brand icon
+│   ├── favicon.ico
+│   ├── favicon.png
+│   ├── favicon-32.png
+│   └── apple-touch-icon.png
+├── css/styles.css
+├── js/
+│   ├── app.js                   # UI / forms / navigation
+│   ├── recovery.js              # descriptive recovery analysis (new)
+│   ├── data.js                  # demo/empty state
+│   ├── core.js                  # dates, calculations, import validation
+│   ├── foods-expanded.js
+│   ├── sync.js                  # Supabase CAS/Conflict protection (unchanged)
+│   └── supabase-config.js       # your existing config (Full Source only)
+├── supabase/
+├── tests/
+├── README.md
+└── CHANGELOG.md
 ```
 
-## รันในเครื่อง / ทดสอบ
-
-ใช้ `index.html` เปิดใน Edge/Chrome หรือวางใน XAMPP `htdocs` แล้วเปิดด้วย Apache; ฟีเจอร์ Local ทำงานได้โดยไม่ต้องตั้ง Cloud (การทดสอบ Auth จริงต้องเชื่อม Supabase และเครือข่าย)
+## วิธีทดสอบ (ติดตั้ง Node.js สำหรับการรันทดสอบเท่านั้น)
 
 ```bash
 node tests/test-core.cjs
-node tests/test-app.cjs
 node tests/test-v12.cjs
 node tests/test-v13.cjs
+node tests/test-v14.cjs
+node tests/test-app.cjs
 node tests/test-sync.cjs
 ```
 
-### ข้อจำกัดที่ยังมี
+การรันทดสอบได้ `23 + 32 + 44 + 39 + 29 + 70 = 237` checks (แยกเป็น assertions/reported checks ของแต่ละชุด; Cloud ทำเป็น Mock). ทดสอบหน้าจอผ่าน Playwright Chromium โดยโหลด HTML/JS/CSS โดยตรง เนื่องจากสภาพแวดล้อมจำกัดการเปิด localhost ของ Chromium; ได้ตรวจ Desktop/Mobile และฟอร์ม Recovery จริง แต่ยังไม่ได้ทดสอบกับ Project Supabase/Vercel ของคุณ จึงต้องทดสอบอัปเดตข้ามอุปกรณ์และ RLS บน Supabase จริงหลัง Deploy
 
-- ไม่ใช่แอปตรวจวัดสุขภาพ และไม่มีฐานข้อมูลอาหารจากแหล่งอ้างอิงที่เชื่อมต่อสด/สแกนบาร์โค้ด
-- ไม่มีการเชื่อม Wearable แบบอัตโนมัติ, ไม่ประมาณโภชนาการจากรูปถ่าย
-- การบันทึกอาหารแต่ละรายการเป็น Snapshot แยกจากคลัง: หากแก้ข้อมูลอาหารคลังภายหลัง จะไม่เปลี่ยนประวัติเก่า
-- Cloud Sync ยังคงใช้การตรวจ Revision และให้ผู้ใช้เลือก Conflict **ทั้งชุด** ตาม V1.1 (ยังไม่มีการ merge ระดับรายการโดยอัตโนมัติ)
-- อาหารที่บันทึกข้ามวันด้วยการคัดลอกจะเป็นคนละรายการ สามารถแก้ปริมาณ/ลบได้อิสระ
+## ความปลอดภัย / ข้อมูลส่วนบุคคล
 
-## ผลการตรวจงานก่อนส่งมอบ
-
-ชุดทดสอบ Node ผ่าน 5 ชุด: `test-core` (23), `test-app` (29), `test-v12` (32), `test-v13` (44), `test-sync` (70), รวม **198 assertions/กรณีที่นับในชุดทดสอบ**; ตรวจ HTML UI บน Chromium ทั้ง Desktop/Mobile ด้วยการฉีดซอร์สเข้า browser (เนื่องจาก URL localhost ถูกบล็อกในสภาพแวดล้อมทดสอบ), ทดสอบการค้นหา เพิ่มอาหารแบบกรัม, Preview, Favorite, Filter และตรวจว่าไม่ล้นแนวนอน การทดสอบ Cloud จริงกับ Supabase Project ของเจ้าของเว็บ **ยังไม่ได้ดำเนินการ**
+- `LocalStorage` **ไม่ถูกเข้ารหัส** เหมาะกับอุปกรณ์ส่วนตัว และไฟล์ JSON backup มีข้อมูลส่วนตัวจริง; อย่าแชร์โดยไม่ลบข้อมูลออกก่อน
+- Cloud Sync ใช้ CAS revision เพื่อลดความเสี่ยงการเขียนทับจากสองเครื่อง, แต่กรณี Conflict ยังต้องเลือกว่าจะเก็บฝั่งใดทั้งชุด; สำรองทั้งคู่ก่อนทุกครั้ง
+- ข้อมูล Check-in ที่บันทึกในอุปกรณ์จะรวมในไฟล์ JSON และถูกซิงค์ผ่านกลไกเดิมเมื่อเข้าสู่บัญชี Cloud
+- Favicon เป็นไฟล์ Static ไม่มีข้อมูลผู้ใช้
+- งานนี้ไม่เปลี่ยนรหัสผ่าน Supabase, RLS หรือตารางฐานข้อมูล
