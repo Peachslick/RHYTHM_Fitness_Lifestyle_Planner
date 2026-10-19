@@ -112,10 +112,10 @@
       if(todayPlan.type==='rest'||todayPlan.type==='recovery') continue;
       sessions.push({id:`demo-session-${i}`,date,day:d,type:todayPlan.type,title:todayPlan.title,duration:todayPlan.type==='run'?38:65,rpe:7,notes:'ตัวอย่างการบันทึก',exercises:todayPlan.exercises.map(ex=>({...ex}))});
     }
-    return {version:1,demo:true,profile:{name:'Alex',age:25,height:175,weight:68,sex:'male',activity:'moderate',goal:'muscle',targetWeight:72,calorieAdjust:200,proteinPerKg:1.6,fatPercent:25,sleepGoal:8},plan:p,meals,sleeps,sessions,weights,routines:routines(),customFoods:[],settings:{theme:'light'}};
+    return {version:1,demo:true,profile:{name:'Alex',age:25,height:175,weight:68,sex:'male',activity:'moderate',goal:'muscle',targetWeight:72,calorieAdjust:200,proteinPerKg:1.6,fatPercent:25,sleepGoal:8},plan:p,meals,sleeps,sessions,weights,routines:routines(),customFoods:[],settings:{theme:'light',font:'ibm'}};
   }
   function blankState() {
-    return {version:1,demo:false,profile:freshProfile(),plan:plan(),meals:[],sleeps:[],sessions:[],weights:[],routines:routines(),customFoods:[],settings:{theme:'light'}};
+    return {version:1,demo:false,profile:freshProfile(),plan:plan(),meals:[],sleeps:[],sessions:[],weights:[],routines:routines(),customFoods:[],settings:{theme:'light',font:'ibm'}};
   }
   window.FitData = {FOOD_LIBRARY,EXERCISES,DAYS,DAYS_FULL,TYPES,GOALS,ACTIVITY,CATEGORIES,MEALTYPES,freshProfile,plan,routines,demoState,blankState};
 })();

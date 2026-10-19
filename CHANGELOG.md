@@ -1,5 +1,26 @@
 # RHYTHM — Changelog
 
+## V1.2.0 — Workout Intelligence & Adaptive Planner (19 October 2026)
+
+### Added
+- Per-set workout log (actual reps, kg, warmup flag) with add/remove set controls and edit-in-place; no synthetic backfilling from legacy templates.
+- Training volume, weekly comparison, exercise-specific PR, estimated 1RM, session volume chart, and conservative progressive-overload hints.
+- Per-date Adaptive Planner allowing safe two-date workout swaps with original weekly templates and logged sessions preserved.
+- Deep / Light / REM sleep stage mode with percentage inputs (watch readings) or minute inputs, totals validation and dual-unit display.
+- 16 Workday Journey style font choices and independently savable font preference applied app-wide.
+- `tests/test-v12.cjs` for sleep stages, schema compatibility, routine overrides, volume/PR math and font persistence.
+
+### Compatibility / security
+- Keeps schema version `1` so current JSON backups, Supabase RLS, revision, CAS sync and Guest LocalStorage continue to work.
+- No new Supabase SQL migration is required. Do not re-run `001_init.sql` if V1.1 is already configured.
+- Font choice stored in the existing `settings.font`; new schedule overrides are optional `scheduleOverrides` objects. Previous data remains valid.
+- Google Fonts require network; system/local font fallbacks are used when unavailable. No font files shipped.
+- All fitness metrics are estimates for tracking and reflection, not clinical guidance.
+
+### Validation
+- Existing core, UI CRUD, Cloud Mock suites and new V1.2 calculator/schema tests pass; Chromium DOM interaction tests performed via injected local app scripts because the sandbox blocks direct HTTP/file navigation.
+- **Not yet verified with a live user-owned Supabase project**, cross-device or actual Vercel deployment.
+
 ## V1.1.0 — Account & Cloud Sync (19 October 2026)
 
 ### Added

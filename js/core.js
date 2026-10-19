@@ -1,4 +1,4 @@
-/* RHYTHM v1.0.0 — pure calculations, dates, local persistence and icons */
+/* RHYTHM v1.2.0 — pure calculations, dates, local persistence and icons */
 (function(){
   'use strict';
   const KEY='rhythm_fitness_v1';
@@ -18,6 +18,24 @@
   function shortDate(date){if(!isDate(date))return '—';const d=new Date(`${date}T12:00:00`);return `${d.getDate()}/${d.getMonth()+1}`;}
   function timeMin(str){if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(String(str)))return null;const [h,m]=str.split(':').map(Number);return h*60+m;}
   function sleepDuration(s){const bed=timeMin(s.bed),wake=timeMin(s.wake);if(bed===null||wake===null||bed===wake)return null;const inBed=(wake-bed+1440)%1440;const awake=num(s.awake,0);return awake>=0&&awake<inBed?inBed-awake:null;}
+  function sleepStageMinutes(x,key){const value=x?.[key],dur=sleepDuration(x);return dur===null||value===null||value===''||value===undefined?null:(x.stageUnit==='percent'?dur*num(value)/100:num(value));}
+  function sleepStagePercent(x,key){const value=sleepStageMinutes(x,key),duration=sleepDuration(x);return value!==null&&duration?value/duration*100:null;}
+  function validSleepStages(x){const duration=sleepDuration(x),unit=x.stageUnit||'minutes';if(duration===null||!['minutes','percent'].includes(unit))return false;const vals=['deep','light','rem'].map(k=>x[k]).filter(v=>v!==null&&v!==''&&v!==undefined);if(vals.some(v=>!Number.isFinite(Number(v))||Number(v)<0))return false;return vals.reduce((a,v)=>a+Number(v),0)<=(unit==='percent'?100.001:duration+.001);}
+  function planOn(state,date){return state.scheduleOverrides?.[date]||state.plan[weekday(date)];}
+  function trainingStats(sessions){
+    const byExercise={},byDate={};let volume=0,sets=0;
+    for(const session of sessions||[])for(const ex of session.exercises||[]){
+      // Old records have only target reps / aggregate count. Never treat them as performed sets.
+      if(!Array.isArray(ex.setLog))continue;
+      for(const row of ex.setLog){const load=num(row.load,-1),reps=num(row.reps,-1);if(row.warmup||!Number.isInteger(reps)||reps<1||reps>100||load<0||load>1000)continue;
+        const key=String(ex.name||'').trim().toLocaleLowerCase();if(!key)continue;
+        const item=byExercise[key]||(byExercise[key]={name:ex.name,sets:0,volume:0,maxLoad:0,maxEst1RM:0,history:[]});
+        item.sets++;item.volume+=load*reps;item.maxLoad=Math.max(item.maxLoad,load);if(reps<=10)item.maxEst1RM=Math.max(item.maxEst1RM,load*(1+reps/30));item.history.push({date:session.date,load,reps,volume:load*reps});
+        byDate[session.date]=(byDate[session.date]||0)+load*reps;volume+=load*reps;sets++;
+      }
+    }
+    return {volume,sets,byExercise,byDate};
+  }
   function ageValid(p){return num(p?.age)>=18&&num(p?.age)<=100;}
   function metrics(state){
     const p=state.profile||{};
@@ -42,7 +60,7 @@
   function weightSeries(state,days=30){return state.weights.filter(x=>isDate(x.date)&&x.date>=shift(today(),-(days-1))&&x.date<=today()&&num(x.weight)>0).sort((a,b)=>a.date.localeCompare(b.date));}
   function recentSleep(state,days=7){return state.sleeps.filter(x=>isDate(x.date)&&x.date>=shift(today(),-(days-1))&&x.date<=today()&&sleepDuration(x)!==null).sort((a,b)=>a.date.localeCompare(b.date));}
   function sleepStats(state,days=7){const entries=recentSleep(state,days),avg=entries.length?entries.reduce((s,e)=>s+sleepDuration(e),0)/entries.length:null;return {entries,avg};}
-  function workoutStats(state,days=7){const dates=Array.from({length:days},(_,i)=>shift(today(),-(days-1-i)));const planned=dates.filter(d=>!['rest','recovery'].includes(state.plan[weekday(d)]?.type));const completed=planned.filter(d=>state.sessions.some(s=>s.date===d));return {planned:planned.length,completed:completed.length,rate:planned.length?completed.length/planned.length:null};}
+  function workoutStats(state,days=7){const dates=Array.from({length:days},(_,i)=>shift(today(),-(days-1-i)));const planned=dates.filter(d=>!['rest','recovery'].includes(planOn(state,d)?.type));const completed=planned.filter(d=>state.sessions.some(s=>s.date===d));return {planned:planned.length,completed:completed.length,rate:planned.length?completed.length/planned.length:null};}
   const avg=(arr)=>arr.length?arr.reduce((a,b)=>a+b,0)/arr.length:null;
   function calorieAverage(state,days=7){const dates=Array.from({length:days},(_,i)=>shift(today(),-i));const logged=dates.filter(d=>state.meals.some(m=>m.date===d));return {days:logged.length,value:avg(logged.map(d=>foodTotals(mealsFor(state,d)).kcal))};}
   function sorted(arr,field='date'){return [...arr].sort((a,b)=>String(b[field]||'').localeCompare(String(a[field]||'')));}
@@ -53,14 +71,18 @@
     const nonNeg=v=>Number.isFinite(Number(v))&&Number(v)>=0;
     for(const key of ['plan','meals','sleeps','sessions','weights','routines','customFoods'])if(!Array.isArray(data[key])||data[key].length>20000)return false;
     if(!record(data.profile)||!record(data.settings)||!['light','dark'].includes(data.settings.theme))return false;
+    if(data.settings.font!==undefined&&!['sarabun','bai','noto','ibm','leelawadee','tahoma','segoe','prompt','kanit','mitr','anakotmai','athiti','trirong','itim','pattaya','chonburi'].includes(data.settings.font))return false;
     if(!shortText(data.profile.name,80)||!['male','female'].includes(data.profile.sex)||!FitData.ACTIVITY[data.profile.activity]||!FitData.GOALS[data.profile.goal])return false;
     if(![data.profile.age,data.profile.height,data.profile.weight,data.profile.targetWeight].every(v=>v===''||Number.isFinite(Number(v))))return false;
     if(!Number.isFinite(Number(data.profile.calorieAdjust))||!Number.isFinite(Number(data.profile.proteinPerKg))||!Number.isFinite(Number(data.profile.fatPercent))||!Number.isFinite(Number(data.profile.sleepGoal)))return false;
     if(data.plan.length!==7||data.plan.some((p,i)=>!record(p)||p.day!==i||!Object.hasOwn(FitData.TYPES,p.type)||!shortText(p.title,120)||!Array.isArray(p.exercises)||p.exercises.length>150||p.exercises.some(ex=>!record(ex)||!shortText(ex.id,80)||!shortText(ex.name,120)||!shortText(ex.reps,60)||!nonNeg(ex.sets)||!nonNeg(ex.load)||!nonNeg(ex.rest))))return false;
     const dated=x=>record(x)&&isDate(x.date)&&shortText(x.id,100);
     if(!data.meals.every(x=>dated(x)&&shortText(x.name,140)&&shortText(x.unit,120)&&Object.hasOwn(FitData.MEALTYPES,x.meal)&&['servings','kcal','protein','carbs','fat'].every(k=>nonNeg(x[k]))))return false;
-    if(!data.sleeps.every(x=>dated(x)&&shortText(x.bed,5)&&shortText(x.wake,5)&&nonNeg(x.awake)&&['deep','light','rem'].every(k=>x[k]===null||x[k]===''||nonNeg(x[k]))&&shortText(x.note||'',1000)))return false;
+    if(!data.sleeps.every(x=>dated(x)&&shortText(x.bed,5)&&shortText(x.wake,5)&&nonNeg(x.awake)&&validSleepStages(x)&&shortText(x.note||'',1000)))return false;
     if(!data.sessions.every(x=>dated(x)&&shortText(x.title,120)&&nonNeg(x.duration)&&Array.isArray(x.exercises)&&x.exercises.length<=150&&x.exercises.every(ex=>record(ex)&&shortText(ex.name,120)&&shortText(ex.reps,60)&&nonNeg(ex.sets)&&nonNeg(ex.load))))return false;
+    if(data.scheduleOverrides!==undefined){if(!record(data.scheduleOverrides)||Object.keys(data.scheduleOverrides).length>730)return false;
+      for(const [date,plan] of Object.entries(data.scheduleOverrides))if(!isDate(date)||!record(plan)||!shortText(plan.title,120)||!Object.hasOwn(FitData.TYPES,plan.type)||!Array.isArray(plan.exercises)||plan.exercises.length>150||plan.exercises.some(ex=>!record(ex)||!shortText(ex.id,80)||!shortText(ex.name,120)||!shortText(ex.reps,60)||!nonNeg(ex.sets)||!nonNeg(ex.load)||!nonNeg(ex.rest)))return false;}
+    for(const session of data.sessions)for(const ex of session.exercises){if(ex.setLog!==undefined&&(!Array.isArray(ex.setLog)||ex.setLog.length>30||ex.setLog.some(r=>!record(r)||!Number.isInteger(Number(r.reps))||num(r.reps)<1||num(r.reps)>100||!nonNeg(r.load)||num(r.load)>1000||typeof r.warmup!=='boolean')))return false;}
     if(!data.weights.every(x=>dated(x)&&nonNeg(x.weight)&&(x.bodyFat===null||x.bodyFat===''||nonNeg(x.bodyFat))))return false;
     if(!data.routines.every(x=>record(x)&&shortText(x.id,100)&&shortText(x.title,120)&&shortText(x.start,5)&&shortText(x.end,5)&&timeMin(x.start)!==null&&timeMin(x.end)!==null&&Object.hasOwn(FitData.CATEGORIES,x.category)&&Array.isArray(x.days)&&x.days.length<=7&&x.days.every(d=>Number.isInteger(d)&&d>=0&&d<=6)))return false;
     if(!data.customFoods.every(x=>record(x)&&shortText(x.id,100)&&shortText(x.name,120)&&shortText(x.unit,100)&&shortText(x.group,60)&&['kcal','protein','carbs','fat'].every(k=>nonNeg(x[k]))))return false;
@@ -121,5 +143,5 @@
     const dots=clean.map((p,i)=>`<circle cx="${x(i)}" cy="${y(p.value)}" r="4.4" fill="var(--accent-deep)" stroke="var(--surface)" stroke-width="2"><title>${esc(pretty(p.date))} • ${nfmt(p.value,1)}</title></circle>`).join('');
     return `<svg role="img" aria-label="${esc(opts.label||'กราฟแนวโน้ม')}" class="line-chart" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet"><defs><linearGradient id="${guid}" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="var(--accent-deep)" stop-opacity=".21"/><stop offset="100%" stop-color="var(--accent-deep)" stop-opacity="0"/></linearGradient></defs>${grid}${target}<path d="${fill}" fill="url(#${guid})"/><path d="${path}" stroke="var(--accent-deep)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>${dots}${labels}</svg>`;
   }
-  window.FitCore={KEY,$,$$,esc,num,nfmt,clamp,uid,today,isDate,shift,weekday,weekDates,pretty,shortDate,timeMin,sleepDuration,ageValid,metrics,mealsFor,foodTotals,weightSeries,recentSleep,sleepStats,workoutStats,calorieAverage,sorted,validateImported,load,save,exportData,icon,lineChart};
+  window.FitCore={KEY,$,$$,esc,num,nfmt,clamp,uid,today,isDate,shift,weekday,weekDates,pretty,shortDate,timeMin,sleepDuration,sleepStageMinutes,sleepStagePercent,validSleepStages,planOn,trainingStats,ageValid,metrics,mealsFor,foodTotals,weightSeries,recentSleep,sleepStats,workoutStats,calorieAverage,sorted,validateImported,load,save,exportData,icon,lineChart};
 })();

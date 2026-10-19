@@ -1,10 +1,42 @@
 # RHYTHM — Fitness & Lifestyle Planner
 
-**Version:** `1.1.0` — Account & Cloud Sync (19 ตุลาคม 2026)
+**Version:** `1.2.0` — Workout Intelligence, Adaptive Planner, Sleep % & Fonts (19 ตุลาคม 2026)
 
 **Tech stack:** HTML5 + CSS3 + Vanilla JavaScript + Supabase Auth/Postgres (optional) + LocalStorage. ไม่ต้องมี Node.js/PHP/Express/การ Build เพื่อรัน Production บน Vercel. Supabase JS v2 โหลดผ่าน jsDelivr CDN เฉพาะตอนหน้าเว็บเริ่มทำงาน (ต้องเชื่อมอินเทอร์เน็ตเพื่อเปิดส่วน Cloud; หาก CDN โหลดไม่ได้ยังใช้โหมด Guest ได้).
 
 > ⚠️ **สำคัญ:** ไฟล์ที่ดาวน์โหลดเป็นโค้ดพร้อมเชื่อม Supabase แต่ **ยังไม่ได้เชื่อมฐานข้อมูลของคุณจริง** เพราะไม่มี Project URL/Publishable Key และยังไม่ได้รัน SQL ภายใต้โปรเจกต์ของคุณ กรุณาทำขั้นตอนด้านล่างก่อนเปิดฟังก์ชันบัญชี ไม่ต้องส่ง API key/รหัสผ่านให้ใครผ่านแชต.
+
+## อะไรใหม่ใน V1.2.0
+
+**สำคัญสำหรับผู้ใช้ V1.1.0:** V1.2.0 อัปเดตโค้ดหน้าเว็บอย่างเดียว ไม่ต้องแก้ตาราง ไม่ต้องรัน SQL ใหม่ และไม่เปลี่ยน LocalStorage key หรือรูปแบบ Cloud Document เวอร์ชัน 1. ควร Export JSON สำรองข้อมูลจริงก่อน Deploy เวอร์ชันใหม่ทุกครั้ง โดยเฉพาะในกรณีที่มี Pending/Conflict อย่าแก้โค้ด Supabase config จน Project URL / Publishable Key เดิมหาย.
+
+- **Workout Intelligence:** บันทึกแต่ละเซตจริงแยก Reps, kg และทำเครื่องหมาย Warm-up; เพิ่ม/ลบเซตในบันทึกการฝึก, แก้ข้อมูลเซตย้อนหลังได้; ดู Volume (kg × reps), เซตใน 7 วัน, PR น้ำหนักสูงสุด, e1RM โดยประมาณจาก Epley (เซต 1–10 reps) และ Volume รายท่า/วันในกราฟ. ข้อมูลบันทึก V1.1.0 ไม่มี Reps จริงแยกแต่ละเซต จึงเก็บไว้ดูประวัติได้แต่ **ไม่เดามาเป็น Volume หรือ PR**.
+- **Adaptive Planner:** ใช้ปุ่ม **สลับวันฝึก** ในหน้า Workout เลือกวันที่ต้นทางและปลายทางที่ไม่ใช่อดีตเพื่อสลับ Push/Pull/Legs/Run/Rest เฉพาะสองวันได้ โดยไม่เปลี่ยนเทมเพลตสัปดาห์ ไม่แก้บันทึกที่ทำแล้ว และสามารถคืนแผนตามเทมเพลตได้. ถ้าทั้งสองวันมีประวัติฝึก ระบบไม่ยอมสลับเพื่อป้องกันข้อมูลคลาดเคลื่อน. การสลับถูกเก็บเป็น `scheduleOverrides` ใน JSON เดิม.
+- **Sleep tracker:** เลือกหน่วยสำหรับ Deep / Light / REM เป็น **เปอร์เซ็นต์** (ค่าเริ่มต้นของรายการใหม่) หรือ **นาที**. ถ้ากรอกเป็นเปอร์เซ็นต์ ผลรวมสามระยะต้องไม่เกิน 100% และระบบจะแสดงนาทีโดยประมาณจากเวลาหลับจริง = เวลาบนเตียง − นาทีตื่น. ไม่บังคับให้กรอกครบ 100% เพราะอุปกรณ์บางรุ่นแสดงระยะการนอนไม่ครบ. การเปลี่ยนหน่วยจะล้างค่าระยะการนอนในฟอร์มเพื่อป้องกันการสับสน, ไม่ลบค่าที่บันทึกไว้จนกว่าจะกดบันทึก. ข้อมูลเก่าที่เป็นนาทียังคงแสดงได้.
+- **Font personalization:** หน้า **โปรไฟล์และตั้งค่า → ตั้งค่าแบบอักษร** เปลี่ยนฟอนต์ได้โดยไม่ต้องกรอกโปรไฟล์ให้ครบ รองรับรายชื่อ 16 แบบเหมือนใน Workday Journey: Sarabun, Bai Jamjuree, Noto Sans Thai, IBM Plex Sans Thai, Leelawadee UI, Tahoma, Segoe UI / System, Prompt, Kanit, Mitr, Anakotmai, Athiti, Trirong, Itim, Pattaya และ Chonburi. บันทึกเป็น `settings.font` ซิงค์ไปพร้อมข้อมูลบัญชี. ฟอนต์ Google โหลดผ่าน Google Fonts เมื่อมีเน็ต; Leelawadee UI และ Anakotmai จะใช้ฟอนต์ที่ติดตั้งในอุปกรณ์ หากไม่มีจะแสดงฟอนต์สำรอง. ไม่มีการแนบไฟล์ฟอนต์ลิขสิทธิ์.
+- **ข้อมูลเดิม / Cloud:** โค้ด `js/sync.js`, `supabase/001_init.sql` และ RLS ของ V1.1.0 ยังคงเดิม; การแก้ไขข้อมูลทุกหน้าผ่าน flow `sync.persist()` เดิม รวมถึง Prompt/FONT, วงรอบซิงค์, Revision, Pending และ Conflict.
+
+### ทดสอบก่อน Deploy (แนะนำ)
+
+1. ดาวน์โหลด JSON backup ของบัญชีปัจจุบันก่อนอัปเดต (หากใช้ Cloud ให้รอสถานะซิงค์สำเร็จ และตรวจว่าไม่มี Pending หรือ Conflict)
+2. ทดสอบ Font เปลี่ยนเป็น Prompt แล้วรีเฟรช / Login อีกอุปกรณ์เพื่อดูว่าสถานะ Cloud ถูกต้อง
+3. ทดสอบบันทึกวันฝึก เพิ่มเซต 40 kg × 10 reps → Volume 400 kg·reps (ไม่รวม Warm-up); ลองแก้เซตและตรวจ PR
+4. ทดลองสลับ Rest Day กับ Legs ในวันอนาคต ตรวจว่าเทมเพลตสัปดาห์ยังคงเดิม และคืนตารางได้
+5. ทดลองกรอก Sleep Deep 22%, Light 55%, REM 23% → ระบบแสดงเปอร์เซ็นต์พร้อมนาทีโดยประมาณ; ลองกรอกเกิน 100% ต้องบันทึกไม่ได้
+6. ใช้บัญชี Supabase สองบัญชีทดสอบแยกข้อมูลตามคำแนะนำเดิมในส่วน Setup ด้านล่าง
+
+### คำสั่งทดสอบตรรกะ (Node.js)
+
+```bash
+node tests/test-core.cjs
+node tests/test-app.cjs
+node tests/test-v12.cjs
+node tests/test-sync.cjs
+```
+
+หากใช้ Chromium Browser ในระบบที่บล็อกการเปิด `localhost` หรือ `file://` อาจต้องทดสอบด้วยเบราว์เซอร์จริงบน Vercel เพิ่ม. ชุดทดสอบอัตโนมัติเหล่านี้เป็นการทดสอบโค้ด/Mock ยังไม่ยืนยันการเชื่อม Supabase ของคุณจริง.
+
+---
 
 ## 1. สิ่งที่มีใน V1.1.0
 
@@ -70,7 +102,7 @@ window.RHYTHM_SUPABASE_CONFIG = Object.freeze({
 
 ## 3. Deploy ขึ้น GitHub + Vercel
 
-1. แตก ZIP, เปิดโฟลเดอร์ `RHYTHM_v1.1.0` แล้วอัปโหลด **ไฟล์ข้างใน** โฟลเดอร์ขึ้น GitHub Repository (ให้ `index.html` อยู่ Repo Root)
+1. แตก ZIP, เปิดโฟลเดอร์ `RHYTHM_v1.2.0` แล้วอัปโหลด **ไฟล์ข้างใน** โฟลเดอร์ขึ้น GitHub Repository (ให้ `index.html` อยู่ Repo Root)
 2. แก้ `js/supabase-config.js` เป็น public URL/publishable key จริง (อย่าใช้ Secret Key)
 3. Vercel → Add New → Project → Import Git Repository
 4. Framework Preset = `Other`, Root Directory = `./`, Build Command = ว่าง, Output Directory = `./` (เลือก static root/default)
