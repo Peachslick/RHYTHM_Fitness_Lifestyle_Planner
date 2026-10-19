@@ -1,18 +1,81 @@
-/* RHYTHM v1.0.0 — Thai-first, zero-dependency, local-first app */
+/* RHYTHM v1.1.0 — Thai-first, optional Supabase account and cloud sync */
 (function(){
  'use strict';
  const C=window.FitCore,D=window.FitData;
  let state=C.load();
+ const sync=window.FitSync.create({
+   getLocal:()=>C.load(),blank:()=>D.blankState(),validate:C.validateImported,
+   onData:data=>{state=data||D.blankState();render(false);},
+   onStatus:manager=>{
+     if(cloudBooting)return;
+     const label=document.getElementById('sync-state-label');
+     if(label)label.textContent=manager.describe();
+     const current=manager.mode;
+     if(current!==lastSyncMode){lastSyncMode=current;render(true);}
+   },
+   onRecovery:()=>{ui.authMode='new-password';showAuthModal();}
+ });
+ let lastSyncMode='guest';
+ let cloudBooting=!!(window.RHYTHM_SUPABASE_CONFIG?.url && window.RHYTHM_SUPABASE_CONFIG?.publishableKey);
  let route=location.hash.replace('#','')||'dashboard';
  const pages={dashboard:{label:'ภาพรวม',icon:'layout',caption:'มองภาพรวมของการฝึก อาหาร และการพักฟื้น'},workouts:{label:'แผนออกกำลังกาย',icon:'dumbbell',caption:'จัดตาราง Push / Pull / Legs / Run ได้ตามชีวิตจริง'},nutrition:{label:'โภชนาการ',icon:'utensils',caption:'บันทึกอาหารและติดตามพลังงานอย่างยืดหยุ่น'},sleep:{label:'การนอน',icon:'moon',caption:'ติดตามชั่วโมงนอนและระยะการนอนจากข้อมูลที่บันทึก'},routine:{label:'ตารางชีวิต',icon:'clock',caption:'ออกแบบวันของคุณ ตั้งแต่ตื่นจนเข้านอน'},progress:{label:'แนวโน้มและเป้าหมาย',icon:'chart',caption:'เรียนรู้จากแนวโน้ม ไม่ตัดสินด้วยข้อมูลวันเดียว'},profile:{label:'โปรไฟล์และตั้งค่า',icon:'user',caption:'ปรับค่าตั้งต้น เป้าหมาย และการจัดการข้อมูล'}};
- const ui={workoutDay:C.weekday(C.today()),workoutDate:C.today(),foodDate:C.today(),sleepDate:C.today(),routineDay:C.weekday(C.today()),weightPeriod:30,search:'',foodCategory:'ทั้งหมด',mobileOpen:false};
+ const ui={authMode:'login',workoutDay:C.weekday(C.today()),workoutDate:C.today(),foodDate:C.today(),sleepDate:C.today(),routineDay:C.weekday(C.today()),weightPeriod:30,search:'',foodCategory:'ทั้งหมด',mobileOpen:false};
  const e=C.esc,ic=C.icon,n=C.nfmt,num=C.num,fmt=C.pretty;
  const option=(value,label,selected)=>`<option value="${e(value)}" ${String(value)===String(selected)?'selected':''}>${e(label)}</option>`;
  const val=(obj,key,defaultVal='')=>obj?.[key]===null||obj?.[key]===undefined?defaultVal:obj[key];
  const empty=(icon,title,desc,button='')=>`<div class="empty-state">${ic(icon,30)}<h3>${title}</h3><p>${desc}</p>${button}</div>`;
- function update(){if(!C.save(state))toast('ไม่สามารถบันทึกข้อมูลได้: พื้นที่เก็บข้อมูลอาจเต็ม','error');render(true);}
+ function update(){
+   if(!sync.persist(state))toast('ยังไม่สามารถเก็บข้อมูลที่เปลี่ยนได้ กรุณาสำรอง JSON ก่อนรีเฟรช','error');
+   render(true);
+ }
+ function cloudBlocker(){
+   if(sync.mode==='loading')return `<div class="panel sync-blocker"><div class="sync-emblem">${ic('cloud',30)}</div><h2>กำลังตรวจสอบข้อมูลบัญชี</h2><p>${e(sync.errorMessage||'กำลังเชื่อมต่อ Cloud โดยยังไม่แตะต้องข้อมูลเดิมในเครื่อง')}</p>${sync.status==='error'?`<button class="button button-primary" data-action="auth-sync">ลองเชื่อมต่ออีกครั้ง</button>`:sync.status==='corrupt-draft'?`<div class="sync-block-actions"><button class="button button-outline" data-action="auth-backup-raw">ดาวน์โหลด Draft ที่อ่านไม่ได้</button><button class="button button-plain danger" data-action="auth-clear-raw">ลบ Draft เสีย (หลังสำรอง)</button></div>`:''}</div>`;
+   if(sync.mode==='setup')return `<div class="panel sync-blocker"><div class="sync-emblem">${ic('cloud',30)}</div><h2>เริ่มต้น Cloud ครั้งแรก</h2><p>ยังไม่มีข้อมูลสำหรับบัญชีนี้ใน Supabase พบข้อมูลจริงในเครื่องนี้ คุณเลือกย้ายข้อมูลเดิมหรือเริ่มบัญชีใหม่ได้ โดยจะไม่อัปโหลดข้อมูลในเครื่องโดยไม่ถามก่อน</p>${sync.errorMessage?`<p class="sync-error">${e(sync.errorMessage)}</p>`:''}<div class="sync-block-actions"><button class="button button-primary" data-action="auth-initial-local">ย้ายข้อมูลจากเครื่องนี้ขึ้น Cloud</button><button class="button button-outline" data-action="auth-initial-blank">เริ่มบัญชีใหม่บน Cloud</button><button class="button button-plain" data-action="auth-backup-guest">สำรองข้อมูลในเครื่องก่อน</button></div></div>`;
+   if(sync.mode==='conflict')return `<div class="panel sync-blocker"><div class="sync-emblem sync-emblem-warn">${ic('info',30)}</div><h2>พบข้อมูล 2 เวอร์ชันที่ไม่ตรงกัน</h2><p>มีข้อมูลจากอุปกรณ์อื่นถูกบันทึกหลังจากที่เครื่องนี้เริ่มแก้ไข เพื่อป้องกันข้อมูลหาย ระบบหยุดซิงค์ไว้จนกว่าคุณจะเลือก</p>${sync.errorMessage?`<p class="sync-error">${e(sync.errorMessage)}</p>`:''}<div class="sync-compare"><div><strong>ข้อมูลบนเครื่องนี้</strong><small>แก้ไขเมื่อ ${e(sync.conflict?.draft?.changedAt?new Date(sync.conflict.draft.changedAt).toLocaleString('th-TH'):'ไม่ทราบ')}</small><button class="button button-outline" data-action="auth-backup-draft">ดาวน์โหลดสำรองของเครื่องนี้</button></div><div><strong>ข้อมูลบน Cloud</strong><small>${e(sync.conflict?.remote?.updated_at?new Date(sync.conflict.remote.updated_at).toLocaleString('th-TH'):'ยังไม่มีข้อมูล')}</small><button class="button button-outline" data-action="auth-backup-remote" ${sync.conflict?.remote?'':'disabled'}>ดาวน์โหลดสำรอง Cloud</button></div></div><div class="sync-block-actions"><button class="button button-primary" data-action="auth-resolve-local">ใช้ข้อมูลเครื่องนี้แทน Cloud</button><button class="button button-outline" data-action="auth-resolve-remote" ${sync.conflict?.remote?'':'disabled'}>ใช้ข้อมูล Cloud แทนเครื่องนี้</button></div><p class="source-hint">ไม่มีการรวมข้อมูลอัตโนมัติ กรุณาดาวน์โหลดสำรองก่อนเลือก เพราะทั้งสองทางเลือกเป็นการแทนที่ข้อมูลทั้งชุด</p></div>`;
+   return '';
+ }
+ function cloudStrip(){
+   const txt=sync.describe();
+   return `<div class="sync-strip ${sync.isCloud?'sync-strip-cloud':'sync-strip-local'}" role="status"><div class="sync-strip-left">${ic(sync.isCloud?'cloud':'user',17)}<span id="sync-state-label">${e(txt)}</span>${sync.isCloud?`<small class="sync-email">${e(sync.email)}</small>`:''}</div><div class="sync-strip-actions">${sync.isCloud?`<button class="button button-mini" data-action="auth-sync">${ic('check',15)} ซิงค์ตอนนี้</button><button class="button button-mini" data-action="auth-logout">ออกจากระบบ</button>`:`<button class="button button-mini" data-action="auth-open" ${!sync.enabled?'disabled':''}>${sync.enabled?'เข้าสู่ระบบ / สมัครสมาชิก':'ยังไม่ตั้งค่า Supabase'}</button>`}</div></div>`;
+ }
+ function showAuthModal(){
+   if(!sync.enabled){toast('กรุณาตั้งค่า js/supabase-config.js และสร้างตารางด้วย SQL ก่อน','error');return;}
+   const mode=ui.authMode;
+   if(mode==='new-password'){
+     showModal('ตั้งรหัสผ่านใหม่',`<form id="auth-password-form"><label class="field"><span>รหัสผ่านใหม่ (อย่างน้อย 8 ตัวอักษร)</span><input name="password" type="password" required minlength="8" autocomplete="new-password" /></label>${modalButtons('อัปเดตรหัสผ่าน')}</form>`,'เปิดจากลิงก์กู้รหัสผ่านในอีเมล');return;
+   }
+   const isSignup=mode==='signup',isReset=mode==='reset';
+   const title=isReset?'ลืมรหัสผ่าน':isSignup?'สมัครสมาชิก RHYTHM':'เข้าสู่ระบบ RHYTHM';
+   const passField=isReset?'':`<label class="field"><span>รหัสผ่าน</span><input name="password" type="password" ${isSignup?'minlength="8"':''} required autocomplete="${isSignup?'new-password':'current-password'}" /></label>`;
+   showModal(title,`<form id="auth-form"><div class="form-grid"><label class="field"><span>อีเมล</span><input name="email" type="email" maxlength="254" required autocomplete="email" placeholder="name@example.com" /></label>${passField}<button type="submit" class="button button-dark full">${isReset?'ส่งลิงก์รีเซ็ตรหัสผ่าน':isSignup?'สมัครสมาชิก':'เข้าสู่ระบบ'}</button></div></form><div class="auth-switch">${mode!=='login'?'<button data-action="auth-mode" data-mode="login">เข้าสู่ระบบ</button>':''}${mode!=='signup'?'<button data-action="auth-mode" data-mode="signup">สร้างบัญชี</button>':''}${mode!=='reset'?'<button data-action="auth-mode" data-mode="reset">ลืมรหัสผ่าน?</button>':''}</div><p class="source-hint">ข้อมูลบัญชีดูแลโดย Supabase Auth และข้อมูลสุขภาพแยกด้วย RLS · รหัสผ่านไม่ถูกบันทึกในโค้ดเว็บ</p>`,isSignup?'หากเปิดยืนยันอีเมล ต้องกดยืนยันก่อนเข้าสู่ระบบ':'ใช้บัญชีเดียวกันบนหลายอุปกรณ์ได้');
+ }
+ async function withCloudAction(task){try{await task();}catch(err){console.error('RHYTHM cloud:',err);toast(err.message||'ไม่สามารถดำเนินการกับ Cloud ได้','error');}}
+ async function handleAuthForm(form){
+   if(sync.authLoading)return;
+   sync.authLoading=true;
+   const btn=form.querySelector('button[type=submit]');if(btn)btn.disabled=true;
+   try{
+     const fd=new FormData(form),password=String(fd.get('password')||'');
+     if(form.id==='auth-password-form'){
+       if(password.length<8)throw new Error('รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร');
+       await sync.changePassword(password);closeModal();toast('เปลี่ยนรหัสผ่านแล้ว');return;
+     }
+     const email=String(fd.get('email')||'').trim();
+     if(ui.authMode==='reset'){
+       await sync.sendPasswordReset(email);closeModal();toast('หากอีเมลถูกต้อง ระบบจะส่งลิงก์รีเซ็ตให้');return;
+     }
+     if(ui.authMode==='signup'){
+       if(password.length<8)throw new Error('รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร');
+       const signedIn=await sync.signup(email,password);closeModal();toast(signedIn?'สมัครสมาชิกและเข้าสู่ระบบแล้ว':'กรุณาตรวจอีเมลเพื่อยืนยันบัญชีก่อนเข้าสู่ระบบ');return;
+     }
+     await sync.signin(email,password);closeModal();toast('เข้าสู่ระบบเรียบร้อย');
+   }catch(err){console.error('Auth:',err);toast(err.message||'เข้าสู่ระบบไม่สำเร็จ','error');}
+   finally{sync.authLoading=false;if(btn?.isConnected)btn.disabled=false;}
+ }
+
  function navigate(page){if(!pages[page])page='dashboard';route=page;ui.mobileOpen=false;if(location.hash!==`#${page}`)history.replaceState(null,'',`#${page}`);render(false);}
  function render(preserve=true){
+   if(cloudBooting){document.getElementById('app').innerHTML='<div class="boot"><div class="boot-mark">R.</div><p>กำลังตรวจสอบเซสชัน RHYTHM…</p></div>';return;}
    if(!pages[route])route='dashboard'; const y=preserve?window.scrollY:0;
    document.documentElement.dataset.theme=state.settings.theme==='dark'?'dark':'light';
    const m=C.metrics(state),pg=pages[route];
@@ -21,11 +84,11 @@
       <div class="brand"><div class="brand-mark">R<span>.</span></div><div class="brand-copy"><strong>RHYTHM</strong><small>Move • Fuel • Recover</small></div><button class="mob-close icon-button" data-action="mobile-close" aria-label="ปิดเมนู">${ic('close')}</button></div>
       <p class="side-label">YOUR SPACE</p>
       <nav class="side-nav" aria-label="เมนูหลัก">${Object.keys(pages).map((key,i)=>`<a href="#${key}" class="nav-item ${route===key?'active':''}" data-route="${key}" ${route===key?'aria-current="page"':''}>${ic(pages[key].icon,19)}<span>${pages[key].label}</span>${i===0?'<span class="nav-dot"></span>':''}</a>`).join('')}</nav>
-      <div class="sidebar-bottom"><div class="side-mantra"><span class="mantra-icon">${ic('bolt',19)}</span><strong>Small steps.<br>Real progress.</strong><p>ก้าวเล็ก ๆ ที่ทำได้ทุกวัน มีค่ากว่าความสมบูรณ์แบบ</p></div><div class="side-profile"><div class="avatar">${e((state.profile.name||'R').slice(0,1).toUpperCase())}</div><div><strong>${e(state.profile.name||'ผู้ใช้ RHYTHM')}</strong><small>${state.demo?'กำลังใช้ข้อมูลตัวอย่าง':'ข้อมูลเก็บในเครื่องนี้'}</small></div></div></div>
+      <div class="sidebar-bottom"><div class="side-mantra"><span class="mantra-icon">${ic('bolt',19)}</span><strong>Small steps.<br>Real progress.</strong><p>ก้าวเล็ก ๆ ที่ทำได้ทุกวัน มีค่ากว่าความสมบูรณ์แบบ</p></div><div class="side-profile"><div class="avatar">${e((sync.isBlocked?'R':(state.profile.name||'R')).slice(0,1).toUpperCase())}</div><div><strong>${e(sync.isBlocked?'กำลังตรวจสอบบัญชี':(state.profile.name||'ผู้ใช้ RHYTHM'))}</strong><small>${sync.isCloud?'บัญชี Cloud':'ข้อมูลเก็บในเครื่องนี้'}</small></div></div></div>
     </aside><div class="mobile-mask ${ui.mobileOpen?'visible':''}" data-action="mobile-close"></div>
     <div class="workspace"><header class="topbar"><div class="topbar-left"><button class="mob-menu icon-button" data-action="mobile-open" aria-label="เปิดเมนู">${ic('menu')}</button><div><div class="breadcrumb">RHYTHM <span>/</span> ${pg.label}</div><h1>${pg.label}</h1><p>${pg.caption}</p></div></div><div class="topbar-actions"><div class="today-chip">${ic('calendar',16)}<span>${e(fmt(C.today(),true))}</span></div><button class="icon-button theme-toggle" data-action="toggle-theme" aria-label="สลับธีม" title="สลับธีม">${ic(state.settings.theme==='dark'?'sun':'moon')}</button><button class="button button-primary top-quick" data-action="quick-add">${ic('plus',16)} <span>บันทึกน้ำหนัก</span></button></div></header>
-     <div class="content">${state.demo?`<div class="demo-banner">${ic('info',17)} <div><strong>โหมดทดลอง:</strong> ตัวเลขและบันทึกที่เห็นเป็นข้อมูลสมมติสำหรับทดสอบเว็บ</div><button class="button button-mini" data-action="start-real">เริ่มใช้ข้อมูลของฉัน ${ic('arrow',15)}</button></div>`:''}${renderPage(m)}</div>
-     <footer class="footer"><span>RHYTHM <b>v1.0.0</b> · Personal Wellness Workspace</span><span>ประมาณการเพื่อการวางแผน ไม่ใช่คำแนะนำทางการแพทย์</span></footer>
+     <div class="content">${cloudStrip()}${sync.isBlocked?cloudBlocker():state.demo?`<div class="demo-banner">${ic('info',17)} <div><strong>โหมดทดลอง:</strong> ตัวเลขและบันทึกที่เห็นเป็นข้อมูลสมมติสำหรับทดสอบเว็บ</div><button class="button button-mini" data-action="start-real">เริ่มใช้ข้อมูลของฉัน ${ic('arrow',15)}</button></div>`:''}${renderPage(m)}</div>
+     <footer class="footer"><span>RHYTHM <b>v1.1.0</b> · Personal Wellness Workspace</span><span>ประมาณการเพื่อการวางแผน ไม่ใช่คำแนะนำทางการแพทย์</span></footer>
     </div></div>`;
    window.scrollTo(0,y);
  }
@@ -118,10 +181,10 @@
  }
  function profile(m){
    const p=state.profile;
-   return `<div class="page-intro"><div><h2>Make it yours.</h2><p>ข้อมูลในฟอร์มนี้ใช้คำนวณเท่านั้น เก็บอยู่ในเบราว์เซอร์ของอุปกรณ์นี้</p></div></div>
+   return `<div class="page-intro"><div><h2>Make it yours.</h2><p>ข้อมูลในฟอร์มนี้ใช้คำนวณเท่านั้น ${sync.isCloud?'บัญชี Cloud จะซิงค์กับ Supabase':'โหมดในเครื่องจะยังไม่ซิงค์กับอุปกรณ์อื่น'}</p></div></div>
     <div class="profile-layout"><section class="panel profile-form-panel">${sectionHead('โปรไฟล์และเป้าหมาย','คำนวณสำหรับผู้ใหญ่ อายุ 18 ปีขึ้นไป')}<form id="profile-form"><div class="form-grid two"><label class="field"><span>ชื่อเล่น</span><input type="text" name="name" maxlength="60" value="${e(p.name)}" placeholder="เช่น ชื่อของคุณ" /></label><label class="field"><span>อายุ (ปี) <b>*</b></span><input type="number" required min="18" max="100" name="age" value="${e(p.age)}" placeholder="18–100" /></label><label class="field"><span>น้ำหนักตั้งต้น (kg) <b>*</b></span><input type="number" required min="25" max="400" step="0.1" name="weight" value="${e(p.weight)}" /></label><label class="field"><span>ส่วนสูง (cm) <b>*</b></span><input type="number" required min="100" max="250" step="0.1" name="height" value="${e(p.height)}" /></label><label class="field"><span>สูตรสมการพลังงานพื้นฐาน <b>*</b></span><select name="sex">${option('male','ค่าคงที่สูตรสำหรับผู้ชาย',p.sex)}${option('female','ค่าคงที่สูตรสำหรับผู้หญิง',p.sex)}</select><small>ใช้เลือกค่าคงที่ของสูตร ไม่ได้ระบุอัตลักษณ์ทางเพศ</small></label><label class="field"><span>ระดับกิจกรรม <b>*</b></span><select name="activity">${Object.entries(D.ACTIVITY).map(([key,v])=>option(key,`${v.label} (×${v.factor})`,p.activity)).join('')}</select></label><label class="field"><span>เป้าหมายหลัก</span><select name="goal" id="goal-select">${Object.entries(D.GOALS).map(([k,v])=>option(k,v.title,p.goal)).join('')}</select></label><label class="field"><span>น้ำหนักเป้าหมาย (kg) · ไม่บังคับ</span><input type="number" name="targetWeight" min="25" max="400" step="0.1" value="${e(p.targetWeight)}" placeholder="เช่น 72" /></label><label class="field"><span>ปรับ kcal จาก TDEE</span><input type="number" name="calorieAdjust" id="calorie-adjust" min="-750" max="750" step="25" value="${e(p.calorieAdjust)}" /><small>ค่าบวก = มากกว่าค่า TDEE / ค่าลบ = น้อยกว่า</small></label><label class="field"><span>โปรตีนที่ต้องการ (g/kg)</span><input type="number" name="proteinPerKg" min="0.8" max="2.5" step="0.1" value="${e(p.proteinPerKg)}" /></label><label class="field"><span>สัดส่วนพลังงานจากไขมัน (%)</span><input type="number" name="fatPercent" min="15" max="40" step="1" value="${e(p.fatPercent)}" /></label><label class="field"><span>เป้าหมายการนอน (ชั่วโมง)</span><input type="number" name="sleepGoal" min="6" max="12" step="0.5" value="${e(p.sleepGoal)}" /></label></div><p class="form-help">น้ำหนักในบันทึกล่าสุด (หากมี) จะใช้เป็นน้ำหนักปัจจุบันในการคำนวณ โดยค่าน้ำหนักตั้งต้นจะไม่เปลี่ยนย้อนหลัง</p><button class="button button-dark save-profile" type="submit">${ic('check',18)} บันทึกโปรไฟล์</button></form></section>
     <div class="side-stack"><section class="panel profile-result">${sectionHead('ผลคำนวณปัจจุบัน','เปลี่ยนตามโปรไฟล์และบันทึกน้ำหนักล่าสุด')}<div class="estimate-list">${[['BMI',m.ready?n(m.bmi,1):'—','kg/m²'],['BMR',m.ready?n(m.bmr):'—','kcal / วัน'],['TDEE',m.ready?n(m.tdee):'—','kcal / วัน'],['พลังงานเป้าหมาย',m.ready?n(m.target):'—','kcal / วัน'],['โปรตีน',m.ready?n(m.protein):'—','g / วัน'],['คาร์โบไฮเดรต',m.ready?n(m.carbs):'—','g / วัน'],['ไขมัน',m.ready?n(m.fat):'—','g / วัน']].map(([k,v,u])=>`<div><span>${k}</span><strong>${v}<small> ${u}</small></strong></div>`).join('')}</div><p class="source-hint">สูตร Mifflin–St Jeor และตัวคูณกิจกรรมเป็นค่าโดยประมาณ BMI เป็นเพียงเครื่องมือคัดกรอง และเป้าหมายสารอาหารปรับได้เอง</p></section>
-    <section class="panel backup-panel">${sectionHead('จัดการข้อมูล','ข้อมูลในเครื่อง ไม่ต้องสมัครสมาชิก')}<div class="backup-actions"><button class="button button-outline full" data-action="export">${ic('download',17)} สำรองข้อมูล (.json)</button><label class="button button-outline full file-label">${ic('upload',17)} นำเข้าข้อมูล (.json)<input id="import-file" type="file" accept="application/json,.json" /></label><button class="button button-plain full danger" data-action="reset">${ic('trash',17)} ล้างข้อมูลและเริ่มใหม่</button></div><p class="source-hint">สำรองไฟล์ไว้เป็นระยะ การล้างข้อมูลเบราว์เซอร์จะทำให้รายการที่ไม่ได้สำรองหายไป ไม่ส่งข้อมูลไปยังเซิร์ฟเวอร์</p></section></div></div>`;
+    <section class="panel backup-panel">${sectionHead('จัดการข้อมูล',sync.isCloud?'บัญชี Cloud และไฟล์สำรองของคุณ':'ข้อมูลในเครื่องและไฟล์สำรอง')}<div class="backup-actions"><button class="button button-outline full" data-action="export">${ic('download',17)} สำรองข้อมูล (.json)</button><label class="button button-outline full file-label">${ic('upload',17)} นำเข้าข้อมูล (.json)<input id="import-file" type="file" accept="application/json,.json" /></label><button class="button button-plain full danger" data-action="reset">${ic('trash',17)} ล้างข้อมูลและเริ่มใหม่</button></div><p class="source-hint">${sync.isCloud?'ข้อมูลที่ซิงค์แล้วอยู่ใน Supabase; ข้อมูลที่ยังไม่ซิงค์รอในเครื่องและอาจสูญหายเมื่อเคลียร์ข้อมูลเว็บไซต์ ควรสำรอง JSON':'ข้อมูลยังอยู่ในเครื่องนี้เท่านั้น หากล้างข้อมูลเบราว์เซอร์อาจสูญหาย'}</p>${sync.isCloud&&!C.load().demo?'<button class="button button-outline full" data-action="auth-migrate-local">ย้ายข้อมูล LocalStorage เดิมไป Cloud</button>':''}</section></div></div>`;
  }
  function showModal(title,body,sub=''){
    document.getElementById('modal-root').innerHTML=`<div class="modal-backdrop" id="modal-backdrop"><div class="modal" role="dialog" aria-modal="true" aria-label="${e(title)}"><div class="modal-head"><div><h2>${e(title)}</h2>${sub?`<p>${e(sub)}</p>`:''}</div><button class="icon-button" data-action="close-modal" aria-label="ปิดหน้าต่าง">${ic('close')}</button></div><div class="modal-body">${body}</div></div></div>`;
@@ -173,9 +236,42 @@
    const el=event.target.closest('[data-action]');if(!el)return;
    const a=el.dataset.action,id=el.dataset.id,date=el.dataset.date;
    if(a==='close-modal'){closeModal();return;}
+   if(a==='auth-open'){ui.authMode='login';showAuthModal();return;}
+   if(a==='auth-mode'){ui.authMode=el.dataset.mode;showAuthModal();return;}
+   if(a==='auth-sync'){void withCloudAction(async()=>{await sync.refresh();render(true);toast(sync.status==='error'||sync.pending?'ยังซิงค์ไม่สำเร็จ กรุณาตรวจสถานะด้านบน':'ตรวจสอบ Cloud แล้ว');});return;}
+   if(a==='auth-logout'){void withCloudAction(async()=>{await sync.signout();render(false);toast('ออกจากระบบแล้ว ข้อมูลบัญชีไม่แสดงในหน้านี้');});return;}
+   if(a==='auth-initial-local'){void withCloudAction(async()=>{await sync.chooseInitial(true);render(false);toast('นำเข้าข้อมูล LocalStorage ไป Cloud แล้ว');});return;}
+   if(a==='auth-initial-blank'){if(!confirmed('เริ่มบัญชี Cloud ด้วยข้อมูลเปล่า? ข้อมูลเดิมในเครื่องจะยังอยู่ และยังไม่ได้ถูกอัปโหลด'))return;void withCloudAction(async()=>{await sync.chooseInitial(false);render(false);toast('เริ่มบัญชี Cloud ใหม่แล้ว');});return;}
+   if(a==='auth-backup-raw'){
+     const raw=sync.rawDraft();if(raw!==null){const file=new Blob([raw],{type:'application/json'});const url=URL.createObjectURL(file);const anchor=document.createElement('a');anchor.href=url;anchor.download='RHYTHM-unreadable-pending-draft.json';document.body.appendChild(anchor);anchor.click();anchor.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}return;
+   }
+   if(a==='auth-clear-raw'){
+     if(!confirmed('ดาวน์โหลดไฟล์ดิบค้างส่งเก็บไว้แล้วหรือยัง? การลบอาจทำให้ข้อมูลที่ยังไม่ขึ้น Cloud หาย')||!confirmed('ยืนยันลบข้อมูล Draft เสีย แล้วลองโหลด Cloud ใหม่หรือไม่?'))return;
+     void withCloudAction(async()=>{await sync.clearCorruptDraft();render(false);toast('ตรวจสอบ Cloud หลังล้าง Draft เสียแล้ว');});return;
+   }
+   if(a==='auth-backup-guest'){C.exportData(C.load());return;}
+   if(a==='auth-backup-draft'){if(sync.conflict?.draft?.data)C.exportData(sync.conflict.draft.data);return;}
+   if(a==='auth-backup-remote'){if(sync.conflict?.remote?.data)C.exportData(sync.conflict.remote.data);return;}
+   if(a==='auth-resolve-remote'){
+     if(!confirmed('ยืนยันใช้ข้อมูล Cloud? การแก้ไขในเครื่องที่ยังไม่ซิงค์จะถูกแทนที่ (ระบบจะดาวน์โหลดสำรองข้อมูลเครื่องนี้ให้ก่อน)'))return;
+     if(sync.conflict?.draft?.data)C.exportData(sync.conflict.draft.data);
+     void withCloudAction(async()=>{await sync.resolveConflict('remote');render(false);toast('ใช้ข้อมูล Cloud แล้ว');});return;
+   }
+   if(a==='auth-resolve-local'){
+     if(!confirmed('ยืนยันใช้ข้อมูลเครื่องนี้แทน Cloud? ข้อมูล Cloud ปัจจุบันจะถูกแทนที่ (ระบบจะดาวน์โหลดสำรอง Cloud ก่อน)'))return;
+     if(sync.conflict?.remote?.data)C.exportData(sync.conflict.remote.data);
+     void withCloudAction(async()=>{await sync.resolveConflict('local');render(false);toast(sync.mode==='conflict'?'มีข้อมูลเปลี่ยนอีกครั้ง กรุณาเลือกรอบใหม่':'อัปโหลดข้อมูลเครื่องนี้แล้ว');});return;
+   }
+   if(a==='auth-migrate-local'){
+     if(!confirmed('ย้ายข้อมูลจาก LocalStorage เดิมแทนข้อมูล Cloud ทั้งหมดใช่หรือไม่? ระบบจะดาวน์โหลดสำรองข้อมูล Cloud ก่อน'))return;
+     C.exportData(state);
+     void withCloudAction(async()=>{const ok=await sync.useGuestAsCloud();render(false);toast(ok?'ย้ายข้อมูลเดิมไป Cloud แล้ว':'ยังย้ายไม่ได้ กรุณาตรวจสถานะซิงค์','error');});return;
+   }
+
    if(a==='mobile-open'){ui.mobileOpen=true;render(true);return;}
    if(a==='mobile-close'){ui.mobileOpen=false;render(true);return;}
    if(a==='toggle-theme'){state.settings.theme=state.settings.theme==='dark'?'light':'dark';update();return;}
+   if(sync.isBlocked){toast('กรุณาจัดการข้อมูล Cloud ก่อน','error');return;}
    if(a==='start-real'){if(confirmed('เริ่มใช้งานจริง? ข้อมูลตัวอย่างทั้งหมดจะถูกล้าง แล้วเปิดโปรไฟล์ให้กรอกข้อมูลของคุณ (สามารถสำรองข้อมูลตัวอย่างก่อน)')){state=D.blankState();ui.search='';update();navigate('profile');toast('เริ่มต้นด้วยข้อมูลของคุณได้เลย');}return;}
    if(a==='hero-workout'){navigate('workouts');return;}
    if(a==='hero-food'){navigate('nutrition');return;}
@@ -204,7 +300,12 @@
    if(a==='edit-weight'){openWeight(id);return;}
    if(a==='delete-weight'){removeItem('weights',x=>x.id===id,'ลบบันทึกน้ำหนักนี้?');return;}
    if(a==='export'){C.exportData(state);toast('สร้างไฟล์สำรองข้อมูลแล้ว');return;}
-   if(a==='reset'){if(confirmed('ล้างข้อมูลทั้งหมดในเครื่องนี้? ไม่สามารถยกเลิกได้ (แนะนำให้สำรองข้อมูลก่อน)')&&confirmed('ยืนยันอีกครั้งว่าจะล้างข้อมูลทั้งหมดจริง ๆ')){state=D.blankState();C.save(state);navigate('profile');toast('เริ่มต้นใหม่เรียบร้อย');}return;}
+   if(a==='reset'){
+     if(confirmed(sync.isCloud?'ล้างข้อมูลในบัญชี Cloud? ระบบจะดาวน์โหลดสำรองข้อมูลก่อน':'ล้างข้อมูลทั้งหมดในเครื่องนี้? แนะนำให้สำรองข้อมูลก่อน')&&confirmed('ยืนยันการล้างข้อมูลอีกครั้ง?')){
+       if(sync.isCloud)C.exportData(state);
+       state=D.blankState();update();navigate('profile');toast(sync.isCloud?'ล้างข้อมูลที่แสดงแล้ว · กำลังซิงค์ Cloud':'เริ่มต้นใหม่เรียบร้อย');
+     }return;
+   }
  });
  document.addEventListener('input',event=>{
    if(event.target.id==='food-search'){
@@ -224,7 +325,7 @@
    if(el.id==='import-file'&&el.files?.length){
      const file=el.files[0];if(file.size>5*1024*1024){toast('ไฟล์มีขนาดเกิน 5 MB','error');return;}
      try{const data=JSON.parse(await file.text());if(!C.validateImported(data)){toast('รูปแบบไฟล์สำรองไม่ถูกต้อง หรือเวอร์ชันไม่รองรับ','error');return;}
-       if(confirmed('นำเข้าข้อมูลนี้แทนข้อมูลปัจจุบันทั้งหมด? แนะนำให้สำรองข้อมูลเดิมก่อน')){state=data;if(!C.save(state))throw new Error('storage unavailable');render(false);toast('นำเข้าข้อมูลสำเร็จ');}
+       if(confirmed('นำเข้าข้อมูลนี้แทนข้อมูลปัจจุบันทั้งหมด? ระบบจะดาวน์โหลดสำรองข้อมูลเดิมก่อน')){C.exportData(state);state=data;update();render(false);toast(sync.isCloud?'นำเข้าแล้ว · กรุณาตรวจสถานะการซิงค์ Cloud':'นำเข้าข้อมูลสำเร็จ');}
      }catch(err){console.error(err);toast('นำเข้าไม่สำเร็จ: ไฟล์ไม่ถูกต้องหรือบันทึกไม่ได้','error');}
    }
  });
@@ -232,6 +333,8 @@
  document.addEventListener('submit',event=>{
    const form=event.target;if(!form.id)return;
    event.preventDefault();
+   if(form.id==='auth-form'||form.id==='auth-password-form'){void handleAuthForm(form);return;}
+   if(sync.isBlocked){toast('กรุณาแก้ไขสถานะ Cloud ก่อนบันทึก','error');return;}
    const fd=new FormData(form),get=k=>String(fd.get(k)??'').trim();
    const metric=k=>Number(get(k));
    if(form.id==='profile-form'){
@@ -298,4 +401,5 @@
  function CATEGORIES_OK(key){return Object.prototype.hasOwnProperty.call(D.CATEGORIES,key);}
  window.addEventListener('hashchange',()=>{route=location.hash.slice(1)||'dashboard';render(false);});
  render(false);
+ void sync.init().finally(()=>{cloudBooting=false;lastSyncMode=sync.mode;render(false);});
 })();

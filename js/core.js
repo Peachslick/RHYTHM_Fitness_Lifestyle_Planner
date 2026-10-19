@@ -76,6 +76,7 @@
     moon:'<path d="M20.5 14.5A8 8 0 0 1 9.5 3.5 8.3 8.3 0 1 0 20.5 14.5Z"/>',
     clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
     chart:'<path d="M3 3v18h18M7 16l4-5 4 3 5-7"/>',
+    cloud:'<path d="M7 19h11a4.5 4.5 0 0 0 .2-9A6 6 0 0 0 6 9.5 4.8 4.8 0 0 0 7 19Z"/>',
     user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
     plus:'<path d="M12 5v14M5 12h14"/>',
     arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>',

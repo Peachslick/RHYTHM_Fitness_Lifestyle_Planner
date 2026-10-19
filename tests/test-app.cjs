@@ -14,7 +14,7 @@ const ctx={console,Date,Math,Intl,Number,JSON,Array,Object,String,Set,Map,Blob,p
 ctx.window=ctx;ctx.scrollY=0;ctx.scrollTo=()=>{};ctx.addEventListener=(type,fn)=>listeners[`window:${type}`]=fn;
 ctx.FormData=class {constructor(form){this.values=form.mock||{}}get(k){return this.values[k]??null}getAll(k){return this.values[k]??[]}has(k){return Object.prototype.hasOwnProperty.call(this.values,k)}};
 vm.createContext(ctx);
-for(const file of ['js/data.js','js/core.js','js/app.js'])vm.runInContext(fs.readFileSync(path.join(base,file),'utf8'),ctx,{filename:file});
+for(const file of ['js/data.js','js/core.js','js/sync.js','js/app.js'])vm.runInContext(fs.readFileSync(path.join(base,file),'utf8'),ctx,{filename:file});
 assert(dom.app.innerHTML.includes('สร้างจังหวะที่ใช่'),'first viewport contains dashboard hero');
 assert(dom.app.innerHTML.includes('โหมดทดลอง'),'demo is labeled');
 function click({action=null,route=null,id='',date='',day='',value=''}){

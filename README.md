@@ -1,186 +1,165 @@
 # RHYTHM — Fitness & Lifestyle Planner
 
-**Version:** `1.0.0` (19 October 2026)  
-**Stack:** HTML5 + CSS3 + Vanilla JavaScript; ไม่มี Node.js, npm, CDN หรือ Backend ที่จำเป็นต่อการใช้งาน  
-**Storage:** LocalStorage (`rhythm_fitness_v1`) + Export/Import JSON  
-**Interface:** ภาษาไทยเป็นหลัก พร้อมธีมสว่าง/มืด รองรับ Desktop / Tablet / Mobile
+**Version:** `1.1.0` — Account & Cloud Sync (19 ตุลาคม 2026)
 
-เว็บนี้เป็นพื้นที่ส่วนตัวเพื่อ **วางแผนและบันทึก** การออกกำลังกาย โภชนาการ การนอน กิจวัตร และแนวโน้มของร่างกายในที่เดียว ไม่ใช่แอปแพทย์หรือระบบออกใบสั่งโปรแกรมออกกำลังกาย
+**Tech stack:** HTML5 + CSS3 + Vanilla JavaScript + Supabase Auth/Postgres (optional) + LocalStorage. ไม่ต้องมี Node.js/PHP/Express/การ Build เพื่อรัน Production บน Vercel. Supabase JS v2 โหลดผ่าน jsDelivr CDN เฉพาะตอนหน้าเว็บเริ่มทำงาน (ต้องเชื่อมอินเทอร์เน็ตเพื่อเปิดส่วน Cloud; หาก CDN โหลดไม่ได้ยังใช้โหมด Guest ได้).
 
-## 1. วิธีเปิดใช้งาน
+> ⚠️ **สำคัญ:** ไฟล์ที่ดาวน์โหลดเป็นโค้ดพร้อมเชื่อม Supabase แต่ **ยังไม่ได้เชื่อมฐานข้อมูลของคุณจริง** เพราะไม่มี Project URL/Publishable Key และยังไม่ได้รัน SQL ภายใต้โปรเจกต์ของคุณ กรุณาทำขั้นตอนด้านล่างก่อนเปิดฟังก์ชันบัญชี ไม่ต้องส่ง API key/รหัสผ่านให้ใครผ่านแชต.
 
-### ทางเลือก A — เปิดไฟล์โดยตรง
+## 1. สิ่งที่มีใน V1.1.0
 
-1. แตกไฟล์ ZIP
-2. เปิด `index.html` ด้วย Microsoft Edge / Google Chrome
-3. หน้าแรกจะแสดง **โหมดทดลอง** พร้อมตัวเลขสมมติ
-4. กด **เริ่มใช้ข้อมูลของฉัน** แล้วกรอกข้อมูลในหน้า **โปรไฟล์และตั้งค่า**
+- ยังใช้ Workout Planner, Nutrition, Sleep, Routine, Progress, Profile, BMI/TDEE และ Backup JSON เหมือน V1.0.0
+- สมัครสมาชิก, เข้าสู่ระบบ, ออกจากระบบ, รีเซ็ตรหัสผ่านด้วยอีเมลผ่าน **Supabase Auth**
+- **RLS (Row-Level Security)**: จำกัดอ่าน/เขียนข้อมูล `public.rhythm_user_data` ของเจ้าของบัญชีเท่านั้น; ไม่มีสิทธิ์ `anon` เข้าถึงตาราง
+- **1 แถวต่อ user_id** เก็บรูปแบบ JSON ของ V1 เดิมไว้ ไม่ต้องย้าย schema ทุกฟีเจอร์ตอนนี้
+- **Optimistic concurrency**: ตรวจ `revision` ที่เครื่องเคยอ่านก่อน UPDATE; การแก้ข้อมูลพร้อมกันจากหลายอุปกรณ์ไม่ถูกเขียนทับเงียบ ๆ
+- **Draft ใน LocalStorage แยก user_id**: บันทึกก่อนส่งขึ้น Cloud, ถ้าเน็ตขาดหรือปิดแท็บก่อนซิงค์จะลองส่งใหม่เมื่อเปิดเว็บครั้งต่อไป
+- เลือกชุดข้อมูลเองเมื่อเกิด Conflict (ข้อมูลในเครื่อง/Cloud) พร้อมปุ่มดาวน์โหลด Backup ทั้งสองชุด
+- **ย้าย LocalStorage เดิมแบบ Opt-in เท่านั้น**; ไม่อัปโหลด Demo หรือข้อมูล Guest โดยอัตโนมัติ; ไม่ลบข้อมูลเครื่องก่อน Cloud ยืนยันว่ารับข้อมูลแล้ว
+- เช็กเวอร์ชันข้อมูลบน Cloud ทุก ~45 วินาทีเมื่อหน้าเว็บยังเปิดอยู่ และเมื่อกลับมาที่แท็บ; กด “ซิงค์ตอนนี้” ได้
+- Sign out จะปฏิเสธหากมี Draft ค้างส่ง เพื่อไม่ให้ผู้ใช้เข้าใจผิดว่าเซฟแล้ว
 
-> บราวเซอร์แต่ละตัวอาจจำกัด LocalStorage สำหรับ URL แบบ `file://` ต่างกัน หากพบว่าข้อมูลหายหลังเปิดใหม่ ให้เปิดผ่าน Localhost ตามทางเลือก B แทน
+## 2. Supabase Setup — ทำตามลำดับ
 
-### ทางเลือก B — XAMPP / localhost (แนะนำ)
+### 2.1 สร้าง Supabase Project
 
-ถ้าคุณมี XAMPP อยู่แล้ว ให้คัดลอกโฟลเดอร์ไปไว้ใน `C:\xampp\htdocs\rhythm-fitness-v1.0.0` แล้ว Start **Apache** เท่านั้น (ไม่ต้องใช้ MySQL/PHP) และเปิด:
+1. ไปที่ https://supabase.com/dashboard แล้วสร้าง Project ใหม่สำหรับ RHYTHM (**แนะนำแยกจาก Workday Journey**)
+2. เปิด **Authentication → Providers → Email** และเปิด Email/Password
+3. **แนะนำเปิด Confirm email** สำหรับเว็บที่เข้าถึงได้สาธารณะ เพื่อยืนยันความเป็นเจ้าของอีเมล (หากปิดจะได้รับ session หลังสมัครทันที และควรชั่งน้ำหนักความเสี่ยง/สแปม)
+4. ตั้ง Rate limits และบริการ SMTP สำหรับ Production ถ้ามีผู้ใช้จริงจำนวนมาก; ค่าอีเมลเริ่มต้นของ Supabase อาจมีโควตาจำกัด
+5. ไปที่ **SQL Editor → New query** วางเนื้อหา `supabase/001_init.sql` ทั้งหมด แล้วกด **Run** **เพียงครั้งแรก** (SQL idempotent บางส่วน แต่ไม่ควรใช้เพื่อแก้ schema ในอนาคตโดยไม่ทบทวน)
+6. ตรวจด้วย `supabase/VERIFY_SETUP.md` ก่อนให้บุคคลอื่นสมัครจริง
 
-- Apache port `80`: `http://localhost/rhythm-fitness-v1.0.0/`
-- Apache port `81`: `http://localhost:81/rhythm-fitness-v1.0.0/`
+### 2.2 ตั้ง Auth URL Configuration
 
-หรือใช้ Python ที่เครื่อง:
+เปิด **Authentication → URL Configuration** ใน Supabase:
 
-```bash
-cd rhythm-fitness-v1.0.0
-python -m http.server 8080
+- **Site URL:** `https://<ชื่อเว็บของคุณ>.vercel.app`
+- **Redirect URLs:** เพิ่ม `https://<ชื่อเว็บของคุณ>.vercel.app/**` และ `http://localhost:8080/**` (หรือ localhost port ที่ใช้) อนุญาตเฉพาะ URL ที่ไว้ใจได้
+- ถ้ามี Custom Domain เพิ่มโดเมนจริงด้วย
+
+ระบบ Password Reset และอีเมลยืนยันใช้ URL เหล่านี้ หาก URL ไม่ถูกต้อง ลิงก์จะส่งกลับผิดเว็บไซต์
+
+### 2.3 กำหนด Frontend Public Config
+
+แก้ `js/supabase-config.js`:
+
+```js
+window.RHYTHM_SUPABASE_CONFIG = Object.freeze({
+  url: 'https://YOUR_PROJECT_ID.supabase.co',
+  publishableKey: 'sb_publishable_YOUR_PUBLIC_KEY'
+});
 ```
 
-แล้วเปิด `http://localhost:8080/`
+หา Project URL และ **Publishable Key** ได้จาก Supabase → **Project Settings → API Keys** (ชื่อเมนูอาจเปลี่ยน) หรือใช้ legacy **anon key** ในโปรเจกต์ที่ยังใช้รูปแบบเดิม.
 
-ไม่จำเป็นต้องสั่ง `npm install` หรือสร้างตาราง Supabase ใน V1.0.0
+**ห้ามใส่ `service_role` / `sb_secret_...` / Database Password ลงใน HTML, JS, Repo, Vercel Public Environment Variables หรือ Source Control โดยเด็ดขาด**: ไฟล์ static เป็นสาธารณะ; การปกป้องข้อมูลพึ่ง Supabase Auth + RLS ไม่ใช่ซ่อน Publishable Key.
 
-## 2. หน้าต่าง ๆ ที่ใช้งานได้
+> หากยังไม่กรอกค่าทั้งสอง ผู้ใช้ยังใช้เว็บใน **โหมดในเครื่อง** ได้ แต่ปุ่มเข้าสู่ระบบจะปิดไว้โดยเจตนา
 
-| หน้า | ความสามารถ |
-| --- | --- |
-| **ภาพรวม** | BMI/BMR/TDEE, เป้าหมายพลังงานและ Macro, พลังงานวันนี้, โปรแกรมฝึกวันนี้, กราฟอาหาร 7 วัน, ภาพรวมพักฟื้น |
-| **แผนออกกำลังกาย** | โปรแกรมฝึก 7 วัน; ปรับ Push, Pull, Legs, Run, Full Body, Recovery, Rest; เพิ่ม/แก้ไข/ลบท่า; ตั้งเซต ครั้ง/เวลา น้ำหนัก เวลาพัก; บันทึกการฝึกจริงพร้อม RPE |
-| **โภชนาการ** | คลังอาหารตัวอย่างภาษาไทย, ค้นหาและกรอง, แก้ไขค่าต่อเสิร์ฟ, บันทึกมื้อ/วันที่/จำนวนเสิร์ฟ, เพิ่มเมนูส่วนตัว, ดูแคลอรี่และ Macro |
-| **การนอน** | วันที่ตื่น, เวลาเข้านอน/ตื่นข้ามคืน, นาทีที่ตื่นกลางคืน, Deep/Light/REM ถ้ามีข้อมูลจริง, เฉลี่ยและกราฟ 7 คืน, ประวัติ |
-| **ตารางชีวิต** | ตั้งรายการกิจวัตรตามช่วงเวลา, เลือกวันในสัปดาห์, จัดหมวดหมู่, เพิ่ม/แก้ไข/ลบกิจกรรม |
-| **แนวโน้มและเป้าหมาย** | บันทึกน้ำหนัก/ไขมัน%, กราฟ 7/30/90 วัน, เป้าหมายน้ำหนัก, จำนวนครั้งที่ฝึกตามแผน, ค่าเฉลี่ยอาหารและการนอนจากข้อมูลที่มีจริง |
-| **โปรไฟล์และตั้งค่า** | คำนวณ BMR/TDEE/BMI, เลือกเป้าหมาย, แก้ calorie offset / โปรตีน / สัดส่วนไขมัน / ชั่วโมงนอน, สำรอง-กู้คืน JSON, ล้างข้อมูล, ธีม |
+### 2.4 ทดสอบด้วยบัญชี 2 คน ก่อนเปิดใช้งานจริง
 
-## 3. วิธีคำนวณ
+- สมัครบัญชี A และ B แยกอีเมล → กรอกข้อมูลที่แตกต่างกัน
+- Login A บนเบราว์เซอร์หนึ่ง → บันทึกน้ำหนัก → รอคำว่า `ซิงค์แล้ว`
+- Login A บนอีกเครื่อง → เห็นข้อมูล A
+- Login B บนอีกเครื่อง → ต้อง **ไม่เห็นข้อมูล A** ไม่ว่าเปลี่ยน URL/API Request อย่างไร (RLS เป็นตัวบังคับสิทธิ์ที่ฐานข้อมูล)
+- ทดสอบการเปลี่ยนข้อมูลพร้อมกัน โดยบันทึกบนอุปกรณ์ทั้งสองก่อนอีกเครื่องจะโหลด revision ใหม่ → ควรเห็นหน้า Conflict และเลือกทางแก้ได้
+- ปิดอินเทอร์เน็ต → แก้ข้อมูล → เช็ก Pending/Refresh → ต่อเน็ต → กดซิงค์ → ข้อมูลไม่หาย
+- Sign out → ข้อมูลบัญชีไม่แสดงในหน้า Guest; Sign in อีกครั้ง → ได้ข้อมูลบัญชีเดิม
+- ทดสอบ Forgot Password ด้วยอีเมลและ Redirect จริง
 
-### BMI
+## 3. Deploy ขึ้น GitHub + Vercel
 
-`BMI = น้ำหนัก(kg) / (ส่วนสูง(m) × ส่วนสูง(m))`
+1. แตก ZIP, เปิดโฟลเดอร์ `RHYTHM_v1.1.0` แล้วอัปโหลด **ไฟล์ข้างใน** โฟลเดอร์ขึ้น GitHub Repository (ให้ `index.html` อยู่ Repo Root)
+2. แก้ `js/supabase-config.js` เป็น public URL/publishable key จริง (อย่าใช้ Secret Key)
+3. Vercel → Add New → Project → Import Git Repository
+4. Framework Preset = `Other`, Root Directory = `./`, Build Command = ว่าง, Output Directory = `./` (เลือก static root/default)
+5. Deploy → ตั้ง Supabase Site/Redirect URLs ให้ตรงกับ URL ที่ได้จาก Vercel
+6. ทดสอบ Login/Sync + Backup บน URL HTTPS ที่ Deploy แล้ว
 
-เกณฑ์หมวด BMI ผู้ใหญ่ใช้สำหรับ **อายุ 20 ปีขึ้นไป** เท่านั้น ตัวเลข BMI ไม่สามารถใช้วินิจฉัยสุขภาพหรือแยกไขมัน/กล้ามเนื้อด้วยตนเอง
+ไม่มี Node.js หรือ API Server ฝั่ง Vercel; Frontend จะติดต่อ Supabase โดยตรงภายใต้ session ของผู้ใช้และ RLS. `vercel.json` เพิ่ม Response Headers ที่เป็นประโยชน์สำหรับเว็บ static.
 
-### BMR (ประมาณจาก Mifflin–St Jeor)
+## 4. วิธีใช้ข้อมูล Guest + บัญชี
 
-- **สูตรค่าคงที่ชาย:** `10 × kg + 6.25 × cm − 5 × อายุ + 5`
-- **สูตรค่าคงที่หญิง:** `10 × kg + 6.25 × cm − 5 × อายุ − 161`
+### เริ่มใช้ใหม่
 
-อินเทอร์เฟซให้เลือกรูปแบบค่าคงที่ที่ใช้ในสมการ **ไม่ใช่การระบุอัตลักษณ์ทางเพศ**; สูตรนี้เป็นค่า Resting Energy Expenditure โดยประมาณ บางเว็บไซต์เรียกว่า BMR เพื่อความสะดวก ไม่ใช่การตรวจวัดจริง
+หน้าแรกถ้ายังไม่ล็อกอินเป็น Demo/Guest และบันทึกลง LocalStorage (`rhythm_fitness_v1`) ตามเดิม. เมื่อ Login บัญชีที่ไม่มีแถว Cloud:
 
-### TDEE / เป้าหมายพลังงาน
+- ถ้ามีข้อมูลจริงใน Guest: **ต้องเลือก** ระหว่าง “ย้ายข้อมูลจากเครื่องนี้ขึ้น Cloud” หรือ “เริ่มบัญชีใหม่บน Cloud”
+- ถ้า Guest ยังเป็น Demo: สร้าง Cloud Profile ว่างให้อัตโนมัติ (**ไม่ย้ายข้อมูลสมมติ**)
 
-`TDEE ประมาณ = BMR × ตัวคูณกิจกรรม`
+### บัญชีมีข้อมูล Cloud อยู่แล้ว
 
-ตัวคูณ: 1.2 / 1.375 / 1.55 / 1.725 / 1.9 ตามระดับกิจกรรมที่เลือก  
-`เป้าหมาย kcal = TDEE + ค่าเพิ่ม/ลด kcal ที่ผู้ใช้กำหนดเอง`
+ระบบใช้ข้อมูลบัญชีเป็นหลัก ไม่สลับไปใช้ Guest โดยอัตโนมัติ. Guest เดิมจะอยู่ใน LocalStorage แยกต่อไปจนกว่าคุณจะเลือก **ย้ายข้อมูล LocalStorage เดิมไป Cloud** จากหน้าโปรไฟล์; การย้ายแบบนี้เป็น **การแทนที่ทั้งชุด** จึงจะมี Confirm และดาวน์โหลด Backup Cloud ก่อน.
 
-ค่าแนะนำเริ่มต้นเมื่อเลือกเป้าหมายในหน้าโปรไฟล์ (แก้เองได้ทุกเมื่อ):
+### ข้อมูลชนกัน (Conflict)
 
-- เพิ่มน้ำหนัก `+250 kcal`
-- เพิ่มกล้ามเนื้อ `+200 kcal`
-- ลดน้ำหนัก `-300 kcal`
-- ลดไขมัน `-250 kcal`
-- รักษาน้ำหนัก `0 kcal`
+หาก revision เปลี่ยนเพราะอุปกรณ์อื่นอัปเดต Cloud ระหว่างนี้:
 
-**สำคัญ:** เป็นเพียงจุดเริ่มสำหรับผู้ใหญ่ ไม่ใช่ปริมาณที่เหมาะกับทุกคน; ประสิทธิผลขึ้นอยู่กับข้อมูลจริง การเปลี่ยนแปลงพลังงานของร่างกาย และกิจกรรม อย่านำค่า TDEE ไปตัดสินว่าต้องกินเท่านั้นทุกวันโดยไม่ดูสุขภาพโดยรวม
+- ระบบเก็บ Pending Draft บนเครื่องไว้ และหยุดส่งข้อมูล ไม่เขียนทับอัตโนมัติ
+- ให้ Export สำรอง “เครื่องนี้” และ “Cloud” (ถ้ามี) ก่อนเลือก
+- **ใช้เครื่องนี้แทน Cloud** = ตั้งใจเขียนข้อมูลในเครื่องทับ Cloud โดย CAS อีกครั้ง
+- **ใช้ Cloud แทนเครื่องนี้** = ทิ้งการแก้ในเครื่อง (หน้าเว็บจะดาวน์โหลดสำรองเครื่องให้อัตโนมัติก่อนทิ้ง)
+- ตอนนี้ **ยังไม่มี Merge ระดับรายการ** (เช่น เซตอาหารจากเครื่อง A + Sleep จาก B) — ต้องเลือกระหว่างข้อมูลทั้งชุด เพื่อให้ผู้ใช้ควบคุมความขัดแย้งได้ชัดเจน
 
-### Macro
+### กรณีอินเทอร์เน็ตหลุด
 
-- โปรตีนเป้าหมาย = `น้ำหนัก × proteinPerKg` (ค่าเริ่มต้น 1.6 g/kg)
-- ไขมันเป้าหมาย = `kcal เป้าหมาย × fatPercent / 100 / 9` (ค่าเริ่มต้น 25%)
-- คาร์โบไฮเดรต = `พลังงานที่เหลือ / 4`
+- หากเข้าสู่ระบบแล้วและเปิดข้อมูล Cloud ได้อย่างน้อยหนึ่งครั้ง: สามารถบันทึกชั่วคราวเป็น Pending Draft แยก user_id ได้
+- Pending Draft จะเก็บใน **LocalStorage โดยไม่ได้เข้ารหัส** (ควรใช้บนเครื่องส่วนตัวเท่านั้น; อย่าบันทึกข้อมูลสุขภาพบนเครื่องสาธารณะ)
+- Draft **ไม่ถือว่า Backup Cloud** จนกว่าแถบสถานะจะขึ้น “ซิงค์แล้ว”
+- ห้ามเคลียร์ข้อมูลเว็บไซต์ / ใช้ Incognito / เปิดหลายแท็บแล้วเข้าใจว่าปลอดภัย 100%: LocalStorage มีโควตาและอาจถูกลบหรือถูกเข้าถึงโดยผู้ใช้เบราว์เซอร์เดียวกันได้
+- หากข้อมูลค้างส่งนาน ให้ดาวน์โหลด JSON เก็บไว้ในที่ปลอดภัยก่อน Refresh / Logout
 
-สารอาหารจาก **บันทึก** คูณตามจำนวนเสิร์ฟ ซึ่งแก้ไขค่าพลังงานต่อเสิร์ฟได้ด้วยตนเอง อาหารในคลังเป็น **ตัวเลขตัวอย่างโดยประมาณ** ไม่ใช่ฐานข้อมูลอาหารมาตรฐานที่รับรองทั้งหมด
+## 5. ประเด็นความเป็นส่วนตัวและข้อจำกัด
 
-### การนอน
+- หน้าเว็บไม่ได้ส่งข้อมูลสุขภาพให้บุคคลอื่นโดยเจตนา **แต่ Supabase เป็นผู้ให้บริการ Cloud ที่เก็บข้อมูลจริง** ต้องพิจารณานโยบายส่วนตัวและ Data Residency ก่อนใช้งานกับผู้อื่น
+- Supabase Database เข้ารหัสข้อมูลระหว่างส่งผ่าน HTTPS และควบคุมสิทธิ์ด้วย RLS; แถว `data` ไม่ได้เข้ารหัสแบบ end-to-end ฝั่งผู้ใช้หรือฝั่งแอป
+- `supabase-js` เก็บข้อมูล Auth Session ใน Browser Storage ตามการตั้งค่า SDK; ดังนั้น **อย่าใช้เครื่องที่ไม่ไว้ใจ** และควรเปิดใช้งานการยืนยันอีเมลสำหรับการใช้งานสาธารณะ
+- ระบบเริ่มด้วย Data Model แบบ JSONB 1 document/user เหมาะกับ MVP และการรักษาความเข้ากันได้กับ V1; หากมีข้อมูลจำนวนมากหรือทำ Collaboration ต้องออกแบบ schema แยกตารางพร้อม migrations, constraint และ test เพิ่ม
+- เวอร์ชันนี้ไม่ได้รับรองการใช้งานทางคลินิก; ตัวเลขอาหาร BMI/TDEE และ Deep/REM เป็นค่าประมาณ/บันทึกตามผู้ใช้หรืออุปกรณ์
+- ไม่ได้รองรับ Merge เฉพาะรายการ และไม่มี Autosync เมื่อเว็บถูกปิดสนิท
+- ไม่ได้เชื่อม Live Supabase Test ในการสร้างไฟล์นี้ เพราะไม่มี Project Credentials; **การทดสอบ Mock ไม่สามารถพิสูจน์ว่า RLS บน Project ของคุณตั้งถูกต้องแล้ว**
 
-`เวลาหลับจริง (นาที) = เวลาจากเข้านอนถึงเวลาตื่น − นาทีที่ตื่นกลางคืน`
-
-- รองรับเวลาเข้านอนก่อนเที่ยงคืนและตื่นหลังเที่ยงคืน
-- ถ้าผู้ใช้มีค่า Deep/Light/REM จากนาฬิกา สามารถกรอกเป็น **นาที** (ไม่บังคับ)
-- ไม่คำนวณ Deep/REM ให้เองจากเวลาเข้านอน-ตื่น เพราะไม่สามารถอนุมานระยะการนอนได้จากเวลานี้
-- ถ้าระยะการนอนรวมเกินเวลาหลับจริง ระบบจะไม่บันทึก
-- อุปกรณ์สวมใส่ไม่ได้มีความแม่นยำเท่าการตรวจวินิจฉัยการนอน; เว็บไม่สามารถตรวจโรคการนอนได้
-
-### วิเคราะห์แนวโน้มอย่างระมัดระวัง
-
-- น้ำหนักจะสรุป **kg/สัปดาห์** เมื่อบันทึกครั้งแรกกับครั้งล่าสุดห่างกันอย่างน้อย 7 วัน
-- อาหารแสดงค่าเฉลี่ยจาก **วันที่มีบันทึก** เท่านั้น ไม่ถือว่าวันที่ว่างเป็น 0 kcal
-- อัตราทำตามตารางนับเฉพาะวันฝึก (ไม่ถือว่าวันพักพลาดเป้าหมาย)
-- ข้อมูล Deep/Light/REM แสดงเท่าที่บันทึกจริง; ไม่สมมติส่วนที่หายไป
-- ไม่ทำนายวันบรรลุเป้าหมายจากสูตรตายตัวอย่าง 7,700 kcal/kg
-
-## 4. ข้อมูลตัวอย่าง (Demo mode)
-
-เมื่อเปิดครั้งแรก ระบบจะแสดงข้อมูลตัวอย่างเพื่อให้ลองกดและสำรวจหน้าเว็บ รวมถึงประวัติอาหาร การฝึก และการนอน **ทั้งหมดเป็นข้อมูลสมมติ** เมื่อพร้อมใช้ข้อมูลจริง กด **เริ่มใช้ข้อมูลของฉัน** ระบบจะล้างข้อมูลตัวอย่างแล้วให้กรอกโปรไฟล์ใหม่ โดยยังคงมี **เทมเพลตโปรแกรมฝึกและตารางชีวิต** ให้ปรับต่อได้ (ไม่ใช่ประวัติเกิดขึ้นจริง)
-
-## 5. การจัดเก็บและความเป็นส่วนตัว
-
-- เวอร์ชันนี้ **ไม่มีการสมัครสมาชิก ไม่มีการส่งข้อมูลไป Supabase/API/เซิร์ฟเวอร์**
-- ทุกข้อมูลถูกเก็บไว้ใน `LocalStorage` ของบราวเซอร์บนอุปกรณ์นั้นโดย **ไม่ได้เข้ารหัสใน LocalStorage**
-- คนที่เข้าถึงโปรไฟล์บราวเซอร์และเครื่องเดียวกันอาจเข้าถึงข้อมูลได้ ไม่ควรใช้เครื่องสาธารณะกับข้อมูลส่วนตัว
-- **ข้อมูลต่างบราวเซอร์/ต่างเครื่องไม่ซิงค์กัน** และล้างข้อมูลเบราว์เซอร์อาจทำให้ข้อมูลหาย
-- ใช้ **โปรไฟล์และตั้งค่า → สำรองข้อมูล (.json)** เพื่อบันทึกไฟล์ แล้วใช้ **นำเข้าข้อมูล (.json)** เมื่อต้องการย้ายเครื่อง/กู้คืน
-- การนำเข้าจะ **แทนที่** ข้อมูลเดิมทั้งหมด ก่อนนำเข้าควร Export ของเดิมไว้ก่อน
-- ไฟล์ JSON สามารถมีประวัติสุขภาพและการกินทั้งหมด **ควรเก็บเป็นส่วนตัว**
-
-## 6. โครงสร้างโปรเจกต์
+## 6. โครงสร้างไฟล์
 
 ```text
-rhythm-fitness-v1.0.0/
-├── index.html             # Entry point
-├── css/
-│   └── styles.css         # Design system, responsive, dark/light
+RHYTHM_v1.1.0/
+├── index.html
+├── vercel.json                 # Static security headers
+├── css/styles.css
 ├── js/
-│   ├── data.js            # ตัวอย่างอาหาร/ท่า/เทมเพลต และ demo/blank state
-│   ├── core.js            # สูตรคำนวณ, วันที่, รวมผล, export/import validation
-│   └── app.js             # Pages, UI, modal, CRUD handlers
+│   ├── data.js                 # Nutrition/Workout example data
+│   ├── core.js                 # Calculations, validation, guest storage
+│   ├── supabase-config.js      # PUBLIC Project URL + Publishable Key
+│   ├── sync.js                 # Supabase Auth, pending drafts, CAS, conflicts
+│   └── app.js                  # 7 existing pages + Account UI
+├── supabase/
+│   ├── 001_init.sql            # Create table, RLS, revision trigger
+│   └── VERIFY_SETUP.md        # Postgres + two-user authorization checklist
 ├── tests/
-│   ├── test-core.cjs      # Unit tests สูตรและ Storage
-│   └── test-app.cjs       # Render/event smoke test (DOM mock)
+│   ├── test-core.cjs
+│   ├── test-app.cjs
+│   └── test-sync.cjs
 ├── CHANGELOG.md
 └── README.md
 ```
 
-## 7. ทดสอบเอง
-
-รันในโฟลเดอร์โปรเจกต์ ถ้าติดตั้ง Node.js ไว้ (เฉพาะ **สำหรับการทดสอบ**; ไม่จำเป็นสำหรับการใช้งานเว็บ):
+## 7. การทดสอบโค้ด (Node ใช้เฉพาะผู้พัฒนา)
 
 ```bash
 node tests/test-core.cjs
 node tests/test-app.cjs
+node tests/test-sync.cjs
 ```
 
-การทดสอบ DOM mock และชุดสูตร ไม่ใช่การทดสอบด้วย browser จริงทั้งหมด; ก่อนเผยแพร่ต่อผู้อื่นควรทดสอบเพิ่มบน Edge/Chrome ทั้ง Desktop และ Mobile และกับข้อมูลผิดรูปแบบ
+**ผลการทดสอบในแพ็กนี้:** Calculator/Storage 23 assertions, App Render/CRUD 29 assertions, Supabase Mock Sync 70 assertions = **122 assertions** ผ่านทั้งหมด. ตรวจไวยากรณ์ JavaScript, JSON และตรวจ UI แบบ Chromium ด้วยการฉีดไฟล์ source เข้า Browser (ข้อจำกัดระบบไม่อนุญาตให้ Browser เปิด localhost; ไม่ได้ทดสอบจริงผ่าน HTTP URL). Browser ระบุไม่พบ JavaScript errors ใน Guest Demo; mobile ไม่พบ Horizontal Overflow ในขนาด 390px.
 
-### Checklist สำหรับลองด้วยตนเอง
+> หากต่อ Supabase จริงแล้วพบ Error โปรดดู Network/Console และตาราง `rhythm_user_data` ใน Supabase ก่อนแก้โค้ด อย่าลบฐานข้อมูลหรือ Reset Auth เพื่อทดลองโดยไม่มี Backup.
 
-1. เปิดหน้าแรก → เห็นคำเตือน **โหมดทดลอง**
-2. ไปทุกหน้าและใช้ปุ่มเพิ่มเติม/แก้ไขข้อมูล
-3. เริ่มใช้ข้อมูลจริง → กรอกโปรไฟล์ → ทดสอบ BMR/TDEE
-4. เพิ่มน้ำหนักวันนี้ → BMI/TDEE เปลี่ยนตามน้ำหนักล่าสุด
-5. เพิ่มอาหาร 2 เสิร์ฟ → kcal และ Macro เพิ่มตามจำนวน
-6. แก้เทมเพลต Push/Pull/Legs → บันทึกวันฝึกจริง → เช็กในหน้าแนวโน้ม
-7. บันทึกเข้านอน 23:00 และตื่น 07:00 → 8 ชั่วโมง (ถ้าตื่นกลางคืน 0 นาที)
-8. เพิ่มกิจวัตรในบางวัน → เห็นเฉพาะวันที่เลือก
-9. เปลี่ยนธีม → Refresh → ยังเป็นธีมเดิม
-10. Export JSON → Import → Refresh → ข้อมูลกลับมา
+## 8. อ้างอิงทางเทคนิค
 
-## 8. สิ่งที่ยัง **ไม่** มีใน V1.0.0
-
-- ระบบ Account / Multi-user / Supabase Cloud Sync หรือ Auth
-- ดึงข้อมูล Apple Health / Google Health Connect / Smartwatch โดยอัตโนมัติ
-- ฐานข้อมูลโภชนาการที่ผ่านการรับรองหรือสแกนบาร์โค้ด
-- โปรแกรมเวทแบบ Progressive Overload อัตโนมัติ / AI Coach / คำสั่งการแพทย์
-- คำนวณ HRV, VO2max หรือค่าการนอนจริงด้วยเซนเซอร์
-- Sync ข้ามอุปกรณ์และ Cloud backup
-
-สามารถต่อยอดใน **v1.1** ด้วย Supabase Auth, แยก user data ตาม user ID, RLS และ Cloud Sync หลังจากทดสอบ schema/สิทธิ์ให้เรียบร้อย ควรทดสอบกับข้อมูลปลอมก่อน และไม่ใส่ service-role key ใน frontend
-
-## 9. แหล่งอ้างอิงทางวิทยาศาสตร์
-
-- [CDC — Adult BMI Categories](https://www.cdc.gov/bmi/adult-calculator/bmi-categories.html)
-- [Mifflin–St Jeor original equation — PubMed PMID 2305711](https://pubmed.ncbi.nlm.nih.gov/2305711/)
-- [NIDDK — About the Body Weight Planner](https://www.niddk.nih.gov/health-information/weight-management/body-weight-planner)
-- [NIDDK — Research Behind the Body Weight Planner](https://www.niddk.nih.gov/research-funding/at-niddk/labs-branches/laboratory-biological-modeling/integrative-physiology-section/research/body-weight-planner)
-- [AASM / SRS — Adult sleep duration consensus](https://pmc.ncbi.nlm.nih.gov/articles/PMC4434546/)
-- [AASM — Consumer sleep technology position statement](https://pmc.ncbi.nlm.nih.gov/articles/PMC5940440/)
-- [ISSN — Protein and exercise position stand (2017)](https://pmc.ncbi.nlm.nih.gov/articles/PMC5477153/)
-
-**หมายเหตุทางสุขภาพ:** สูตรใช้เพื่อช่วยจัดระเบียบและติดตามพฤติกรรมในผู้ใหญ่ ไม่เหมาะกับการตัดสินใจทางการแพทย์ การตั้งพลังงานสำหรับเด็ก ผู้ตั้งครรภ์/ให้นมบุตร หรือผู้มีภาวะสุขภาพ/ความต้องการเฉพาะ ควรปรึกษาผู้เชี่ยวชาญที่เหมาะสมเมื่อจำเป็น
+- Supabase Auth JS v2: https://supabase.com/docs/reference/javascript/start
+- Supabase Row Level Security: https://supabase.com/docs/guides/database/postgres/row-level-security
+- Supabase JavaScript CDN: https://supabase.com/docs/reference/javascript/installing
+- Supabase Auth URL settings: https://supabase.com/docs/guides/auth/redirect-urls
+- Supabase Password Reset: https://supabase.com/docs/reference/javascript/auth-resetpasswordforemail
