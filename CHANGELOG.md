@@ -1,3 +1,16 @@
+# RHYTHM — Changelog
+
+## V1.6.0 — Deep Analytics & Personal Insights (2026-10-20)
+
+- Added Insights Dashboard with 7/14/30 day windows, insight filtering, graphs and data coverage.
+- Added descriptive sleep-duration advice and sleep-stage percentages; no diagnosis based on wearable stage ratios.
+- Added nutrition, weight, actual training volume, running, recovery, and observational cross-domain analysis.
+- No database migrations; all analyses derived from existing state and excluded from Cloud writes.
+- Kept Supabase conflict protection and V1.5.0 features unchanged.
+- Added `js/insights.js` and `tests/test-v160.cjs`.
+
+---
+
 ## V1.5.0 — Smart Workout Timer & Running Tracker (2026-10-20)
 
 ### Added
