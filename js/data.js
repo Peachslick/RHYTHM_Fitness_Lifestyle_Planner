@@ -126,10 +126,10 @@
         {energy:4,fatigue:2,soreness:2,stress:2,mood:4}
       ];return {id:'demo-checkin-'+i,date:localDate(i-5),...values[i],waterMl:1800+i*150,steps:6500+i*400,note:''};
     });
-    return {version:1,demo:true,profile:{name:'Alex',age:25,height:175,weight:68,sex:'male',activity:'moderate',goal:'muscle',targetWeight:72,calorieAdjust:200,proteinPerKg:1.6,fatPercent:25,sleepGoal:8},plan:p,meals,sleeps,sessions,weights,routines:routines(),customFoods:[],customExercises:[],checkins,settings:{theme:'light',font:'ibm'}};
+    return {version:1,demo:true,profile:{name:'Alex',age:25,height:175,weight:68,sex:'male',activity:'moderate',goal:'muscle',targetWeight:72,calorieAdjust:200,proteinPerKg:1.6,fatPercent:25,sleepGoal:8},plan:p,meals,sleeps,sessions,weights,routines:routines(),customFoods:[],customExercises:[],checkins,runs:[],settings:{theme:'light',font:'ibm'}};
   }
   function blankState() {
-    return {version:1,demo:false,profile:freshProfile(),plan:plan(),meals:[],sleeps:[],sessions:[],weights:[],routines:routines(),customFoods:[],customExercises:[],checkins:[],settings:{theme:'light',font:'ibm'}};
+    return {version:1,demo:false,profile:freshProfile(),plan:plan(),meals:[],sleeps:[],sessions:[],weights:[],routines:routines(),customFoods:[],customExercises:[],checkins:[],runs:[],settings:{theme:'light',font:'ibm'}};
   }
   window.FitData = {FOOD_LIBRARY,EXERCISES,DAYS,DAYS_FULL,TYPES,GOALS,ACTIVITY,CATEGORIES,MEALTYPES,freshProfile,plan,routines,demoState,blankState};
 })();

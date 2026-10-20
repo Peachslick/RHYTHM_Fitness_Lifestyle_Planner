@@ -9,7 +9,7 @@ const ctx={console,Date,Math,Intl,Number,JSON,Array,Object,String,Set,Map,Blob,p
 ctx.window=ctx;ctx.scrollY=0;ctx.scrollTo=()=>{};ctx.addEventListener=(k,f)=>listeners['window:'+k]=f;
 ctx.FormData=class {constructor(form){this.values=form.mock||{}}get(k){return this.values[k]??null}getAll(k){return this.values[k]??[]}has(k){return Object.hasOwn(this.values,k)}};
 vm.createContext(ctx);
-for(const f of ['js/data.js','js/core.js','js/sync.js','js/app.js'])vm.runInContext(fs.readFileSync(path.join(base,f),'utf8'),ctx,{filename:f});
+for(const f of ['js/data.js','js/core.js','js/sync.js','js/running.js','js/timer.js','js/app.js'])vm.runInContext(fs.readFileSync(path.join(base,f),'utf8'),ctx,{filename:f});
 const C=ctx.FitCore;let count=0;
 function equal(a,b,msg){assert.equal(a,b,msg);count++}
 function ok(a,msg){assert.ok(a,msg);count++}

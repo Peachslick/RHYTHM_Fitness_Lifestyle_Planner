@@ -1,7 +1,7 @@
-/* RHYTHM v1.4.2 — Thai-first, optional Supabase account and cloud sync */
+/* RHYTHM v1.5.0 — Thai-first, optional Supabase account and cloud sync */
 (function(){
  'use strict';
- const C=window.FitCore,D=window.FitData,R=window.FitRecovery;
+ const C=window.FitCore,D=window.FitData,R=window.FitRecovery,Run=window.FitRun;
  let state=C.load();
  const sync=window.FitSync.create({
    getLocal:()=>C.load(),blank:()=>D.blankState(),validate:C.validateImported,
@@ -18,10 +18,27 @@
  let lastSyncMode='guest';
  let cloudBooting=!!(window.RHYTHM_SUPABASE_CONFIG?.url && window.RHYTHM_SUPABASE_CONFIG?.publishableKey);
  let route=location.hash.replace('#','')||'dashboard';
- const pages={dashboard:{label:'ภาพรวม',icon:'layout',caption:'มองภาพรวมของการฝึก อาหาร และการพักฟื้น'},workouts:{label:'แผนออกกำลังกาย',icon:'dumbbell',caption:'จัดตาราง Push / Pull / Legs / Run ได้ตามชีวิตจริง'},nutrition:{label:'โภชนาการ',icon:'utensils',caption:'บันทึกอาหารและติดตามพลังงานอย่างยืดหยุ่น'},sleep:{label:'การนอน',icon:'moon',caption:'ติดตามชั่วโมงนอนและระยะการนอนจากข้อมูลที่บันทึก'},recovery:{label:'Recovery & Lifestyle',icon:'sparkles',caption:'เชื่อมความรู้สึก การพักผ่อน และภาระการฝึกโดยไม่วินิจฉัยสุขภาพ'},routine:{label:'ตารางชีวิต',icon:'clock',caption:'ออกแบบวันของคุณ ตั้งแต่ตื่นจนเข้านอน'},progress:{label:'แนวโน้มและเป้าหมาย',icon:'chart',caption:'เรียนรู้จากแนวโน้ม ไม่ตัดสินด้วยข้อมูลวันเดียว'},profile:{label:'โปรไฟล์และตั้งค่า',icon:'user',caption:'ปรับค่าตั้งต้น เป้าหมาย และการจัดการข้อมูล'}};
- const ui={exerciseFocus:'',authMode:'login',workoutDay:C.weekday(C.today()),workoutDate:C.today(),foodDate:C.today(),sleepDate:C.today(),recoveryDate:C.today(),routineDay:C.weekday(C.today()),weightPeriod:30,search:'',foodCategory:'ทั้งหมด',foodLimit:60,mobileOpen:false};
+ const pages={dashboard:{label:'ภาพรวม',icon:'layout',caption:'มองภาพรวมของการฝึก อาหาร และการพักฟื้น'},workouts:{label:'แผนออกกำลังกาย',icon:'dumbbell',caption:'จัดตาราง Push / Pull / Legs / Run ได้ตามชีวิตจริง'},running:{label:'บันทึกการวิ่ง',icon:'route',caption:'บันทึกระยะทาง เวลา Pace และแนวโน้มการวิ่ง'},nutrition:{label:'โภชนาการ',icon:'utensils',caption:'บันทึกอาหารและติดตามพลังงานอย่างยืดหยุ่น'},sleep:{label:'การนอน',icon:'moon',caption:'ติดตามชั่วโมงนอนและระยะการนอนจากข้อมูลที่บันทึก'},recovery:{label:'Recovery & Lifestyle',icon:'sparkles',caption:'เชื่อมความรู้สึก การพักผ่อน และภาระการฝึกโดยไม่วินิจฉัยสุขภาพ'},routine:{label:'ตารางชีวิต',icon:'clock',caption:'ออกแบบวันของคุณ ตั้งแต่ตื่นจนเข้านอน'},progress:{label:'แนวโน้มและเป้าหมาย',icon:'chart',caption:'เรียนรู้จากแนวโน้ม ไม่ตัดสินด้วยข้อมูลวันเดียว'},profile:{label:'โปรไฟล์และตั้งค่า',icon:'user',caption:'ปรับค่าตั้งต้น เป้าหมาย และการจัดการข้อมูล'}};
+ const ui={runDate:C.today(),exerciseFocus:'',authMode:'login',workoutDay:C.weekday(C.today()),workoutDate:C.today(),foodDate:C.today(),sleepDate:C.today(),recoveryDate:C.today(),routineDay:C.weekday(C.today()),weightPeriod:30,search:'',foodCategory:'ทั้งหมด',foodLimit:60,mobileOpen:false};
  const FONTS={sarabun:'Sarabun · Recommended',bai:'Bai Jamjuree',noto:'Noto Sans Thai',ibm:'IBM Plex Sans Thai',leelawadee:'Leelawadee UI',tahoma:'Tahoma',segoe:'Segoe UI / System',prompt:'Prompt',kanit:'Kanit',mitr:'Mitr',anakotmai:'Anakotmai',athiti:'Athiti',trirong:'Trirong (Serif)',itim:'Itim (Handwriting)',pattaya:'Pattaya (Display)',chonburi:'Chonburi (Display)'};
  const e=C.esc,ic=C.icon,n=C.nfmt,num=C.num,fmt=C.pretty;
+ // Browser-local timer: never upload transient state into Supabase snapshots.
+ let timerSound=null;
+ function timerTick(snap){
+   document.querySelectorAll('[data-timer-display]').forEach(node=>node.textContent=clockText(snap.displaySeconds));
+   document.querySelectorAll('[data-timer-status]').forEach(node=>node.textContent=timerStatus(snap));
+   document.querySelectorAll('[data-timer-progress]').forEach(node=>{const pct=snap.mode==='countdown'&&snap.duration?100*snap.remaining/snap.duration:0;node.style.width=`${pct}%`;});
+ }
+ function clockText(seconds){const v=Math.max(0,Math.floor(Number(seconds)||0));const h=Math.floor(v/3600),m=Math.floor(v%3600/60),s=v%60;return h?`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`:`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;}
+ function timerStatus(snap){return snap.status==='running'?'กำลังจับเวลา':snap.status==='paused'?'หยุดชั่วคราว':snap.status==='done'?'ครบเวลาแล้ว':'พร้อมเริ่ม';}
+ function beepTimer(){try{if(!timerSound)return;const osc=timerSound.createOscillator(),gain=timerSound.createGain();osc.type='sine';osc.frequency.value=780;gain.gain.value=.07;osc.connect(gain);gain.connect(timerSound.destination);osc.start();osc.stop(timerSound.currentTime+.22);}catch(err){console.warn('Timer sound unavailable:',err);}}
+ const workoutTimer=window.FitTimer.create({onTick:timerTick,onDone:()=>{
+   beepTimer();toast('ครบเวลาจับถอยหลังแล้ว');
+   if(typeof Notification!=='undefined'&&Notification.permission==='granted'&&document.visibilityState==='hidden')try{new Notification('RHYTHM · ครบเวลาแล้ว',{body:'พร้อมเริ่มเซตถัดไป',icon:'assets/favicon.png'});}catch(_){/* blocked notifications */}
+   setTimeout(()=>{if(!document.querySelector('.modal'))render(true);},0);
+ }});
+ document.addEventListener('visibilitychange',()=>workoutTimer.update());
+
  const option=(value,label,selected)=>`<option value="${e(value)}" ${String(value)===String(selected)?'selected':''}>${e(label)}</option>`;
  const val=(obj,key,defaultVal='')=>obj?.[key]===null||obj?.[key]===undefined?defaultVal:obj[key];
  const empty=(icon,title,desc,button='')=>`<div class="empty-state">${ic(icon,30)}<h3>${title}</h3><p>${desc}</p>${button}</div>`;
@@ -90,11 +107,11 @@
     </aside><div class="mobile-mask ${ui.mobileOpen?'visible':''}" data-action="mobile-close"></div>
     <div class="workspace"><header class="topbar"><div class="topbar-left"><button class="mob-menu icon-button" data-action="mobile-open" aria-label="เปิดเมนู">${ic('menu')}</button><div><div class="breadcrumb"><img class="topbar-logo" src="assets/rhythm-logo.png" alt="" /> RHYTHM <span>/</span> ${pg.label}</div><h1>${pg.label}</h1><p>${pg.caption}</p></div></div><div class="topbar-actions"><div class="today-chip">${ic('calendar',16)}<span>${e(fmt(C.today(),true))}</span></div><button class="icon-button theme-toggle" data-action="toggle-theme" aria-label="สลับธีม" title="สลับธีม">${ic(state.settings.theme==='dark'?'sun':'moon')}</button><button class="button button-primary top-quick" data-action="quick-add">${ic('plus',16)} <span>บันทึกน้ำหนัก</span></button></div></header>
      <div class="content">${cloudStrip()}${sync.isBlocked?cloudBlocker():state.demo?`<div class="demo-banner">${ic('info',17)} <div><strong>โหมดทดลอง:</strong> ตัวเลขและบันทึกที่เห็นเป็นข้อมูลสมมติสำหรับทดสอบเว็บ</div><button class="button button-mini" data-action="start-real">เริ่มใช้ข้อมูลของฉัน ${ic('arrow',15)}</button></div>`:''}${renderPage(m)}</div>
-     <footer class="footer"><span>RHYTHM <b>v1.4.2</b> · Personal Wellness Workspace</span><span>ประมาณการเพื่อการวางแผน ไม่ใช่คำแนะนำทางการแพทย์</span></footer>
+     <footer class="footer"><span>RHYTHM <b>v1.5.0</b> · Personal Wellness Workspace</span><span>ประมาณการเพื่อการวางแผน ไม่ใช่คำแนะนำทางการแพทย์</span></footer>
     </div></div>`;
    window.scrollTo(0,y);
  }
- function renderPage(m){return ({dashboard:()=>dashboard(m),workouts, nutrition:()=>nutrition(m), sleep, recovery, routine, progress:()=>progress(m),profile:()=>profile(m)})[route]();}
+ function renderPage(m){return ({dashboard:()=>dashboard(m),workouts,running, nutrition:()=>nutrition(m), sleep, recovery, routine, progress:()=>progress(m),profile:()=>profile(m)})[route]();}
  const sectionHead=(title,sub,action='')=>`<div class="section-head"><div><h2>${title}</h2>${sub?`<p>${sub}</p>`:''}</div>${action}</div>`;
  const ghost=(action,label,icon='plus',attrs='')=>`<button class="button button-outline" data-action="${action}" ${attrs}>${ic(icon,16)} ${label}</button>`;
  const formatHour=mins=>mins===null?'—':`${Math.floor(mins/60)} ชม. ${Math.round(mins%60)} นาที`;
@@ -150,12 +167,43 @@
    const exists=state.sessions.find(s=>s.date===ui.workoutDate);
    const recent=C.sorted(state.sessions).slice(0,5);
    return `<div class="page-intro"><div><h2>ตารางฝึกประจำสัปดาห์</h2><p>ตารางนี้วนซ้ำทุกสัปดาห์ คุณเปลี่ยนชื่อวัน ประเภทการฝึก ท่า เซต และเวลาพักได้อิสระ</p></div><div class="inline-actions">${ghost('edit-day','แก้เทมเพลต','edit')}${ghost('reschedule','สลับวันฝึก','calendar')}</div></div>
-    <div class="week-strip">${D.DAYS.map((d,i)=>{const plan=C.planOn(state,dates[i]);return `<button class="week-day ${i===day?'selected':''}" data-action="select-workday" data-day="${i}"><span>${d} · ${C.shortDate(dates[i])}</span><span class="week-day-indicator" style="--dot:${D.TYPES[plan.type].color}"></span><strong>${e(D.TYPES[plan.type].title)}</strong><small>${plan.exercises.length} ท่า${state.scheduleOverrides?.[dates[i]]?' · ปรับวัน':''}</small></button>`;}).join('')}</div>
+    ${workoutTimerPanel()}<div class="week-strip">${D.DAYS.map((d,i)=>{const plan=C.planOn(state,dates[i]);return `<button class="week-day ${i===day?'selected':''}" data-action="select-workday" data-day="${i}"><span>${d} · ${C.shortDate(dates[i])}</span><span class="week-day-indicator" style="--dot:${D.TYPES[plan.type].color}"></span><strong>${e(D.TYPES[plan.type].title)}</strong><small>${plan.exercises.length} ท่า${state.scheduleOverrides?.[dates[i]]?' · ปรับวัน':''}</small></button>`;}).join('')}</div>
     ${state.scheduleOverrides?.[ui.workoutDate]?`<div class="schedule-note">${ic('calendar',17)}<span>${fmt(ui.workoutDate)} · ใช้แผนเฉพาะวัน</span><button class="button button-mini" data-action="clear-override">คืนตารางปกติ</button></div>`:''}<div class="workout-layout"><section class="panel workout-detail">${sectionHead(e(p.title),e(D.TYPES[p.type].desc),`<div class="inline-actions">${ghost('edit-day','แก้เทมเพลต','edit')}${ghost('open-exercise','เพิ่มท่า','plus')}${ghost('open-exercise-library','คลังท่าของฉัน','dumbbell')}</div>`)}<div class="exercise-head"><span>ท่าออกกำลังกาย</span><span>เซต × ครั้ง/เวลา</span><span>ประเภท</span><span></span></div><div class="exercise-list">${p.exercises.length?p.exercises.map((ex,i)=>`<div class="exercise-row"><div class="exercise-main"><span class="exercise-no">${String(i+1).padStart(2,'0')}</span><div><strong>${e(ex.name)}</strong><small>พัก ${n(ex.rest||0)} วินาที</small></div></div><span class="exercise-sets">${e(ex.sets)} × ${exerciseGoal(ex)}</span><span class="exercise-load">${exerciseLoadLabel(ex)}</span><div class="row-buttons"><button class="tiny-icon" data-action="edit-exercise" data-id="${e(ex.id)}" title="แก้ไขท่า" aria-label="แก้ไขท่า">${ic('edit',16)}</button><button class="tiny-icon danger" data-action="delete-exercise" data-id="${e(ex.id)}" title="ลบท่า" aria-label="ลบท่า">${ic('trash',16)}</button></div></div>`).join(''):empty('moon','วันนี้สำหรับการพัก','คุณเลือกเพิ่มท่าออกกำลังกายได้หากเปลี่ยนแผน') }</div><div class="workout-foot"><span>${ic('info',16)} ตารางนี้เป็นเทมเพลต บันทึกการฝึกจริงอยู่ด้านขวา</span>${ghost('open-exercise','เพิ่มท่าใหม่')}</div></section>
     <div class="side-stack"><section class="panel session-panel">${sectionHead('บันทึกการฝึกจริง','บันทึกเซตจริงเพื่อดูสถิติความแข็งแรง')}<label class="field"><span>วันที่ฝึก</span><input type="date" id="workout-date" data-picker="workoutDate" max="${C.today()}" value="${e(ui.workoutDate)}" /></label><div class="session-status ${exists?'done':''}"><span>${ic(exists?'check':'clock',19)}</span><div><strong>${exists?'บันทึกแล้ว':'ยังไม่มีบันทึก'}</strong><small>${exists?`${e(exists.title)} • ${n(exists.duration)} นาที`:'บันทึกตามวันที่ ไม่ใช่แค่การกดเช็กชื่อ'}</small></div></div><button class="button button-dark full" data-action="open-session">${ic(exists?'edit':'plus',17)} ${exists?'แก้ไขบันทึกวันนี้':'เพิ่มบันทึกการฝึก'}</button>${exists?`<button class="button button-plain danger full" data-action="delete-session">ลบบันทึกวันนี้</button>`:''}</section>
      <section class="panel recent-sessions">${sectionHead('ประวัติล่าสุด','การฝึกที่บันทึกไว้จริง')} ${recent.length?recent.map(x=>`<div class="history-item"><span class="history-icon">${ic('dumbbell',16)}</span><div><strong>${e(x.title)}</strong><small>${fmt(x.date)} · ${n(x.duration)} นาที</small></div><button class="tiny-icon" data-action="edit-session-date" data-date="${e(x.date)}" title="เปิดบันทึก">${ic('chevron-right',18)}</button></div>`).join(''):empty('dumbbell','ยังไม่มีประวัติ','เริ่มบันทึกการฝึกครั้งแรกของคุณ')}</section></div></div>${intelligencePanel()}
     <div class="insight-inline">${ic('info',18)}<p>น้ำหนักที่ระบุในท่าเป็นเพียงค่าตัวอย่างของเทมเพลต ไม่ได้แนะนำให้เริ่มยกตามค่านั้น เลือกให้เหมาะกับความสามารถและเทคนิคของคุณ</p></div>`;
  }
+
+ function workoutTimerPanel(){
+   const t=workoutTimer.snapshot(),plan=C.planOn(state,ui.workoutDate),rest=plan?.exercises?.map(x=>x.rest).find(x=>x>0)||90,timed=(plan?.exercises||[]).filter(x=>C.exerciseMode(x).measure==='time'&&C.exerciseSeconds(x)>0).slice(0,3);
+   const active=t.status==='running'||t.status==='paused';
+   return `<section class="panel workout-timer-panel" aria-label="ตัวจับเวลาออกกำลังกาย">
+     <div class="workout-timer-overview"><div class="timer-heading"><div class="timer-icon">${ic('clock',22)}</div><div><h2>Smart Workout Timer</h2><p>พักระหว่างเซต · จับเวลา Plank หรือวิ่ง (ตัวจับเวลาเก็บไว้เฉพาะแท็บนี้)</p></div></div><div class="timer-clock-wrap"><strong class="timer-clock" data-timer-display>${clockText(t.displaySeconds)}</strong><small data-timer-status aria-live="off">${timerStatus(t)}</small></div></div>
+     <div class="timer-track"><div data-timer-progress style="width:${t.mode==='countdown'?100*t.remaining/t.duration:0}%"></div></div>
+     <div class="timer-controls"><div class="timer-presets"><button class="button button-outline button-mini" data-action="timer-preset" data-seconds="60" ${active?'disabled':''}>พัก 1 นาที</button><button class="button button-outline button-mini" data-action="timer-preset" data-seconds="90" ${active?'disabled':''}>พัก 90 วินาที</button><button class="button button-outline button-mini" data-action="timer-preset" data-seconds="${e(rest)}" ${active?'disabled':''}>พักตามแผน (${C.formatDuration(rest)})</button>${timed.map(ex=>`<button class="button button-outline button-mini" data-action="timer-preset" data-seconds="${C.exerciseSeconds(ex)}" ${active?'disabled':''}> ${ic('clock',13)} ${e(ex.name)} · ${e(C.formatDuration(C.exerciseSeconds(ex)))}</button>`).join('')}</div>
+     <div class="timer-custom"><label><span>นาที</span><input id="timer-minutes" type="number" inputmode="numeric" min="0" max="600" step="1" value="${C.durationParts(t.mode==='countdown'&&t.status!=='idle'?t.duration:rest).minutes}" ${active?'disabled':''} /></label><label><span>วินาที</span><input id="timer-seconds" type="number" inputmode="numeric" min="0" max="59" step="1" value="${C.durationParts(t.mode==='countdown'&&t.status!=='idle'?t.duration:rest).seconds}" ${active?'disabled':''} /></label></div>
+     <div class="timer-buttons">${t.status==='running'?`<button class="button button-dark" data-action="timer-pause">${ic('pause',16)} หยุดชั่วคราว</button>`:t.status==='paused'?`<button class="button button-dark" data-action="timer-resume">${ic('play',16)} ทำต่อ</button>`:`<button class="button button-dark" data-action="timer-countdown">${ic('play',16)} นับถอยหลัง</button><button class="button button-outline" data-action="timer-stopwatch">${ic('clock',16)} จับเวลาเดินหน้า</button>`}<button class="button button-outline" data-action="timer-reset">${ic('refresh',16)} รีเซ็ต</button><button class="button button-plain" data-action="timer-notify">${ic('bell',16)} เปิดแจ้งเตือน</button></div></div>
+     <p class="source-hint">เมื่อสลับแท็บ ระบบคำนวณเวลาจากนาฬิกาจริงและปรับเวลาให้ตรงเมื่อกลับมาอีกครั้ง · การแจ้งเตือน/เสียงขึ้นอยู่กับสิทธิ์และข้อจำกัดของเบราว์เซอร์ · ไม่บันทึกเวลานี้เป็น Workout Log อัตโนมัติ</p>
+   </section>`;
+ }
+ function running(){
+   const today=C.today(),runs=Run.records(state),stats=Run.stats(state,today),series=Run.weeklySeries(state,today),goal=Number(state.settings.runWeeklyGoalKm)||0;
+   const best=runs.filter(x=>x.date<=today).sort((a,b)=>Run.paceSeconds(a.distanceKm,a.durationSeconds)-Run.paceSeconds(b.distanceKm,b.durationSeconds))[0];
+   const todayRun=runs.filter(x=>x.date===ui.runDate);
+   const history=runs.slice(0,40);
+   return `<div class="page-intro running-intro"><div><h2>Running Tracker</h2><p>บันทึกการวิ่งจากนาฬิกาหรือผลที่วัดเอง ระยะทางและเวลาเป็นข้อมูลที่คุณกรอก ไม่ได้ติดตาม GPS อัตโนมัติ</p></div><div class="inline-actions"><button class="button button-dark" data-action="add-run">${ic('plus',16)} บันทึกการวิ่ง</button><button class="button button-outline" data-route="workouts">${ic('clock',16)} เปิด Timer</button></div></div>
+    ${workoutTimerPanel()}<div class="running-kpis"><div class="running-kpi"><span>${ic('route',18)} ระยะทางในสัปดาห์นี้</span><strong>${n(stats.weeklyKm,2)} <small>km</small></strong><small>${stats.weeklyCount} ครั้ง · นับจันทร์–อาทิตย์</small></div><div class="running-kpi"><span>${ic('chart',18)} 7 วันที่ผ่านมา</span><strong>${n(stats.distanceKm,2)} <small>km</small></strong><small>${stats.count} ครั้ง</small></div><div class="running-kpi"><span>${ic('clock',18)} Pace รวม 7 วัน</span><strong>${e(stats.pace)}</strong><small>คำนวณจากเวลารวม ÷ ระยะรวม ไม่ใช่ค่าจาก GPS</small></div><div class="running-kpi"><span>${ic('bolt',18)} Pace เร็วสุดที่บันทึก</span><strong>${best?e(Run.pace(best.distanceKm,best.durationSeconds)):'—'}</strong><small>รายการที่เร็วที่สุด · ไม่เปรียบเทียบเส้นทาง</small></div></div>
+    <div class="running-layout"><section class="panel">${sectionHead('ระยะทางย้อนหลัง 8 สัปดาห์','รวมจากบันทึกการวิ่ง (km)')} ${runs.length?`<div class="running-chart">${C.lineChart(series,{label:'km ต่อสัปดาห์'})}</div>`:empty('chart','ยังไม่มีข้อมูลการวิ่ง','เพิ่มบันทึกครั้งแรกเพื่อเริ่มเห็นแนวโน้ม')}
+    <div class="run-goal-block"><div><strong>เป้าหมายระยะทางต่อสัปดาห์</strong><p class="form-help">ตัวเลขนี้ปรับเองได้ ระบบจะไม่ตั้งเป้าหมายการวิ่งให้โดยอัตโนมัติ</p></div><form id="run-goal-form" class="run-goal-form"><label class="field"><span>เป้าหมาย (km / สัปดาห์)</span><input name="goal" type="number" step="0.5" min="0" max="500" value="${e(goal)}" required /></label><button class="button button-outline" type="submit">บันทึกเป้าหมาย</button></form>${goal>0?`<div class="run-goal-progress"><div style="width:${Math.min(100,100*stats.weeklyKm/goal)}%"></div></div><small class="source-hint">${n(stats.weeklyKm,2)} / ${n(goal,1)} km · ${n(100*stats.weeklyKm/goal)}% ของเป้าหมาย</small>`:''}</div></section>
+    <section class="panel running-log">${sectionHead('ประวัติการวิ่ง','เพิ่ม แก้ไข และลบบันทึกได้')}<div class="run-list">${history.length?history.map(x=>`<div class="run-item"><div class="run-item-icon">${ic('route',19)}</div><div class="run-item-main"><strong>${e(Run.TYPES[x.type])} · ${n(x.distanceKm,2)} km</strong><small>${fmt(x.date)} · ${e(Run.duration(x.durationSeconds))}${x.rpe?' · RPE '+e(x.rpe):''}</small>${x.notes?`<p>${e(x.notes)}</p>`:''}</div><div class="run-item-pace"><strong>${e(Run.pace(x.distanceKm,x.durationSeconds))}</strong><span>เฉลี่ย</span></div><div class="run-item-actions"><button class="tiny-icon" data-action="edit-run" data-id="${e(x.id)}" aria-label="แก้ไขการวิ่ง">${ic('edit',16)}</button><button class="tiny-icon danger" data-action="delete-run" data-id="${e(x.id)}" aria-label="ลบการวิ่ง">${ic('trash',16)}</button></div></div>`).join(''):empty('route','ยังไม่ได้บันทึกการวิ่ง','กรอกระยะทาง เวลาและประเภทการฝึก เพื่อคำนวณ Pace')} </div>${runs.length>40?'<p class="source-hint">แสดง 40 รายการล่าสุด ข้อมูลเก่ายังเก็บอยู่ในบัญชีและไฟล์สำรอง</p>':''}</section></div>
+    <div class="insight-inline">${ic('info',18)}<p>ข้อมูล Pace เป็นความเร็วเฉลี่ยจากระยะทางและระยะเวลาที่กรอก รวมเวลาพักหากอยู่ในเวลาที่บันทึก ไม่มี GPS หรือข้อมูล Heart Rate อัตโนมัติ และไม่ใช้เพื่อวินิจฉัยสุขภาพ</p></div>`;
+ }
+ function openRun(id=null){
+   const x=id?(state.runs||[]).find(x=>x.id===id):null,t=workoutTimer.snapshot(),elapsed=t.mode==='stopwatch'&&t.elapsed>0?Math.round(t.elapsed):0,parts=Run.parts(x?.durationSeconds||elapsed||1800);
+   showModal(x?'แก้ไขบันทึกการวิ่ง':'บันทึกการวิ่ง',`<form id="run-form" data-id="${e(x?.id||'')}"><div class="form-grid two"><label class="field"><span>วันที่วิ่ง *</span><input type="date" name="date" max="${C.today()}" required value="${e(x?.date||ui.runDate)}" /></label><label class="field"><span>ประเภทการวิ่ง</span><select name="type">${Object.entries(Run.TYPES).map(([k,v])=>option(k,v,x?.type||'easy')).join('')}</select></label><label class="field"><span>ระยะทาง (กม.) *</span><input name="distanceKm" type="number" inputmode="decimal" min="0.01" max="500" step="0.01" placeholder="เช่น 5.00" required value="${e(x?.distanceKm||'')}" /></label><div class="field"><span>เวลาที่ใช้จริง *</span><div class="duration-pair"><label><span>นาที</span><input name="minutes" type="number" min="0" max="2880" step="1" required value="${parts.hours*60+parts.minutes}" /></label><label><span>วินาที (0–59)</span><input name="seconds" type="number" min="0" max="59" step="1" required value="${parts.seconds}" /></label></div></div><label class="field"><span>RPE (1–10) · ไม่บังคับ</span><input name="rpe" type="number" min="1" max="10" step="1" value="${e(x?.rpe??'')}" placeholder="ความหนักที่รู้สึก" /></label></div><div class="run-live-preview">${ic('chart',18)} <span data-run-preview>กรอกระยะทางและเวลาเพื่อดู Pace เฉลี่ย</span></div><label class="field"><span>หมายเหตุ</span><textarea name="notes" rows="3" maxlength="700" placeholder="เช่น วิ่งรอบสวน อากาศดี ความรู้สึกระหว่างวิ่ง">${e(x?.notes||'')}</textarea></label><p class="form-help">${elapsed?`Stopwatch มีเวลาล่าสุด ${clockText(elapsed)} · ฟอร์มจะเติมเวลาให้เมื่อสร้างรายการใหม่ (แก้ไขได้)`: 'ต้องกรอกระยะทางด้วยตนเอง ระบบยังไม่รองรับ GPS'} · สามารถบันทึกหลายรอบวิ่งในวันเดียวกันได้</p>${modalButtons(x?'อัปเดตการวิ่ง':'บันทึกการวิ่ง')}</form>`,'การวิ่งจะเก็บแยกจาก Workout Session เดิม');
+   updateRunPreview();
+ }
+ function updateRunPreview(){const f=document.getElementById('run-form'),target=f?.querySelector('[data-run-preview]');if(!f||!target)return;const s=Run.parseDuration(f.elements.minutes.value,f.elements.seconds.value),d=Number(f.elements.distanceKm.value);target.textContent=s&&d>0?`ระยะทาง ${n(d,2)} km · เวลา ${Run.duration(s)} · Pace ${Run.pace(d,s)}`:'กรอกระยะทางและเวลาที่ถูกต้องเพื่อดู Pace เฉลี่ย';}
  function intelligencePanel(){
    const now=C.today();
    const cur=C.trainingStats(state.sessions.filter(x=>x.date>=C.shift(now,-6)&&x.date<=now));
@@ -390,6 +438,16 @@
    if(a==='toggle-theme'){state.settings.theme=state.settings.theme==='dark'?'light':'dark';update();return;}
    if(sync.isBlocked){toast('กรุณาจัดการข้อมูล Cloud ก่อน','error');return;}
    if(a==='start-real'){if(confirmed('เริ่มใช้งานจริง? ข้อมูลตัวอย่างทั้งหมดจะถูกล้าง แล้วเปิดโปรไฟล์ให้กรอกข้อมูลของคุณ (สามารถสำรองข้อมูลตัวอย่างก่อน)')){state=D.blankState();ui.search='';update();navigate('profile');toast('เริ่มต้นด้วยข้อมูลของคุณได้เลย');}return;}
+   if(a==='add-run'){ui.runDate=C.today();openRun();return;}
+   if(a==='edit-run'){openRun(id);return;}
+   if(a==='delete-run'){if(confirmed('ลบบันทึกการวิ่งนี้? การลบไม่กระทบ Workout Session')){state.runs=(state.runs||[]).filter(r=>r.id!==id);update();toast('ลบประวัติการวิ่งแล้ว');}return;}
+   if(a==='timer-preset'){const s=Number(el.dataset.seconds);if(!workoutTimer.start('countdown',s)){toast('เวลาพักไม่ถูกต้อง','error');return;}try{timerSound??=new (window.AudioContext||window.webkitAudioContext)();timerSound.resume();}catch(_){/* no sound */}render(true);return;}
+   if(a==='timer-countdown'){const m=document.getElementById('timer-minutes')?.value,sec=document.getElementById('timer-seconds')?.value,duration=C.parseDurationParts(m,sec);if(!duration){toast('กรอกนาทีและวินาทีให้ถูกต้อง (สูงสุด 600 นาที)','error');return;}workoutTimer.start('countdown',duration);try{timerSound??=new (window.AudioContext||window.webkitAudioContext)();timerSound.resume();}catch(_){/* no sound */}render(true);return;}
+   if(a==='timer-stopwatch'){workoutTimer.start('stopwatch');render(true);return;}
+   if(a==='timer-pause'){workoutTimer.pause();render(true);return;}
+   if(a==='timer-resume'){workoutTimer.resume();render(true);return;}
+   if(a==='timer-reset'){workoutTimer.reset();render(true);return;}
+   if(a==='timer-notify'){if(typeof Notification==='undefined'||!window.isSecureContext){toast('เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน หรือไม่ได้เปิดด้วย HTTPS','error');return;}Notification.requestPermission().then(p=>toast(p==='granted'?'เปิดแจ้งเตือนแล้ว':'ไม่ได้รับสิทธิ์แจ้งเตือน',p==='granted'?'success':'error'));return;}
    if(a==='hero-workout'){navigate('workouts');return;}
    if(a==='hero-food'){navigate('nutrition');return;}
    if(a==='quick-add'){openWeight();return;}
@@ -452,6 +510,7 @@
    }
  });
  document.addEventListener('input',event=>{
+   if(event.target.closest('#run-form')){updateRunPreview();return;}
    if(event.target.closest('#meal-form')){refreshMealPreview();return;}
    if(event.target.id==='food-search'){
      ui.search=event.target.value;
@@ -494,6 +553,18 @@
    if(sync.isBlocked){toast('กรุณาแก้ไขสถานะ Cloud ก่อนบันทึก','error');return;}
    const fd=new FormData(form),get=k=>String(fd.get(k)??'').trim();
    const metric=k=>Number(get(k));
+   if(form.id==='run-goal-form'){
+     const goal=metric('goal');if(!Number.isFinite(goal)||goal<0||goal>500){toast('เป้าหมายต้องอยู่ระหว่าง 0–500 km','error');return;}
+     state.settings.runWeeklyGoalKm=goal;update();toast('บันทึกเป้าหมายการวิ่งแล้ว');return;
+   }
+   if(form.id==='run-form'){
+     const durationSeconds=Run.parseDuration(get('minutes'),get('seconds'));
+     const existing=(state.runs||[]).find(r=>r.id===form.dataset.id);
+     const entry={id:existing?.id||C.uid(),date:get('date'),type:get('type'),distanceKm:metric('distanceKm'),durationSeconds,rpe:get('rpe')===''?null:metric('rpe'),notes:get('notes')};
+     if(!Run.validRun(entry)||entry.date>C.today()){toast('ตรวจสอบวันที่ ระยะทาง นาที/วินาที และ RPE อีกครั้ง','error');return;}
+     state.runs=(state.runs||[]).filter(r=>r.id!==entry.id);state.runs.push(entry);ui.runDate=entry.date;
+     closeModal();update();toast('บันทึกการวิ่งแล้ว · Pace '+Run.pace(entry.distanceKm,entry.durationSeconds));return;
+   }
    if(form.id==='font-form'){const font=get('font');if(!FONTS[font]){toast('ฟอนต์ไม่ถูกต้อง','error');return;}state.settings.font=font;update();toast('บันทึกแบบอักษรแล้ว');return;}
    if(form.id==='profile-form'){
      const p={name:get('name'),age:metric('age'),height:metric('height'),weight:metric('weight'),sex:get('sex'),activity:get('activity'),goal:get('goal'),targetWeight:get('targetWeight')===''?'':metric('targetWeight'),calorieAdjust:metric('calorieAdjust'),proteinPerKg:metric('proteinPerKg'),fatPercent:metric('fatPercent'),sleepGoal:metric('sleepGoal')};

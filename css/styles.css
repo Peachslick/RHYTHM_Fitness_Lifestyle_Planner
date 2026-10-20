@@ -173,3 +173,62 @@
 .session-duration-field>span{display:block;font-size:11px;font-weight:650;margin-bottom:5px}
 .set-entry .duration-pair input[type="number"]{height:41px;width:100%}
 @media(max-width:630px){.session-duration-field{grid-column:1/-1}.set-entry .duration-pair{gap:8px}}
+
+/* V1.5.0 — Smart Timer / Running Tracker */
+.workout-timer-panel{margin-bottom:21px;background:linear-gradient(115deg,var(--surface) 0%,var(--surface) 66%,var(--surface-3) 100%);overflow:hidden}
+.workout-timer-overview{display:flex;align-items:center;justify-content:space-between;gap:18px}
+.timer-heading{display:flex;align-items:center;gap:13px;min-width:0}
+.timer-heading h2{font-size:18px;letter-spacing:-.02em;margin:0 0 3px}
+.timer-heading p{font-size:11px;color:var(--muted);line-height:1.6;margin:0}
+.timer-icon{display:grid;place-items:center;background:#e0f4e6;color:#17663c;width:46px;height:46px;border-radius:15px;flex-shrink:0}
+.timer-clock-wrap{display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;min-width:130px}
+.timer-clock{font-family:'IBM Plex Sans Thai',var(--font-family),sans-serif;font-weight:750;letter-spacing:-.06em;font-variant-numeric:tabular-nums;font-size:38px;line-height:1.18;color:var(--ink)}
+.timer-clock-wrap small{font-size:11px;color:var(--muted)}
+.timer-track{height:5px;background:var(--line);border-radius:10px;overflow:hidden;margin:14px 0 16px}
+.timer-track>div{height:100%;background:linear-gradient(90deg,#3fbe8b,#6ac7d9);border-radius:inherit;transition:width .2s linear}
+.timer-controls{display:flex;align-items:end;justify-content:space-between;flex-wrap:wrap;gap:13px}
+.timer-presets{display:flex;flex-wrap:wrap;gap:7px}
+.timer-custom{display:flex;align-items:center;gap:7px}
+.timer-custom label{display:grid;gap:3px;font-size:10px;color:var(--muted)}
+.timer-custom input{width:73px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);color:var(--ink);font:inherit;font-size:15px;font-weight:700;padding:8px}
+.timer-buttons{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.timer-buttons .button{white-space:nowrap}
+.timer-presets .button:disabled,.timer-custom input:disabled{opacity:.5;cursor:not-allowed}
+.workout-timer-panel>.source-hint{margin:15px 0 0;line-height:1.7}
+.running-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:20px}
+.running-kpi{min-width:0;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:16px;padding:20px 17px;display:flex;flex-direction:column;gap:12px}
+.running-kpi>span{display:flex;gap:7px;align-items:center;font-size:11px;color:var(--muted);font-weight:680}
+.running-kpi>span svg{color:var(--accent-deep)}
+.running-kpi>strong{font-size:24px;letter-spacing:-.045em;line-height:1.2;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.running-kpi>strong small{font-size:12px;font-weight:650;color:var(--muted)}
+.running-kpi>small{font-size:10px;color:var(--muted);line-height:1.6}
+.running-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,1.08fr);gap:17px;align-items:start}
+.running-chart{min-height:230px;display:flex;align-items:center;margin-bottom:18px}
+.running-chart svg{max-width:100%}
+.run-goal-block{border-top:1px solid var(--line);padding-top:19px;margin-top:6px}
+.run-goal-block>div>strong{font-size:13px}
+.run-goal-block p{margin:6px 0 14px}
+.run-goal-form{display:flex;align-items:end;gap:9px;flex-wrap:wrap}
+.run-goal-form .field{min-width:170px;flex:1;max-width:280px}
+.run-goal-progress{height:10px;border-radius:12px;overflow:hidden;background:var(--surface-2);margin:16px 0 7px}
+.run-goal-progress>div{height:100%;background:#46aa7b;transition:width .15s}
+.run-list{display:flex;flex-direction:column;gap:0}
+.run-item{display:grid;grid-template-columns:38px minmax(0,1fr) auto auto;gap:12px;align-items:center;border-bottom:1px solid var(--line);padding:15px 0}
+.run-item:last-child{border-bottom:0}
+.run-item-icon{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:var(--surface-2);color:var(--accent-deep)}
+.run-item-main{min-width:0}
+.run-item-main strong{display:block;font-size:12px;overflow-wrap:anywhere}
+.run-item-main small{display:block;font-size:10px;color:var(--muted);margin-top:4px}
+.run-item-main p{font-size:10px;color:var(--muted);margin:6px 0 0;white-space:normal;overflow-wrap:anywhere}
+.run-item-pace{text-align:right;white-space:nowrap}
+.run-item-pace strong{display:block;font-size:12px}
+.run-item-pace span{font-size:10px;color:var(--muted)}
+.run-item-actions{display:flex;align-items:center;gap:0}
+.run-live-preview{display:flex;align-items:center;gap:9px;padding:14px;border:1px solid #a3d5b7;border-radius:12px;background:var(--surface-3);color:var(--accent-deep);font-size:12px;font-weight:670;margin:12px 0 17px}
+.run-live-preview svg{flex-shrink:0}
+:root[data-theme="dark"] .timer-icon{background:#24513c;color:#aff4c2}
+:root[data-theme="dark"] .run-live-preview{border-color:#3f7355;color:#bdecc7}
+@media(max-width:1230px){.running-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.running-layout{grid-template-columns:1fr}.timer-controls{justify-content:flex-start}}
+@media(max-width:630px){.workout-timer-overview{align-items:flex-start;flex-direction:column;gap:10px}.timer-heading h2{font-size:15px}.timer-clock-wrap{width:100%;align-items:flex-start}.timer-clock{font-size:38px}.timer-presets{width:100%}.timer-buttons{width:100%}.timer-buttons .button{flex:1;justify-content:center;min-width:108px}.running-kpis{gap:9px;margin-bottom:12px}.running-kpi{padding:14px 12px}.running-kpi>span{font-size:10px}.running-kpi>strong{font-size:19px}.running-layout{gap:12px}.run-item{grid-template-columns:31px minmax(0,1fr) auto;gap:7px}.run-item-icon{width:30px;height:30px}.run-item-pace{grid-column:2;grid-row:2;text-align:left}.run-item-actions{grid-column:3;grid-row:1 / span 2}.run-goal-form .button{width:100%}.timer-custom input{width:80px}}
+
+@media(max-width:630px){.running-intro{flex-direction:column;gap:12px}.running-intro .inline-actions{display:flex;align-self:stretch;justify-content:flex-start;gap:8px}.running-intro .button{white-space:nowrap!important;min-height:42px}.timer-presets .button{line-height:1.4}}

@@ -8,7 +8,7 @@ const ctx={console,Date,Math,Intl,Number,JSON,Array,Object,String,Set,Map,Blob,p
 ctx.window=ctx;ctx.addEventListener=()=>{};ctx.scrollY=0;ctx.scrollTo=()=>{};
 ctx.FormData=class{constructor(form){this.values=form.mock||{}}get(k){return this.values[k]??null}getAll(k){return this.values[k]??[]}has(k){return Object.hasOwn(this.values,k)}};
 vm.createContext(ctx);
-for(const file of ['js/data.js','js/foods-expanded.js','js/core.js','js/sync.js','js/app.js'])vm.runInContext(fs.readFileSync(path.join(base,file),'utf8'),ctx,{filename:file});
+for(const file of ['js/data.js','js/foods-expanded.js','js/core.js','js/sync.js','js/running.js','js/timer.js','js/app.js'])vm.runInContext(fs.readFileSync(path.join(base,file),'utf8'),ctx,{filename:file});
 const D=ctx.FitData,C=ctx.FitCore,date=C.today();
 function ok(expr,message){assert(expr,message);checks++}function eq(a,b,message){assert.equal(a,b,message);checks++}
 function click(action,id='',value=''){const el={dataset:{action,id,value},closest:selector=>selector==='[data-route]'?null:el};listeners.click({target:el,preventDefault(){}})}

@@ -163,6 +163,9 @@
     if(!data.customFoods.every(x=>x.baseGrams===undefined||x.baseGrams===null||(nonNeg(x.baseGrams)&&Number(x.baseGrams)>0&&Number(x.baseGrams)<=10000)))return false;
     // Personal exercise library is optional so older backups remain valid.
     if(data.customExercises!==undefined&&(!Array.isArray(data.customExercises)||data.customExercises.length>1500||data.customExercises.some(ex=>!record(ex)||!shortText(ex.id,100)||!shortText(ex.name,120)||!shortText(ex.reps,60)||!nonNeg(ex.sets)||!nonNeg(ex.load)||!nonNeg(ex.rest)||!validExerciseExtra(ex))))return false;
+    // V1.5.0 manual runs are optional; preserve ability to import v1.0–v1.4.2 backups.
+    if(data.runs!==undefined&&(!Array.isArray(data.runs)||data.runs.length>20000||!data.runs.every(x=>window.FitRun.validRun(x))))return false;
+    if(data.settings.runWeeklyGoalKm!==undefined&&(!Number.isFinite(Number(data.settings.runWeeklyGoalKm))||Number(data.settings.runWeeklyGoalKm)<0||Number(data.settings.runWeeklyGoalKm)>500))return false;
     // Recovery check-ins are optional: previous V1.0–V1.3 JSON exports remain valid.
     if(data.checkins!==undefined){
       if(!Array.isArray(data.checkins)||data.checkins.length>20000||!data.checkins.every(x=>dated(x)&&['energy','fatigue','soreness','stress','mood'].every(k=>Number.isInteger(Number(x[k]))&&Number(x[k])>=1&&Number(x[k])<=5)&&['waterMl','steps'].every(k=>x[k]===null||x[k]===undefined||x[k]===''||(Number.isInteger(Number(x[k]))&&Number(x[k])>=0&&Number(x[k])<=(k==='steps'?100000:12000)))&&shortText(x.note||'',600)))return false;
@@ -204,7 +207,12 @@
     bolt:'<path d="M13 2 4 13h7l-1 9 10-12h-7l0-8Z"/>',
     calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18"/>',
     sparkles:'<path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3Z"/>',
-    drop:'<path d="M12 2S5 11 5 15a7 7 0 0 0 14 0c0-4-7-13-7-13Z"/>'
+    drop:'<path d="M12 2S5 11 5 15a7 7 0 0 0 14 0c0-4-7-13-7-13Z"/>',
+    route:'<path d="M3 17a4 4 0 1 1 8 0c0 3 10 3 10-3a4 4 0 1 0-8 0"/><circle cx="7" cy="17" r="1"/><circle cx="17" cy="6" r="1"/>',
+    play:'<path d="m8 5 11 7-11 7V5Z"/>',
+    pause:'<path d="M8 5v14M16 5v14"/>',
+    refresh:'<path d="M21 3v6h-6M3 21v-6h6"/><path d="M4 9a8 8 0 0 1 14-3l3 3M3 15l3 3a8 8 0 0 0 14-3"/>',
+    bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>' 
   };
   function icon(name,size=20){return `<svg class="icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name]||paths.info}</svg>`;}
   function lineChart(points,opts={}){

@@ -1,3 +1,18 @@
+## V1.5.0 — Smart Workout Timer & Running Tracker (2026-10-20)
+
+### Added
+- หน้า Running Tracker ใน Sidebar พร้อมกรอกระยะทาง km เวลา นาที/วินาที ประเภทการวิ่ง RPE และหมายเหตุ
+- ฟอร์มเพิ่ม/แก้ไข/ลบบันทึกวิ่งหลายครั้งต่อวัน พร้อม Pace สดขณะกรอก, Pace เฉลี่ยย้อนหลัง, แผนภูมิระยะทาง 8 สัปดาห์ และเป้าหมายระยะทางรายสัปดาห์
+- Timer ใช้ได้ทั้งหน้า Workout และ Running: Countdown, Stopwatch, Pause/Resume/Reset, เวลาพักสำเร็จรูป, เวลาพักในแผนและท่าจับเวลาในแผน, กรอกนาทีและวินาทีเอง
+- SessionStorage กู้สถานะ Timer หลังรีเฟรชในแท็บเดิม และคำนวณอิงเวลาจริงเมื่อแท็บไม่ได้ active; Toast/เสียง (หาก browser อนุญาต); opt-in Notification
+- ใหม่ `js/running.js`, `js/timer.js` และ `tests/test-v150.cjs` (51 assertions)
+
+### Safety / Compatibility
+- เก็บ `runs` เป็นฟิลด์ทางเลือกใน JSON Snapshot เดิม พร้อมตรวจ validRun เมื่อ import และตรวจเป้าหมาย weekly km — นำเข้าข้อมูลเดิมได้โดยไม่ต้อง SQL Migration
+- Timer ไม่ถูกเขียนเข้าฐานข้อมูลหรือบันทึก Workout Session อัตโนมัติ
+- ไม่ใช้ค่าจาก GPS/สมาร์ตวอทช์อัตโนมัติ ไม่มี Health API หรือการวัดทางการแพทย์
+- ไม่แก้ไข `js/supabase-config.js` ใน Update Only
+
 # RHYTHM Changelog
 
 ## V1.4.2 — Minute & Second Workout Timing (2026-10-20)
