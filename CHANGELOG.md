@@ -1,5 +1,22 @@
 # RHYTHM Changelog
 
+## V1.4.2 — Minute & Second Workout Timing (2026-10-20)
+
+### Changed
+- Timed exercise targets now use separate minute/second fields, allowing 30-minute running or 1-minute-30-second planks without manual conversion. Performed workout logs use the same two-field design.
+- Daily plan goals, personal library rows and timed PR summaries display a readable Thai duration while analytics continue using the exact stored number of seconds.
+- Timed input validation enforces seconds 0–59, total duration 1–36000 seconds, and integer minutes/seconds. Switching back to repetitions does not require timed fields.
+
+### Compatibility / Safety
+- Existing `targetSeconds`, `reps` text, and `setLog[].seconds` are preserved as-is in persisted JSON / Supabase. No schema migration, SQL, new tables or cloud credential changes required.
+- No changes to the original account isolation, RLS or conflict-handling modules. Update Only excludes Supabase Config.
+
+### Verification
+- 39 new V1.4.2 logic/editor assertions, plus 273 existing = **312 passing assertions**.
+- Chromium Playwright real interaction verified on Desktop and Mobile with inline source fallback because the environment blocked localhost: plan creation 1:30, editing 30:00, actual set 1:20, reload of stored values, and no JS errors or horizontal mobile page overflow.
+- User's actual Supabase cloud and Vercel deployments remain untested: back up JSON and test login/sync on deployed site.
+
+
 ## V1.4.1 — Reusable Exercise Library & Adaptive Workout Types (2026-10-20)
 
 ### New

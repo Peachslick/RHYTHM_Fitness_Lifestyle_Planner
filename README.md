@@ -1,3 +1,46 @@
+# RHYTHM V1.4.2 — Minute & Second Workout Timing
+
+อัปเดตต่อจาก RHYTHM V1.4.1 โดยปรับฟอร์มท่าออกกำลังกายและฟอร์มบันทึกเซตจริงให้กรอก **นาที + วินาที** แทนการแปลงเองเป็นวินาทียาว ๆ ข้อมูลเก่า, คลังท่าส่วนตัว, ตัวคำนวณ Training Analytics และ Supabase Cloud Sync ยังใช้รูปแบบเดิม
+
+## ฟีเจอร์ใหม่
+
+- เมื่อเลือก **รูปแบบการทำ → จับเวลา** ช่อง **เวลาต่อเซต** แยกเป็น `นาที` (0–600) และ `วินาที` (0–59)
+- ตัวอย่าง: Plank **1 นาที 30 วินาที** → นาที `1`, วินาที `30`; วิ่ง **30 นาที** → นาที `30`, วินาที `0`; Plank 45 วินาที → นาที `0`, วินาที `45`
+- **บันทึกการฝึกจริง → เพิ่มเซตจริง** รองรับนาที + วินาทีแยกกันเช่นเดียวกัน และเปิดแก้ไขเซตเก่าได้
+- ตารางฝึก, คลังท่าส่วนตัว และผล PR ที่เป็นเวลาจะแสดงผลอ่านง่าย (`30 นาที`, `1 นาที 30 วินาที`)
+- ระบบเก็บค่า `targetSeconds`, `seconds` ภายในเป็น **จำนวนวินาทีเต็มเท่านั้น** (`30 นาที = 1800 วินาที`) เพื่อไม่เปลี่ยน JSON Schema และไม่กระทบสถิติที่มีอยู่
+- ปฏิเสธเวลา 0, ค่าติดลบ, วินาที 60 ขึ้นไป และเวลารวมที่เกิน 10 ชั่วโมงต่อเซต โดยไม่เขียนทับข้อมูลก่อนหน้า
+
+## วิธีอัปเดตเว็บที่ใช้ V1.4.1 อยู่แล้ว
+
+1. เข้าเว็บ V1.4.1 ให้ Cloud Sync ไม่มี Pending/Conflict และดาวน์โหลด **Backup JSON** ก่อน
+2. แตก `RHYTHM_v1.4.2_UPDATE_ONLY.zip` แล้วนำไฟล์ภายในไป **ทับตรง root** ของ GitHub Repository เดิม (ไม่ต้องเพิ่มโฟลเดอร์ครอบ)
+3. ไฟล์ใน ZIP อัปเดต: `index.html`, `css/styles.css`, `js/app.js`, `js/core.js`, `tests/test-v142.cjs`, `README.md`, `CHANGELOG.md`
+4. **ไม่มี** `js/supabase-config.js` ในไฟล์ Update Only; URL และ Publishable Key ที่คุณตั้งไว้ไม่ถูกทับ
+5. Commit/Push ไป GitHub → รอ Vercel Deploy → Hard Refresh → ตรวจ footer ว่า **V1.4.2**
+6. ลองสร้าง Plank 1 นาที 30 วินาที และวิ่ง 30 นาที; บันทึกเซตจริง; เปิดกลับมาแก้; ตรวจ Cloud Sync จากบัญชีจริงด้วยตนเอง
+
+**ไม่ต้องรัน SQL ใหม่** ระบบยังใช้ JSON user document + RLS และ CAS sync ของ V1.1.0 ตามเดิม ส่วนการทดสอบกับ Supabase จริงยังไม่ได้ทำในสภาพแวดล้อมนี้
+
+## ทดสอบ
+
+```bash
+node tests/test-core.cjs
+node tests/test-app.cjs
+node tests/test-sync.cjs
+node tests/test-v12.cjs
+node tests/test-v13.cjs
+node tests/test-v14.cjs
+node tests/test-v141.cjs
+node tests/test-v142.cjs
+```
+
+ทดสอบบน Node.js ผ่าน **312 assertions** จาก 8 ชุด (273 เดิม + 39 ใหม่) และทดสอบ Chromium แบบ Desktop 1440×900 / Mobile 390×844 โดยใช้ inline source fallback เนื่องจากสภาพแวดล้อมบล็อก localhost: เพิ่มท่า → ตั้งเป้า 1:30 → แก้ 30:00 → บันทึกเซต 1:20 → เปิดซ้ำ, ไม่พบ JavaScript Error หรือ mobile page overflow; **ยังไม่ได้ทดสอบ Supabase จริง**
+
+---
+
+## คู่มือ V1.4.1 และก่อนหน้า
+
 # RHYTHM V1.4.1 — Reusable Exercise Library & Workout Modes
 
 แก้จาก **V1.4.0** โดยไม่ล้างข้อมูลเดิม และไม่ต้องแก้ Supabase SQL / RLS เพิ่ม

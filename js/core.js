@@ -1,4 +1,4 @@
-/* RHYTHM v1.4.1 — pure calculations, dates, local persistence and icons */
+/* RHYTHM v1.4.2 — pure calculations, dates, local persistence and icons */
 (function(){
   'use strict';
   const KEY='rhythm_fitness_v1';
@@ -35,6 +35,26 @@
     const text=String(ex?.reps||'').trim(),m=text.match(/^(\d+(?:\.\d+)?)\s*(วินาที|นาที|sec(?:onds?)?|min(?:utes?)?)$/i);
     if(!m)return null;
     return Math.round(Number(m[1])*(m[2].toLowerCase().startsWith('นาที')||m[2].toLowerCase().startsWith('min')?60:1));
+  }
+  // UI accepts minutes + seconds, while saved plans and cloud JSON remain seconds.
+  // Never interpret invalid or empty input as a valid 0-second timed set.
+  function durationParts(total){
+    const value=Number(total);
+    const safe=Number.isInteger(value)&&value>=0?value:0;
+    return {minutes:Math.floor(safe/60),seconds:safe%60};
+  }
+  function parseDurationParts(minutes,seconds,max=36000){
+    const m=String(minutes??'').trim(),s=String(seconds??'').trim();
+    if(!m&&!s)return null;
+    if(!/^\d+$/.test(m||'0')||!/^\d+$/.test(s||'0'))return null;
+    const mm=Number(m||0),ss=Number(s||0),total=mm*60+ss;
+    if(!Number.isSafeInteger(total)||ss>=60||total<=0||total>max)return null;
+    return total;
+  }
+  function formatDuration(total){
+    const {minutes,seconds}=durationParts(total);
+    if(!minutes)return `${seconds} วินาที`;
+    return seconds?`${minutes} นาที ${seconds} วินาที`:`${minutes} นาที`;
   }
   function validExerciseExtra(ex){
     if(ex.measure!==undefined&&!['reps','time'].includes(ex.measure))return false;
@@ -205,5 +225,5 @@
     const dots=clean.map((p,i)=>`<circle cx="${x(i)}" cy="${y(p.value)}" r="4.4" fill="var(--accent-deep)" stroke="var(--surface)" stroke-width="2"><title>${esc(pretty(p.date))} • ${nfmt(p.value,1)}</title></circle>`).join('');
     return `<svg role="img" aria-label="${esc(opts.label||'กราฟแนวโน้ม')}" class="line-chart" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet"><defs><linearGradient id="${guid}" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="var(--accent-deep)" stop-opacity=".21"/><stop offset="100%" stop-color="var(--accent-deep)" stop-opacity="0"/></linearGradient></defs>${grid}${target}<path d="${fill}" fill="url(#${guid})"/><path d="${path}" stroke="var(--accent-deep)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>${dots}${labels}</svg>`;
   }
-  window.FitCore={KEY,$,$$,esc,num,nfmt,clamp,uid,today,isDate,shift,weekday,weekDates,pretty,shortDate,timeMin,exerciseMode,exerciseSeconds,validExerciseExtra,validPerformedSet,sleepDuration,sleepStageMinutes,sleepStagePercent,validSleepStages,planOn,trainingStats,ageValid,metrics,mealsFor,foodTotals,weightSeries,recentSleep,sleepStats,workoutStats,calorieAverage,weightTrend,nutritionSummary,sorted,validateImported,load,save,exportData,icon,lineChart};
+  window.FitCore={KEY,$,$$,esc,num,nfmt,clamp,uid,today,isDate,shift,weekday,weekDates,pretty,shortDate,timeMin,exerciseMode,exerciseSeconds,durationParts,parseDurationParts,formatDuration,validExerciseExtra,validPerformedSet,sleepDuration,sleepStageMinutes,sleepStagePercent,validSleepStages,planOn,trainingStats,ageValid,metrics,mealsFor,foodTotals,weightSeries,recentSleep,sleepStats,workoutStats,calorieAverage,weightTrend,nutritionSummary,sorted,validateImported,load,save,exportData,icon,lineChart};
 })();

@@ -162,3 +162,14 @@
   .exercise-row .exercise-sets{white-space:normal;font-size:10px}
   .intelligence-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* V1.4.2 - minute/second time inputs, compact and touch-friendly */
+.duration-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;min-width:0}
+.duration-pair label{display:block;min-width:0}
+.duration-pair label>span{display:block;font-size:11px;color:var(--ink-soft);font-weight:650;margin-bottom:5px}
+.duration-pair input{width:100%;min-width:0}
+.exercise-time-field>.duration-pair{margin-top:5px}
+.session-duration-field{min-width:0}
+.session-duration-field>span{display:block;font-size:11px;font-weight:650;margin-bottom:5px}
+.set-entry .duration-pair input[type="number"]{height:41px;width:100%}
+@media(max-width:630px){.session-duration-field{grid-column:1/-1}.set-entry .duration-pair{gap:8px}}
