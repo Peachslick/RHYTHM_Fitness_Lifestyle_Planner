@@ -139,3 +139,26 @@
 @media(max-width:630px){.brand-logo{width:43px;height:43px}.recovery-intro{padding:24px 18px;flex-direction:column;align-items:stretch;gap:16px}.recovery-intro h2{font-size:21px}.recovery-intro .button{width:100%;justify-content:center}.recovery-kpis{gap:10px}.recovery-kpi{padding:14px;min-height:144px}.recovery-kpi>strong{font-size:24px}.recovery-kpi>span{font-size:10px}.recovery-feelings{gap:7px}.recovery-feelings>div{padding:10px}.recovery-calendar{gap:3px}.recovery-calendar-day{padding:10px 2px}.recovery-calendar-day span:not(.rc-dot){font-size:8px}.recovery-datebox{flex-direction:column;align-items:stretch}.recovery-datebox .field{width:100%}.recovery-datebox .button{width:100%;justify-content:center}.checkin-fields{grid-template-columns:1fr}}
 
 @media(max-width:630px){.recovery-calendar{grid-template-columns:repeat(7,92px);overflow-x:auto;padding-bottom:11px;scroll-snap-type:x proximity}.recovery-calendar-day{scroll-snap-align:start;min-width:88px}.recovery-calendar-day strong{font-size:11px}.recovery-calendar-day span:not(.rc-dot){font-size:10px}}
+
+/* v1.4.1 — reusable exercise library and bodyweight/timed workout entry */
+[hidden]{display:none!important}
+.workout-detail .section-head .inline-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.exercise-row .exercise-sets{overflow-wrap:anywhere}
+.exercise-row .exercise-load{white-space:normal;font-size:11px;line-height:1.4}
+.exercise-mode-note{background:var(--surface-2);padding:10px 12px;border-radius:9px;margin:0;color:var(--muted)}
+.library-exercise-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}
+.library-exercise-row>div:first-child{min-width:0;overflow-wrap:anywhere}
+.library-exercise-row strong{display:block;font-size:12px}
+.library-exercise-row small{display:block;color:var(--muted);margin-top:4px;font-size:11px}
+.library-exercise-row .row-buttons{flex-shrink:0;display:flex;align-items:center;gap:6px}
+.set-bodyweight-label{font-size:11px;color:var(--accent-deep);min-height:41px;display:flex;align-items:center;line-height:1.45;font-weight:700}
+.intelligence-kpis{grid-template-columns:repeat(auto-fit,minmax(145px,1fr))}
+@media(max-width:630px){
+  .workout-detail .section-head .inline-actions{width:100%;justify-content:flex-start}
+  .workout-detail .section-head .inline-actions .button{white-space:normal}
+  .set-entry-adaptive{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .library-exercise-row{align-items:flex-start;flex-direction:column}
+  .library-exercise-row .row-buttons{width:100%;justify-content:flex-end}
+  .exercise-row .exercise-sets{white-space:normal;font-size:10px}
+  .intelligence-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+}

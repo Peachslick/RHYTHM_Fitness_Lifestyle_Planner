@@ -1,4 +1,4 @@
-/* RHYTHM v1.4.0 — Seed data and editable local food / exercise references.
+/* RHYTHM v1.4.1 — Seed data and editable local food / exercise references.
    Food nutrition is an APPROXIMATE example per serving; check labels or verified sources. */
 (function () {
   'use strict';
@@ -28,7 +28,7 @@
     {id:'ex-shoulder',name:'Shoulder Press',group:'push',sets:3,reps:'8-12',load:12,rest:90},
     {id:'ex-lateral',name:'Lateral Raise',group:'push',sets:3,reps:'12-15',load:6,rest:60},
     {id:'ex-tricep',name:'Triceps Pushdown',group:'push',sets:3,reps:'10-15',load:20,rest:60},
-    {id:'ex-pullup',name:'Pull-up / Assisted',group:'pull',sets:3,reps:'6-10',load:0,rest:120},
+    {id:'ex-pullup',name:'Pull-up / Assisted',group:'pull',sets:3,reps:'6-10',load:0,rest:120,measure:'reps',loadType:'bodyweight'},
     {id:'ex-lat',name:'Lat Pulldown',group:'pull',sets:3,reps:'8-12',load:35,rest:90},
     {id:'ex-row',name:'Seated Cable Row',group:'pull',sets:3,reps:'8-12',load:30,rest:90},
     {id:'ex-face',name:'Face Pull',group:'pull',sets:3,reps:'12-15',load:12,rest:60},
@@ -38,10 +38,14 @@
     {id:'ex-lunge',name:'Walking Lunge',group:'legs',sets:3,reps:'10/ข้าง',load:12,rest:75},
     {id:'ex-legpress',name:'Leg Press',group:'legs',sets:3,reps:'10-12',load:80,rest:90},
     {id:'ex-calf',name:'Standing Calf Raise',group:'legs',sets:3,reps:'12-20',load:20,rest:60},
-    {id:'ex-run',name:'วิ่งเบา / Zone 2',group:'run',sets:1,reps:'30 นาที',load:0,rest:0},
-    {id:'ex-interval',name:'วิ่ง Interval',group:'run',sets:6,reps:'2 นาที',load:0,rest:90},
-    {id:'ex-walk',name:'เดินเร็ว / Active Recovery',group:'recovery',sets:1,reps:'30 นาที',load:0,rest:0},
-    {id:'ex-plank',name:'Plank',group:'full',sets:3,reps:'45 วินาที',load:0,rest:45}
+    {id:'ex-run',name:'วิ่งเบา / Zone 2',group:'run',sets:1,reps:'30 นาที',load:0,rest:0,measure:'time',loadType:'none',targetSeconds:1800},
+    {id:'ex-interval',name:'วิ่ง Interval',group:'run',sets:6,reps:'2 นาที',load:0,rest:90,measure:'time',loadType:'none',targetSeconds:120},
+    {id:'ex-walk',name:'เดินเร็ว / Active Recovery',group:'recovery',sets:1,reps:'30 นาที',load:0,rest:0,measure:'time',loadType:'none',targetSeconds:1800},
+    {id:'ex-pushup',name:'Push-ups (วิดพื้น)',group:'push',sets:3,reps:'10-15',load:0,rest:60,measure:'reps',loadType:'bodyweight'},
+    {id:'ex-dip',name:'Bench Dips',group:'push',sets:3,reps:'10-12',load:0,rest:60,measure:'reps',loadType:'bodyweight'},
+    {id:'ex-body-squat',name:'Bodyweight Squat',group:'legs',sets:3,reps:'15-20',load:0,rest:60,measure:'reps',loadType:'bodyweight'},
+    {id:'ex-wall-sit',name:'Wall Sit',group:'legs',sets:3,reps:'45 วินาที',load:0,rest:45,measure:'time',loadType:'bodyweight',targetSeconds:45},
+    {id:'ex-plank',name:'Plank',group:'full',sets:3,reps:'45 วินาที',load:0,rest:45,measure:'time',loadType:'bodyweight',targetSeconds:45}
   ];
   const DAYS = ['จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์','อาทิตย์'];
   const DAYS_FULL = ['วันจันทร์','วันอังคาร','วันพุธ','วันพฤหัสบดี','วันศุกร์','วันเสาร์','วันอาทิตย์'];
@@ -122,10 +126,10 @@
         {energy:4,fatigue:2,soreness:2,stress:2,mood:4}
       ];return {id:'demo-checkin-'+i,date:localDate(i-5),...values[i],waterMl:1800+i*150,steps:6500+i*400,note:''};
     });
-    return {version:1,demo:true,profile:{name:'Alex',age:25,height:175,weight:68,sex:'male',activity:'moderate',goal:'muscle',targetWeight:72,calorieAdjust:200,proteinPerKg:1.6,fatPercent:25,sleepGoal:8},plan:p,meals,sleeps,sessions,weights,routines:routines(),customFoods:[],checkins,settings:{theme:'light',font:'ibm'}};
+    return {version:1,demo:true,profile:{name:'Alex',age:25,height:175,weight:68,sex:'male',activity:'moderate',goal:'muscle',targetWeight:72,calorieAdjust:200,proteinPerKg:1.6,fatPercent:25,sleepGoal:8},plan:p,meals,sleeps,sessions,weights,routines:routines(),customFoods:[],customExercises:[],checkins,settings:{theme:'light',font:'ibm'}};
   }
   function blankState() {
-    return {version:1,demo:false,profile:freshProfile(),plan:plan(),meals:[],sleeps:[],sessions:[],weights:[],routines:routines(),customFoods:[],checkins:[],settings:{theme:'light',font:'ibm'}};
+    return {version:1,demo:false,profile:freshProfile(),plan:plan(),meals:[],sleeps:[],sessions:[],weights:[],routines:routines(),customFoods:[],customExercises:[],checkins:[],settings:{theme:'light',font:'ibm'}};
   }
   window.FitData = {FOOD_LIBRARY,EXERCISES,DAYS,DAYS_FULL,TYPES,GOALS,ACTIVITY,CATEGORIES,MEALTYPES,freshProfile,plan,routines,demoState,blankState};
 })();

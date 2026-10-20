@@ -1,5 +1,25 @@
 # RHYTHM Changelog
 
+## V1.4.1 — Reusable Exercise Library & Adaptive Workout Types (2026-10-20)
+
+### New
+- Added a permanent **My Exercise Library**, backed by optional `customExercises` inside the existing version-1 user document. Each new exercise can be saved to the library and reused on other workout days. Previously customized exercises in weekly templates can also be selected without retyping.
+- Added **Manage My Exercise Library** to list, reuse, or remove saved entries; deleting a library item leaves existing workout plans and historical workout sessions unchanged.
+- Exercise form now offers **repetitions** or **seconds per set**, alongside **external weight / bodyweight / no weight**. Supports Plank, Wall Sit, running, Push-ups, Pull-ups, etc. Added sample presets.
+- Daily template rows and actual set logging display appropriate units. Push-ups no longer require fabricated kg values; Plank uses actual recorded seconds.
+- Updated analytics: kg·reps and Epley estimated 1RM only for real externally weighted repetition sets, with separate bodyweight repetitions and timed seconds. Warm-up sets remain excluded.
+
+### Compatibility / Cloud
+- Old exercise templates lacking `measure`, `loadType` and `targetSeconds` are interpreted without rewriting old data. Common Push-up and Plank names are inferred for accurate display; edit any non-standard exercise name to choose the right mode.
+- Old session logs remain preserved; no conversion of historical repetitions to elapsed seconds is attempted.
+- `customExercises` and exercise metadata are **optional fields**; backups from V1.4.0 and older stay importable.
+- No Supabase SQL migration required: the existing JSON document, optimistic concurrency protection and per-user RLS remain untouched. This patch does not contain `js/supabase-config.js`.
+
+### Verification
+- All 7 local test suites passed (273 assertions in total, including 36 new V1.4.1 assertions).
+- Chromium Playwright verified on desktop and mobile (inline-script fallback because browser file URL was blocked by the environment), with a test-only localStorage shim: exercise library save, selecting Plank, seconds-only set logs, bodyweight reps without kg, and zero JS exceptions / no mobile horizontal overflow.
+- **Not yet validated** with user's real Supabase account, network reconnect, multiple concurrent Vercel devices, or live production data. Back up JSON first.
+
 ## V1.4.0 — Recovery & Lifestyle Intelligence + Identity (2026-10-19)
 
 ### Added
