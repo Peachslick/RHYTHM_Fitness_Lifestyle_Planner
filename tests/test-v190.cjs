@@ -1,0 +1,32 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const root=path.resolve(__dirname,'..');let checks=0;
+const eq=(a,b,m)=>{assert.equal(a,b,m);checks++};const ok=(a,m)=>{assert.ok(a,m);checks++};
+const local=new Map(),listeners={};let sidebarScroll=0,created=0;
+const app={_html:'',set innerHTML(x){this._html=x;created++;},get innerHTML(){return this._html;}};
+const sidebar=()=>({get scrollTop(){return sidebarScroll},set scrollTop(v){sidebarScroll=v}});
+const dom={app,'modal-root':{innerHTML:''},'toast-root':{innerHTML:''}};
+const doc={documentElement:{dataset:{}},body:{classList:{add(){},remove(){}}},getElementById:id=>id==='sidebar'?sidebar():dom[id],querySelector:()=>null,querySelectorAll:()=>[],addEventListener:(k,fn)=>listeners[k]=fn};
+const loc={hash:'#metabolism'},history={replaceState:(a,b,p)=>loc.hash=p};
+const ctx={console,Date,Math,Intl,Number,JSON,Array,Object,String,Set,Map,Blob,parseInt,parseFloat,document:doc,location:loc,history,localStorage:{getItem:k=>local.get(k)||null,setItem:(k,v)=>local.set(k,v)},sessionStorage:{getItem:()=>null,setItem:()=>{}},setTimeout:()=>1,clearTimeout:()=>{},confirm:()=>true};
+ctx.window=ctx;ctx.scrollY=0;ctx.scrollTo=()=>{};ctx.scrollBy=()=>{};ctx.addEventListener=(k,f)=>listeners['window:'+k]=f;
+vm.createContext(ctx);
+for(const file of ['js/data.js','js/core.js','js/recovery.js','js/running.js','js/timer.js','js/insights.js','js/goals.js','js/workout-analytics.js','js/metabolism.js','js/sync.js','js/app.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),ctx,{filename:file});
+const C=ctx.FitCore,D=ctx.FitData,M=ctx.FitMetabolism;const today=C.today(),s=D.blankState();s.meals=[];s.weights=[];
+let r=M.analyse(s,{asOf:today,days:28});eq(r.loggedDays,0,'no meals');eq(r.coverage,0,'no coverage');eq(r.totals.kcal,null,'missing is unknown');eq(r.empiricalTdee,null,'no empirical');ok(r.notes.some(x=>x.title.includes('ยังไม่มี')),'inform missing');eq(JSON.stringify(s),JSON.stringify(D.blankState()),'pure');
+const f={id:'f1',name:'rice',meal:'lunch',servings:1,kcal:500,protein:20,carbs:80,fat:10};
+s.meals.push({...f,date:today});r=M.analyse(s,{asOf:today,days:28});eq(r.loggedDays,1,'one logged day');eq(r.totals.kcal,500,'one meal');eq(r.coverage,1/28,'coverage');eq(r.totals.protein,20,'protein');eq(r.topFoods[0].count,1,'food count');eq(r.empiricalTdee,null,'insufficient');
+s.meals.push({...f,id:'f2',date:today,servings:2});r=M.analyse(s,{asOf:today,days:14});eq(r.totals.kcal,1500,'sum per unique day only');eq(r.loggedDays,1,'two items same day');eq(r.totals.protein,60,'protein total');eq(r.mealMix[0].share,1,'meal share');
+const first=C.shift(today,-27);s.meals=[];for(let i=0;i<28;i++){const date=C.shift(first,i); if(i!==7){s.meals.push({...f,id:String(i),date,servings:4});}}
+for(const i of [0,2,25,27])s.weights.push({id:'w'+i,date:C.shift(first,i),weight:i<10?70:70.5,bodyFat:null});
+r=M.analyse(s,{asOf:today,days:28});eq(r.loggedDays,27,'27 days');ok(r.coverage>.85,'coverage enough');ok(r.trendReady,'enough distributed weights');ok(r.empiricalTdee!==null,'optional approximate TDEE shown');ok(r.notes.some(x=>x.domain==='metabolism'),'model caveat');
+const before=JSON.stringify(s);r=M.analyse(s,{asOf:today,days:14});eq(r.days,14,'14 days');eq(r.empiricalTdee,null,'never compute model at 14 days');eq(JSON.stringify(s),before,'no mutation');
+r=M.analyse(s,{asOf:today,days:99});eq(r.days,28,'invalid range fallback');
+s.meals=s.meals.filter(m=>m.date===today);r=M.analyse(s,{asOf:today,days:28});eq(r.empiricalTdee,null,'low coverage disallows model');
+// Sidebar scroll should persist even when another route reconstructs the entire shell.
+sidebarScroll=485;const nav=page=>listeners.click({preventDefault(){},target:{closest:q=>q==='[data-route]'?{dataset:{route:page}}:null}});
+nav('nutrition');eq(sidebarScroll,485,'sidebar kept on navigation');ok(app.innerHTML.includes('Smart Nutrition'),'navigated nutrition');nav('metabolism');eq(sidebarScroll,485,'sidebar kept when returning');ok(app.innerHTML.includes('Metabolism & Nutrition Insights'),'new page rendered');
+const click=(action,value)=>listeners.click({target:{closest:q=>q==='[data-route]'?null:{dataset:{action,value}}},preventDefault(){}});
+click('metabolism-period','56');ok(app.innerHTML.includes('56 วัน'),'range click');eq(sidebarScroll,485,'sidebar kept on in-page rerender');eq(loc.hash,'#metabolism','route remains');
+ok(app.innerHTML.includes('ข้อมูลไม่พอ'),'source quality states surfaced');
+console.log('PASS: '+checks+' V1.9.0 metabolism, data quality, pure analytics, sidebar preservation and UI smoke assertions');

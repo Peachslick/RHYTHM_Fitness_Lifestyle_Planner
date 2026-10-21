@@ -1,3 +1,12 @@
+## V1.9.0 — Metabolism & Nutrition Insights & Sidebar Scroll Preservation (2026-10-21)
+
+- New read-only `js/metabolism.js`: TDEE vs intake, tracked-day coverage, macros, weight trend and evidence-gated rough energy-maintenance model.
+- Added 14/28/56-day Metabolism & Nutrition page with charts, food-frequency view and action-oriented notes; no automatic calorie adjustment.
+- Fixed Sidebar scrolling to preserve scrollTop during full shell re-render when navigating or filtering; tested desktop and mobile.
+- All prior data and existing Supabase Auth/RLS/schema retained; **no SQL migration** or sync-format changes.
+- Added `tests/test-v190.cjs` (34 new checks). Aggregate 508 checks across 13 suites.
+- Browser QA used Playwright Chromium with direct source injection because localhost navigation was blocked by environment policy; Supabase live integration not tested.
+
 ## V1.8.0 — Advanced Workout Analytics & Deep Insights Filter Scroll Fix (2026-10-21)
 
 - Added read-only advanced workout analytics engine in `js/workout-analytics.js`; no database schema change.
