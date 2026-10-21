@@ -129,11 +129,12 @@
   function foodTotals(entries){
     // HDmall per-dish entries may provide calories but NO macro facts.
     // Legacy meals (macroKnown undefined) remain fully compatible.
-    const result={kcal:0,protein:0,carbs:0,fat:0,macroIncomplete:false,incompleteItems:0};
+    const result={kcal:0,protein:0,carbs:0,fat:0,macroIncomplete:false,incompleteItems:0,estimatedItems:0};
     for(const row of entries){
       const servings=num(row.servings,1);
       result.kcal+=num(row.kcal)*servings;
       if(row.macroKnown===false){result.macroIncomplete=true;result.incompleteItems++;continue;}
+      if(row.macroEstimated===true)result.estimatedItems++;
       for(const key of ['protein','carbs','fat'])result[key]+=num(row[key])*servings;
     }
     for(const key of ['kcal','protein','carbs','fat'])result[key]=Math.round(result[key]*10)/10;
@@ -183,11 +184,13 @@
     for(const session of data.sessions)for(const ex of session.exercises){if(ex.setLog!==undefined&&(!Array.isArray(ex.setLog)||ex.setLog.length>30||ex.setLog.some(r=>!validPerformedSet(ex,r))))return false;}
     if(!data.weights.every(x=>dated(x)&&nonNeg(x.weight)&&(x.bodyFat===null||x.bodyFat===''||nonNeg(x.bodyFat))))return false;
     if(!data.routines.every(x=>record(x)&&shortText(x.id,100)&&shortText(x.title,120)&&shortText(x.start,5)&&shortText(x.end,5)&&timeMin(x.start)!==null&&timeMin(x.end)!==null&&Object.hasOwn(FitData.CATEGORIES,x.category)&&Array.isArray(x.days)&&x.days.length<=7&&x.days.every(d=>Number.isInteger(d)&&d>=0&&d<=6)))return false;
-    if(!data.customFoods.every(x=>record(x)&&shortText(x.id,100)&&shortText(x.name,120)&&shortText(x.unit,100)&&shortText(x.group,60)&&['kcal','protein','carbs','fat'].every(k=>nonNeg(x[k]))&&(x.macroKnown===undefined||typeof x.macroKnown==='boolean')))return false;
+    if(!data.customFoods.every(x=>record(x)&&shortText(x.id,100)&&shortText(x.name,120)&&shortText(x.unit,100)&&shortText(x.group,60)&&['kcal','protein','carbs','fat'].every(k=>nonNeg(x[k]))&&(x.macroKnown===undefined||typeof x.macroKnown==='boolean')&&(x.macroEstimated===undefined||typeof x.macroEstimated==='boolean')))return false;
     // V1.3 fields are optional so old V1.0–V1.2 exports remain importable.
     if(data.favoriteFoodIds!==undefined&&(!Array.isArray(data.favoriteFoodIds)||data.favoriteFoodIds.length>2000||data.favoriteFoodIds.some(id=>!shortText(id,100))))return false;
-    if(!data.meals.every(x=>(x.macroKnown===undefined||typeof x.macroKnown==='boolean')&&(x.baseGrams===undefined||x.baseGrams===null||(nonNeg(x.baseGrams)&&Number(x.baseGrams)>0&&Number(x.baseGrams)<=10000))&&(x.quantityMode===undefined||['servings','grams'].includes(x.quantityMode))&&(x.quantityGrams===undefined||x.quantityGrams===null||(nonNeg(x.quantityGrams)&&Number(x.quantityGrams)<=3000))&&(x.copiedFrom===undefined||shortText(x.copiedFrom,100))))return false;
+    if(!data.meals.every(x=>(x.macroEstimated===undefined||typeof x.macroEstimated==='boolean')&&(x.macroKnown===undefined||typeof x.macroKnown==='boolean')&&(x.baseGrams===undefined||x.baseGrams===null||(nonNeg(x.baseGrams)&&Number(x.baseGrams)>0&&Number(x.baseGrams)<=10000))&&(x.quantityMode===undefined||['servings','grams'].includes(x.quantityMode))&&(x.quantityGrams===undefined||x.quantityGrams===null||(nonNeg(x.quantityGrams)&&Number(x.quantityGrams)<=3000))&&(x.copiedFrom===undefined||shortText(x.copiedFrom,100))))return false;
     if(!data.customFoods.every(x=>x.baseGrams===undefined||x.baseGrams===null||(nonNeg(x.baseGrams)&&Number(x.baseGrams)>0&&Number(x.baseGrams)<=10000)))return false;
+    // Meal Templates are optional to preserve old backups and cloud snapshots.
+    if(data.mealTemplates!==undefined&&(!Array.isArray(data.mealTemplates)||data.mealTemplates.length>120||!data.mealTemplates.every(t=>window.FitUX?.validMealTemplate(t))))return false;
     // Personal exercise library is optional so older backups remain valid.
     if(data.customExercises!==undefined&&(!Array.isArray(data.customExercises)||data.customExercises.length>1500||data.customExercises.some(ex=>!record(ex)||!shortText(ex.id,100)||!shortText(ex.name,120)||!shortText(ex.reps,60)||!nonNeg(ex.sets)||!nonNeg(ex.load)||!nonNeg(ex.rest)||!validExerciseExtra(ex))))return false;
     // V1.7 optional goals; retain old v1.0–v1.6 backups and protect cloud snapshots.

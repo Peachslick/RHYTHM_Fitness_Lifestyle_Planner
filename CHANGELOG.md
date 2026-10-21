@@ -1,3 +1,12 @@
+## V1.9.3 — Everyday UX Upgrade (2026-10-21)
+
+- Setup Wizard 3 steps (save on confirm; open after starting real data).
+- Meal Templates create/reuse/delete; cloud-synced JSON, duplicate confirmation.
+- Inline Live Workout per-set entry, rest timer, browser-tab draft scoped to account/date; save confirmed sets only.
+- 183 HDmall kcal-only catalog items gain clearly labelled heuristic Macro estimates while preserving original kcal. Historical user logs not overwritten.
+- Analytics separate estimated macros from verified data; no new SQL or Supabase config changes.
+- README and Thai guide include usage instructions and Macro caveats.
+
 ## V1.9.1 — HDmall Food Calorie Catalog (2026-10-21)
 
 - Added 183 curated HDmall per-serving menu entries, excluding known catalog-name duplicates (154 existing -> 337 total). Attribution URL retained in source entries and UI.

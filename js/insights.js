@@ -30,7 +30,7 @@ function assemble(state,{days=14,asOf=C.today()}={}){
  const goal=finite(profile.sleepGoal)?clip(Number(profile.sleepGoal),6,12)*60:480;
  const dailyMeals=new Map();for(const item of state.meals||[])if(isPast(item.date,from,asOf)){const arr=dailyMeals.get(item.date)||[];arr.push(item);dailyMeals.set(item.date,arr);}
  const foods=[...dailyMeals].sort((a,b)=>a[0].localeCompare(b[0])).map(([date,rows])=>({date,...C.foodTotals(rows)}));
- const foodCover=coverage(foods.length,days,4),foodAvg=avg(foods.map(x=>x.kcal)),proteinFoods=foods.filter(x=>!x.macroIncomplete),proteinAvg=avg(proteinFoods.map(x=>x.protein));
+ const foodCover=coverage(foods.length,days,4),foodAvg=avg(foods.map(x=>x.kcal)),proteinFoods=foods.filter(x=>!x.macroIncomplete&&!x.estimatedItems),proteinAvg=avg(proteinFoods.map(x=>x.protein));
  const calorieTarget=metrics.ready?metrics.target:null;
  const mealLine=foods.map(x=>({date:x.date,value:round(x.kcal,1)}));
  const weightMap=new Map();for(const item of state.weights||[])if(isPast(item.date,from,asOf)&&finite(item.weight)&&Number(item.weight)>0)weightMap.set(item.date,item);
