@@ -129,3 +129,16 @@
 - **V1.2.0:** Workout sets / training analytics / flexible planner, sleep % stages, Thai font choice.
 - **V1.1.0:** Optional Supabase Auth, RLS, revisioned Cloud Sync, recovery draft/backup and conflict safeguards.
 - **V1.0.0:** Baseline fitness, food, sleep, schedule, profile and local persistence.
+
+---
+
+# V1.9.2 — UX Simplification & In-App Guide (21 October 2026)
+
+- จัดกลุ่ม Sidebar เป็น **บันทึกและวางแผน** และ **วิเคราะห์และพัฒนา** พร้อมยุบ/กางได้ และคง URL เดิมทุกหน้า
+- เปลี่ยนปุ่มบน Toolbar จาก “บันทึกน้ำหนัก” เป็น **+ บันทึกด่วน** เลือก Meal, Workout, Sleep, Weight, Recovery และ Running ได้โดยไม่ต้องเปลี่ยนหน้า
+- เพิ่มเมนู **เริ่มต้นและคู่มือ** และ `#guide` พร้อมสถานะข้อมูลย้อนหลัง 14 วัน คำอธิบายข้อมูลที่จำเป็นต่อผลวิเคราะห์ และทางลัดไปหน้าใช้งานจริง
+- เพิ่มแถบสั้นบน Dashboard เชื่อมไปคู่มือ ลดปัญหาผู้ใช้ไม่รู้ว่าจะกรอกอะไร
+- เพิ่ม **บันทึกเมนูที่เคยกินอีกครั้ง** ในหน้าโภชนาการ เลือกเมนูจากประวัติย้อนหลัง 28 วันและใช้ปริมาณเดิม (ตรวจสอบก่อนใช้งาน); ป้องกันการคัดลอกแถวต้นทางเดียวกันซ้ำโดยไม่ตั้งใจ
+- เพิ่ม `USER_GUIDE_TH.md` คู่มือเต็มภาษาไทย อธิบาย Inputs → Analyses → Limits ของทุกโมดูล และแนะนำการกรอกให้น้อยลง
+- ยังไม่รวม/ลบตาราง SQL หรือโครงสร้าง Cloud JSON และไม่แก้ Supabase Config
+- **หมายเหตุ QA:** Regression ทุกชุดเดิมผ่าน; Chromium Desktop/Mobile ทดสอบ Guide, Navigation, Quick Log, Meal Repeat ผ่านโดยโหลดโค้ดโดยตรงเพราะ file:// ถูกบล็อก; ยังไม่เชื่อมทดสอบ Supabase จริง
