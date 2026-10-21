@@ -62,6 +62,21 @@
     if(ex.targetSeconds!==undefined&&(!Number.isInteger(Number(ex.targetSeconds))||num(ex.targetSeconds)<1||num(ex.targetSeconds)>36000))return false;
     return true;
   }
+  // Generated plan slots are UI-only drafts. Never persist them as completed sets.
+  function prefillSessionSets(ex,existing=[]){
+    const rows=Array.isArray(existing)?existing.map(r=>({...r})):[];
+    const target=Math.min(30,Math.max(0,Math.floor(Number(ex?.sets)||0)));
+    const mode=exerciseMode(ex);
+    const text=String(ex?.reps||'');
+    const repsMatch=text.match(/\d+/);
+    const suggestedReps=repsMatch?Math.min(100,Math.max(1,Number(repsMatch[0]))):null;
+    const suggestedSeconds=exerciseSeconds(ex);
+    while(rows.length<target){
+      if(mode.measure==='time')rows.push({_template:true,seconds:suggestedSeconds||null,load:mode.loadType==='external'?num(ex.load):0,warmup:false});
+      else rows.push({_template:true,reps:suggestedReps,load:mode.loadType==='external'?num(ex.load):0,warmup:false});
+    }
+    return rows;
+  }
   function validPerformedSet(ex,row){
     if(!row||typeof row!=='object'||Array.isArray(row)||typeof row.warmup!=='boolean')return false;
     const kind=exerciseMode(ex);
@@ -163,6 +178,8 @@
     if(!data.customFoods.every(x=>x.baseGrams===undefined||x.baseGrams===null||(nonNeg(x.baseGrams)&&Number(x.baseGrams)>0&&Number(x.baseGrams)<=10000)))return false;
     // Personal exercise library is optional so older backups remain valid.
     if(data.customExercises!==undefined&&(!Array.isArray(data.customExercises)||data.customExercises.length>1500||data.customExercises.some(ex=>!record(ex)||!shortText(ex.id,100)||!shortText(ex.name,120)||!shortText(ex.reps,60)||!nonNeg(ex.sets)||!nonNeg(ex.load)||!nonNeg(ex.rest)||!validExerciseExtra(ex))))return false;
+    // V1.7 optional goals; retain old v1.0–v1.6 backups and protect cloud snapshots.
+    if(data.goals!==undefined&&(!Array.isArray(data.goals)||data.goals.length>100||!data.goals.every(g=>window.FitGoals?.validGoal(g))))return false;
     // V1.5.0 manual runs are optional; preserve ability to import v1.0–v1.4.2 backups.
     if(data.runs!==undefined&&(!Array.isArray(data.runs)||data.runs.length>20000||!data.runs.every(x=>window.FitRun.validRun(x))))return false;
     if(data.settings.runWeeklyGoalKm!==undefined&&(!Number.isFinite(Number(data.settings.runWeeklyGoalKm))||Number(data.settings.runWeeklyGoalKm)<0||Number(data.settings.runWeeklyGoalKm)>500))return false;
@@ -233,5 +250,5 @@
     const dots=clean.map((p,i)=>`<circle cx="${x(i)}" cy="${y(p.value)}" r="4.4" fill="var(--accent-deep)" stroke="var(--surface)" stroke-width="2"><title>${esc(pretty(p.date))} • ${nfmt(p.value,1)}</title></circle>`).join('');
     return `<svg role="img" aria-label="${esc(opts.label||'กราฟแนวโน้ม')}" class="line-chart" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet"><defs><linearGradient id="${guid}" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="var(--accent-deep)" stop-opacity=".21"/><stop offset="100%" stop-color="var(--accent-deep)" stop-opacity="0"/></linearGradient></defs>${grid}${target}<path d="${fill}" fill="url(#${guid})"/><path d="${path}" stroke="var(--accent-deep)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>${dots}${labels}</svg>`;
   }
-  window.FitCore={KEY,$,$$,esc,num,nfmt,clamp,uid,today,isDate,shift,weekday,weekDates,pretty,shortDate,timeMin,exerciseMode,exerciseSeconds,durationParts,parseDurationParts,formatDuration,validExerciseExtra,validPerformedSet,sleepDuration,sleepStageMinutes,sleepStagePercent,validSleepStages,planOn,trainingStats,ageValid,metrics,mealsFor,foodTotals,weightSeries,recentSleep,sleepStats,workoutStats,calorieAverage,weightTrend,nutritionSummary,sorted,validateImported,load,save,exportData,icon,lineChart};
+  window.FitCore={KEY,$,$$,esc,num,nfmt,clamp,uid,today,isDate,shift,weekday,weekDates,pretty,shortDate,timeMin,exerciseMode,exerciseSeconds,durationParts,parseDurationParts,formatDuration,validExerciseExtra,validPerformedSet,prefillSessionSets,sleepDuration,sleepStageMinutes,sleepStagePercent,validSleepStages,planOn,trainingStats,ageValid,metrics,mealsFor,foodTotals,weightSeries,recentSleep,sleepStats,workoutStats,calorieAverage,weightTrend,nutritionSummary,sorted,validateImported,load,save,exportData,icon,lineChart};
 })();

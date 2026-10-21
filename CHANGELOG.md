@@ -1,3 +1,12 @@
+# V1.7.0 — Smart Goals & Recommendations
+
+- หน้าใหม่ เป้าหมายอัจฉริยะ: Personal Goals, Insight-based Suggestions, ค่าจริงย้อนหลัง, ตัวกรองสถานะ, Reflection และสรุปความคืบหน้า
+- ไม่แก้ Cloud schema; optional `goals[]` ใน snapshot และ backward compatibility พร้อม validation
+- Workout Session สร้างแถวเซตอัตโนมัติจากเทมเพลต, มีตัวเลขเป้าหมาย editable และติ๊ก “ทำแล้ว” ก่อนนับในสถิติ
+- บันทึกเก่าคงเดิม ไม่เปลี่ยนสูตร Volume/1RM
+
+---
+
 # RHYTHM — Changelog
 
 ## V1.6.0 — Deep Analytics & Personal Insights (2026-10-20)
