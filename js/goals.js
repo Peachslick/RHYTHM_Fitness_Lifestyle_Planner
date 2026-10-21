@@ -36,7 +36,9 @@ function progress(goal,state,asOf=C.today()){
      count=byDay.size;value=mean([...byDay.values()]);
    }else if(goal.kind==='protein'||goal.kind==='foodDays'){
      const byDay=new Map();for(const x of state.meals||[])if(dateOK(x.date)){const arr=byDay.get(x.date)||[];arr.push(x);byDay.set(x.date,arr);}
-     count=byDay.size;value=goal.kind==='foodDays'?count:mean([...byDay.values()].map(rows=>C.foodTotals(rows).protein));
+     const totals=[...byDay.values()].map(rows=>C.foodTotals(rows));
+     count=goal.kind==='foodDays'?byDay.size:totals.filter(t=>!t.macroIncomplete).length;
+     value=goal.kind==='foodDays'?count:mean(totals.filter(t=>!t.macroIncomplete).map(t=>t.protein));
    }else if(goal.kind==='workoutDays'){
      const days=new Set((state.sessions||[]).filter(x=>dateOK(x.date)).map(x=>x.date));count=days.size;value=count;
    }else if(goal.kind==='runningKm'){

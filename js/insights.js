@@ -30,7 +30,7 @@ function assemble(state,{days=14,asOf=C.today()}={}){
  const goal=finite(profile.sleepGoal)?clip(Number(profile.sleepGoal),6,12)*60:480;
  const dailyMeals=new Map();for(const item of state.meals||[])if(isPast(item.date,from,asOf)){const arr=dailyMeals.get(item.date)||[];arr.push(item);dailyMeals.set(item.date,arr);}
  const foods=[...dailyMeals].sort((a,b)=>a[0].localeCompare(b[0])).map(([date,rows])=>({date,...C.foodTotals(rows)}));
- const foodCover=coverage(foods.length,days,4),foodAvg=avg(foods.map(x=>x.kcal)),proteinAvg=avg(foods.map(x=>x.protein));
+ const foodCover=coverage(foods.length,days,4),foodAvg=avg(foods.map(x=>x.kcal)),proteinFoods=foods.filter(x=>!x.macroIncomplete),proteinAvg=avg(proteinFoods.map(x=>x.protein));
  const calorieTarget=metrics.ready?metrics.target:null;
  const mealLine=foods.map(x=>({date:x.date,value:round(x.kcal,1)}));
  const weightMap=new Map();for(const item of state.weights||[])if(isPast(item.date,from,asOf)&&finite(item.weight)&&Number(item.weight)>0)weightMap.set(item.date,item);
@@ -76,10 +76,10 @@ function assemble(state,{days=14,asOf=C.today()}={}){
  // Nutrition — counting only logged days, never assume unlogged = fasting.
  if(foods.length>=4&&calorieTarget!==null){const gap=foodAvg-calorieTarget;if(Math.abs(gap)>=250)observations.push(insight('nutrition','mid',gap<0?'แคลอรี่ที่บันทึกเฉลี่ยต่ำกว่าเป้า':'แคลอรี่ที่บันทึกเฉลี่ยสูงกว่าเป้า',`เฉลี่ย ${Math.round(foodAvg)} kcal/วันที่บันทึก เทียบเป้า ${calorieTarget} kcal (ต่าง ${Math.abs(Math.round(gap))} kcal) จาก ${foods.length} วัน`,`ตรวจความครบถ้วนของมื้ออาหารและน้ำหนักที่ชั่งก่อนปรับเป้าหมาย ถ้าบันทึกครบให้ดูแนวโน้มน้ำหนักร่วมอย่างน้อย 2 สัปดาห์`,foodCover.level));else observations.push(insight('nutrition','positive','แคลอรี่ที่บันทึกเฉลี่ยใกล้เป้าหมาย',`เฉลี่ย ${Math.round(foodAvg)} เทียบเป้า ${calorieTarget} kcal จาก ${foods.length} วัน`,`รักษาความสม่ำเสมอในการบันทึกและติดตามแนวโน้มน้ำหนัก`,'ปานกลาง'));}
  else observations.push(insight('nutrition','info','ต้องการข้อมูลอาหารเพิ่มก่อนสรุป',`มีบันทึกอาหาร ${foods.length}/${days} วัน${calorieTarget===null?' · ยังไม่มีเป้า kcal จากโปรไฟล์':''}`,`บันทึกมื้ออาหารให้ครบในหลายวันก่อนแปลความหมายว่าแคลอรี่น้อยหรือมากเกินไป`,'จำกัด'));
- if(foods.length>=4&&metrics.ready&&proteinAvg!==null){
+ if(proteinFoods.length>=4&&metrics.ready&&proteinAvg!==null){
   const proteinTarget=metrics.protein;
   const difference=proteinAvg-proteinTarget;
-  observations.push(insight('nutrition',difference< -25?'mid':'info','เปรียบเทียบโปรตีนกับเป้าหมายที่ตั้งไว้',`บันทึกโปรตีนเฉลี่ย ${Math.round(proteinAvg)} g/วัน เทียบเป้าจากโปรไฟล์ ${proteinTarget} g/วัน (เฉพาะ ${foods.length} วันที่บันทึก)`,difference< -25?'ลองตรวจว่าบันทึกแหล่งโปรตีนครบทุกมื้อหรือยัง แล้วปรับส่วนอาหารตามความสะดวกและความเหมาะสม':'ใช้แนวโน้มและน้ำหนักที่ชั่งร่วมกัน ไม่ต้องยึดค่าต่อวันเป๊ะทุกวัน',foodCover.level));
+  observations.push(insight('nutrition',difference< -25?'mid':'info','เปรียบเทียบโปรตีนกับเป้าหมายที่ตั้งไว้',`บันทึกโปรตีนเฉลี่ย ${Math.round(proteinAvg)} g/วัน เทียบเป้าจากโปรไฟล์ ${proteinTarget} g/วัน (เฉพาะ ${proteinFoods.length} วันที่ทราบ Macro ครบ)`,difference< -25?'ลองตรวจว่าบันทึกแหล่งโปรตีนครบทุกมื้อหรือยัง แล้วปรับส่วนอาหารตามความสะดวกและความเหมาะสม':'ใช้แนวโน้มและน้ำหนักที่ชั่งร่วมกัน ไม่ต้องยึดค่าต่อวันเป๊ะทุกวัน',foodCover.level));
  }
  if(weightDelta!==null){observations.push(insight('weight','info','เปรียบเทียบน้ำหนักเฉลี่ยสองช่วง',`เฉลี่ยช่วงนี้ ${round(weightMean,2)} kg เทียบช่วงก่อน ${round(weightPrev,2)} kg (${weightDelta>=0?'+':''}${round(weightDelta,2)} kg)`,`ดูแนวโน้มต่อเนื่องและสภาพการชั่งคล้ายกันก่อนปรับแคลอรี่ ไม่ใช้ค่าชั่งครั้งเดียวตัดสิน`,'ปานกลาง'));}
  else observations.push(insight('weight','info','น้ำหนักยังไม่พอสำหรับเปรียบเทียบ',`ชั่ง ${weights.length} วันในช่วงนี้ และ ${oldWeightMap.size} วันในช่วงก่อน`,`ลองชั่งในเงื่อนไขใกล้เคียงกันอย่างสม่ำเสมออย่างน้อย 2 วันในแต่ละช่วงก่อนเทียบค่าเฉลี่ย`,'จำกัด'));

@@ -1,3 +1,13 @@
+## V1.9.1 — HDmall Food Calorie Catalog (2026-10-21)
+
+- Added 183 curated HDmall per-serving menu entries, excluding known catalog-name duplicates (154 existing -> 337 total). Attribution URL retained in source entries and UI.
+- Source calories kept per original plate/bowl/cup/piece, never inventing a reference weight in grams.
+- Calories-only menu records carry `macroKnown:false` and are labeled as missing nutrients, not zero-g protein/carbs/fat; macro-dependent analysis excludes incompletely logged days.
+- Preserved user custom foods, favorites, old food logs, cloud Sync and V1.9.0 functionality; no SQL migration.
+- Added `tests/test-v191.cjs` and tested nutrition flow on Chromium Desktop/Mobile (direct source injection fallback; live Supabase integration unverified).
+
+---
+
 ## V1.9.0 — Metabolism & Nutrition Insights & Sidebar Scroll Preservation (2026-10-21)
 
 - New read-only `js/metabolism.js`: TDEE vs intake, tracked-day coverage, macros, weight trend and evidence-gated rough energy-maintenance model.

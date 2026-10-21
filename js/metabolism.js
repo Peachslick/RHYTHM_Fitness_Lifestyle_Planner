@@ -21,7 +21,8 @@
    const safeAsOf=C.isDate(asOf)?asOf:C.today(),range=allowed.includes(days)?days:28;
    const start=C.shift(safeAsOf,1-range),metrics=C.metrics(state);
    const daily=dailyMealTotals(state,safeAsOf,range),loggedDays=daily.length,coverage=loggedDays/range;
-   const calories=avg(daily.map(d=>d.kcal)),protein=avg(daily.map(d=>d.protein)),carbs=avg(daily.map(d=>d.carbs)),fat=avg(daily.map(d=>d.fat));
+   const macroDays=daily.filter(d=>!d.macroIncomplete); // incomplete days must not look like low-protein days
+   const calories=avg(daily.map(d=>d.kcal)),protein=avg(macroDays.map(d=>d.protein)),carbs=avg(macroDays.map(d=>d.carbs)),fat=avg(macroDays.map(d=>d.fat));
    const calorieTarget=metrics.ready?metrics.target:null,proteinTarget=metrics.ready?metrics.protein:null,tdee=metrics.ready?metrics.tdee:null;
    const macro={protein,carbs,fat},totals={kcal:calories,protein,carbs,fat};
    const byDate=new Map();
@@ -60,6 +61,7 @@
        'เฉลี่ย '+round(calories)+' เทียบเป้าหมาย '+round(calorieTarget)+' kcal/วันที่บันทึก (ต่าง '+(gap>=0?'+':'')+round(gap)+' kcal)',
        coverage<.7?'ข้อมูลยังน้อย ไม่ควรปรับแคลอรี่จากค่าเฉลี่ยนี้': 'เปรียบเทียบกับแนวโน้มน้ำหนักอย่างน้อยหลายสัปดาห์ ก่อนพิจารณาปรับเป้าหมายด้วยตนเอง',coverage<.7?'ข้อมูลจำกัด':'ประมาณการ');
    }
+   if(macroDays.length<daily.length)add('protein','ข้อมูล Macro ไม่ครบทุกวัน',`มีข้อมูล Macro ครบ ${macroDays.length} / ${daily.length} วันที่บันทึกอาหาร`,'เมนูบางรายการจาก HDmall มีเฉพาะแคลอรี่ หากต้องการวิเคราะห์โปรตีน คาร์บ และไขมันให้เติมค่าจากฉลากหรือข้อมูลที่ตรวจสอบได้','ข้อมูลจำกัด');
    if(protein!==null&&proteinTarget!==null){const gap=protein-proteinTarget;
      add('protein',gap>=-10?'โปรตีนเฉลี่ยที่บันทึกใกล้เป้าหมาย':'โปรตีนเฉลี่ยที่บันทึกต่ำกว่าเป้าหมาย',
        round(protein,1)+' เทียบ '+round(proteinTarget)+' กรัม/วันที่บันทึก',
@@ -74,7 +76,7 @@
    else add('metabolism','ยังไม่ประเมินพลังงานคงสภาพจากแนวโน้ม',
       'ต้องมีช่วงอย่างน้อย 28 วัน บันทึกอาหาร ≥85% ของวัน และชั่งน้ำหนักต้น/ท้ายช่วงอย่างน้อยช่วงละ 2 วัน',
       'เก็บข้อมูลเพิ่มและอย่าปรับค่าแคลอรี่จากสูตรประมาณการเพียงอย่างเดียว','ข้อมูลไม่พอ');
-   return {asOf:safeAsOf,days:range,start,metrics,loggedDays,coverage,daily,totals,calorieTarget,proteinTarget,tdee,weights,firstAverage,lastAverage,firstDays:first.length,lastDays:last.length,trendReady,weeklyKg,empiricalTdee:empiricalPlausible?empiricalTdee:null,mealMix,topFoods,notes};
+   return {asOf:safeAsOf,days:range,start,metrics,loggedDays,coverage,daily,macroDays:macroDays.length,totals,calorieTarget,proteinTarget,tdee,weights,firstAverage,lastAverage,firstDays:first.length,lastDays:last.length,trendReady,weeklyKg,empiricalTdee:empiricalPlausible?empiricalTdee:null,mealMix,topFoods,notes};
  }
  window.FitMetabolism={analyse};
 })();
