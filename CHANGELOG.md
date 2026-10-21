@@ -1,3 +1,12 @@
+## V1.9.4 — Custom Food Editor (2026-10-21)
+
+- Added edit control on **customFoods** rows in Nutrition Food Library, separate from the Add (+) button; core/HDmall entries remain read-only in the library.
+- Edit name, serving unit, optional grams/serving, kcal and known/unknown protein-carbs-fat in a focused modal; validation for required and bounded fields, duplicate custom-food names.
+- Persist updates to existing custom ID (retains favorites) through existing Guest or Supabase snapshot sync; no schema/SQL change.
+- Optional custom food deletion with confirmation, without deleting food history or past Meal Templates. Favorite ID cleaned up on deletion.
+- Historical meal records and saved Meal Templates keep their values; only **future** logs use the updated custom-food definition.
+- Includes `js/custom-food-editor.js`, CSS, cache-busted index, Thai README / guide, and regression and Chromium interaction QA.
+
 ## V1.9.3 — Everyday UX Upgrade (2026-10-21)
 
 - Setup Wizard 3 steps (save on confirm; open after starting real data).

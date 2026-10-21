@@ -1,7 +1,7 @@
 /* RHYTHM v1.9.3 — Thai-first, optional Supabase account and cloud sync */
 (function(){
  'use strict';
- const C=window.FitCore,D=window.FitData,R=window.FitRecovery,Run=window.FitRun,I=window.FitInsights,G=window.FitGoals,WA=window.FitWorkoutAnalytics,M=window.FitMetabolism,U=window.FitUX;
+ const C=window.FitCore,D=window.FitData,R=window.FitRecovery,Run=window.FitRun,I=window.FitInsights,G=window.FitGoals,WA=window.FitWorkoutAnalytics,M=window.FitMetabolism,U=window.FitUX,FoodEdit=window.FitCustomFoodEditor;
  let state=C.load();
  const sync=window.FitSync.create({
    getLocal:()=>C.load(),blank:()=>D.blankState(),validate:C.validateImported,
@@ -132,7 +132,7 @@
     </aside><div class="mobile-mask ${ui.mobileOpen?'visible':''}" data-action="mobile-close"></div>
     <div class="workspace"><header class="topbar"><div class="topbar-left"><button class="mob-menu icon-button" data-action="mobile-open" aria-label="เปิดเมนู">${ic('menu')}</button><div><div class="breadcrumb"><img class="topbar-logo" src="assets/rhythm-logo.png" alt="" /> RHYTHM <span>/</span> ${pg.label}</div><h1>${pg.label}</h1><p>${pg.caption}</p></div></div><div class="topbar-actions"><div class="today-chip">${ic('calendar',16)}<span>${e(fmt(C.today(),true))}</span></div><button class="icon-button theme-toggle" data-action="toggle-theme" aria-label="สลับธีม" title="สลับธีม">${ic(state.settings.theme==='dark'?'sun':'moon')}</button><button class="button button-primary top-quick" data-action="quick-menu" aria-label="เปิดเมนูบันทึกด่วน">${ic('plus',16)} <span>บันทึกด่วน</span></button></div></header>
      <div class="content">${cloudStrip()}${sync.isBlocked?cloudBlocker():state.demo?`<div class="demo-banner">${ic('info',17)} <div><strong>โหมดทดลอง:</strong> ตัวเลขและบันทึกที่เห็นเป็นข้อมูลสมมติสำหรับทดสอบเว็บ</div><button class="button button-mini" data-action="start-real">เริ่มใช้ข้อมูลของฉัน ${ic('arrow',15)}</button></div>`:''}${renderPage(m)}</div>
-     <footer class="footer"><span>RHYTHM <b>v1.9.3</b> · Personal Wellness Workspace</span><span>ประมาณการเพื่อการวางแผน ไม่ใช่คำแนะนำทางการแพทย์</span></footer>
+     <footer class="footer"><span>RHYTHM <b>v1.9.4</b> · Personal Wellness Workspace</span><span>ประมาณการเพื่อการวางแผน ไม่ใช่คำแนะนำทางการแพทย์</span></footer>
     </div></div>`;
    const newSidebar=document.getElementById('sidebar');
    if(newSidebar)newSidebar.scrollTop=sidebarScrollTop;
@@ -393,7 +393,8 @@
  }
  function renderFoodList(foods){
    const favs=state.favoriteFoodIds||[];
-   return foods.length?`${foods.slice(0,ui.foodLimit).map(f=>`<div class="food-list-item"><button class="food-star ${favs.includes(f.id)?'selected':''}" data-action="food-favorite" data-id="${e(f.id)}" aria-label="${favs.includes(f.id)?'เอาออกจากรายการโปรด':'เพิ่มในรายการโปรด'}: ${e(f.name)}" title="${favs.includes(f.id)?'เอาออกจากรายการโปรด':'เพิ่มในรายการโปรด'}">${favs.includes(f.id)?'★':'☆'}</button><div class="food-title"><strong>${e(f.name)}</strong><small>${e(f.unit)} · ${e(f.group)} ${f.source==='HDmall'?'· HDmall':''}</small>${f.macroKnown===false?'<small class="food-kcal-only">มีเฉพาะ kcal · ไม่มีข้อมูล Macro</small>':f.macroEstimated?'<small class="food-kcal-only">Macro ประมาณโดยระบบ · ไม่ใช่ค่าจาก HDmall</small>':''}</div><div class="food-number"><strong>${n(f.kcal)}</strong><span>kcal</span></div><button class="add-circle" data-action="food-add" data-id="${e(f.id)}" aria-label="เพิ่ม ${e(f.name)}">${ic('plus',17)}</button></div>`).join('')}${foods.length>ui.foodLimit?`<button class="button button-outline food-more" data-action="food-more">แสดงเพิ่มอีก ${Math.min(60,foods.length-ui.foodLimit)} รายการ (${ui.foodLimit}/${foods.length})</button>`:''}`:empty('search','ไม่พบเมนู','ลองเปลี่ยนคำค้นหาหรือเพิ่มเมนูของตัวเอง');
+   const customIds=new Set(state.customFoods.map(food=>food.id));
+   return foods.length?`${foods.slice(0,ui.foodLimit).map(f=>`<div class="food-list-item"><button class="food-star ${favs.includes(f.id)?'selected':''}" data-action="food-favorite" data-id="${e(f.id)}" aria-label="${favs.includes(f.id)?'เอาออกจากรายการโปรด':'เพิ่มในรายการโปรด'}: ${e(f.name)}" title="${favs.includes(f.id)?'เอาออกจากรายการโปรด':'เพิ่มในรายการโปรด'}">${favs.includes(f.id)?'★':'☆'}</button><div class="food-title"><strong>${e(f.name)}</strong><small>${e(f.unit)} · ${e(f.group)} ${f.source==='HDmall'?'· HDmall':''}</small>${f.macroKnown===false?'<small class="food-kcal-only">มีเฉพาะ kcal · ไม่มีข้อมูล Macro</small>':f.macroEstimated?'<small class="food-kcal-only">Macro ประมาณโดยระบบ · ไม่ใช่ค่าจาก HDmall</small>':''}</div><div class="food-number"><strong>${n(f.kcal)}</strong><span>kcal</span></div><div class="food-item-actions">${customIds.has(f.id)?`<button type="button" class="food-edit-button" data-action="food-library-edit" data-id="${e(f.id)}" title="แก้ไขข้อมูล ${e(f.name)}" aria-label="แก้ไขเมนู ${e(f.name)}">${ic('edit',17)}</button>`:''}<button type="button" class="add-circle" data-action="food-add" data-id="${e(f.id)}" aria-label="เพิ่ม ${e(f.name)}">${ic('plus',17)}</button></div></div>`).join('')}${foods.length>ui.foodLimit?`<button class="button button-outline food-more" data-action="food-more">แสดงเพิ่มอีก ${Math.min(60,foods.length-ui.foodLimit)} รายการ (${ui.foodLimit}/${foods.length})</button>`:''}`:empty('search','ไม่พบเมนู','ลองเปลี่ยนคำค้นหาหรือเพิ่มเมนูของตัวเอง');
  }
  function sleep(){
    const entries=C.sorted(state.sleeps),avg=C.sleepStats(state),latest=entries[0],goal=num(state.profile.sleepGoal,8);
@@ -598,6 +599,12 @@
    showModal(existing?'แก้ไขอาหารที่บันทึก':'เพิ่มรายการอาหาร',`<form id="meal-form" data-id="${e(existing?.id||'')}" data-foodid="${e(existing?.foodId||foodId||'')}" data-foodsource="${base?.source==='HDmall'||existing?.source==='HDmall'?'HDmall':''}" data-estimated="${f.macroEstimated===true?'true':'false'}"><div class="form-grid"><div class="form-grid two"><label class="field"><span>วันที่ *</span><input name="date" type="date" value="${e(existing?.date||ui.foodDate)}" max="${C.today()}" required /></label><label class="field"><span>มื้ออาหาร *</span><select name="meal">${Object.entries(D.MEALTYPES).map(([k,v])=>option(k,v,f.meal||'lunch')).join('')}</select></label></div><label class="field"><span>ชื่ออาหาร *</span><input name="name" required maxlength="100" value="${e(f.name)}" placeholder="เช่น ข้าวสวย / ไข่ต้ม" /></label><div class="form-grid two"><label class="field"><span>หน่วยต่อเสิร์ฟ</span><input name="unit" maxlength="70" value="${e(f.unit||'1 เสิร์ฟ')}" required /></label><label class="field"><span>น้ำหนักต่อหนึ่งเสิร์ฟ (กรัม) · ถ้าทราบ</span><input name="baseGrams" type="number" min="1" max="10000" step="0.1" value="${baseGrams?e(baseGrams):''}" placeholder="เช่น 100" /></label></div><div class="form-grid two"><label class="field"><span>กรอกปริมาณแบบ</span><select name="quantityMode" id="meal-quantity-mode">${option('servings','จำนวนเสิร์ฟ',mode)}${option('grams','น้ำหนักเป็นกรัม',mode)}</select></label><label class="field"><span id="meal-quantity-label">${mode==='grams'?'ปริมาณที่กิน (กรัม)':'จำนวนเสิร์ฟ'} *</span><input id="meal-quantity" name="quantity" type="number" min="0.1" max="${mode==='grams'?'3000':'30'}" step="0.1" value="${e(quantity)}" required /></label></div><p class="form-help">ถ้ากรอกเป็นกรัม กรุณาใส่ “น้ำหนักต่อหนึ่งเสิร์ฟ” ก่อน เช่น 100 กรัมต่อเสิร์ฟ → กิน 150 กรัม = 1.5 เสิร์ฟ</p>${base?.source==='HDmall'||existing?.source==='HDmall'?'<p class="form-help food-source-note">แคลอรี่ต่อหน่วยอ้างอิงจาก <a href="https://hdmall.co.th/health-tools/food-calorie-table.html" target="_blank" rel="noopener noreferrer">HDmall</a> · แคลอรี่จาก HDmall; โปรตีน/คาร์บ/ไขมันจากสูตรคาดการณ์ตามประเภทเมนู ไม่ใช่ข้อมูลจาก HDmall · ตรวจหน่วยและส่วนผสมจริง</p>':''}<label class="field"><span>ข้อมูลสารอาหารหลักของรายการนี้</span><select name="macroStatus" id="meal-macro-status">${option('known',f.macroEstimated?'ตัวเลข Macro โดยประมาณจากระบบ (แก้ไขได้)':'มีตัวเลข Macro จากฉลากหรือสูตร',macroKnown?'known':'unknown')}${option('unknown','ยังไม่ทราบ · บันทึกเฉพาะแคลอรี่',macroKnown?'known':'unknown')}</select></label><p class="form-help bold-help">สารอาหารต่อ 1 เสิร์ฟ · ถ้ายังไม่ทราบให้เว้นว่างและเลือก “บันทึกเฉพาะแคลอรี่”</p><div class="form-grid two"><label class="field"><span>พลังงาน (kcal)</span><input name="kcal" type="number" required min="0" max="10000" step="0.1" value="${e(f.kcal)}" /></label><label class="field"><span>โปรตีน (g)</span><input name="protein" type="number" min="0" max="1000" step="0.1" value="${macroKnown?e(f.protein):''}" /></label><label class="field"><span>คาร์โบไฮเดรต (g)</span><input name="carbs" type="number" min="0" max="1000" step="0.1" value="${macroKnown?e(f.carbs):''}" /></label><label class="field"><span>ไขมัน (g)</span><input name="fat" type="number" min="0" max="1000" step="0.1" value="${macroKnown?e(f.fat):''}" /></label></div><div id="meal-preview" class="meal-preview" role="status" aria-live="polite">คำนวณพลังงานตามปริมาณที่กรอก</div>${!existing&&!foodId?'<label class="check-field"><input type="checkbox" name="remember" checked /><span>บันทึกเมนูนี้ไว้ในคลังส่วนตัว</span></label>':''}</div>${modalButtons(existing?'อัปเดตรายการ':'เพิ่มลงในบันทึก')}</form>`,'ค่าต่อหนึ่งเสิร์ฟจะคูณกับปริมาณจริง · ตรวจฉลากก่อนบันทึก');
    refreshMealPreview();
  }
+ function openCustomFoodEditor(id){
+   const food=state.customFoods.find(f=>f.id===id);
+   if(!food){toast('ไม่พบเมนูที่สร้างเอง กรุณาโหลดรายการใหม่','error');return;}
+   const known=food.macroKnown!==false;
+   showModal('แก้ไขเมนูอาหารในคลัง',`<form id="custom-food-form" data-id="${e(food.id)}"><div class="form-grid"><label class="field"><span>ชื่อเมนู *</span><input type="text" name="name" required maxlength="100" value="${e(food.name)}" /></label><div class="form-grid two"><label class="field"><span>หน่วยต่อหนึ่งเสิร์ฟ *</span><input type="text" name="unit" required maxlength="70" value="${e(food.unit)}" placeholder="เช่น 1 จาน" /></label><label class="field"><span>น้ำหนักต่อเสิร์ฟ (กรัม) · ไม่บังคับ</span><input name="baseGrams" type="number" min="1" max="10000" step="0.1" value="${food.baseGrams==null?'':e(food.baseGrams)}" placeholder="เช่น 150" /></label></div><label class="field"><span>สถานะข้อมูลสารอาหาร</span><select name="macroStatus" id="custom-food-macro-status">${option('known','ระบุค่าโปรตีน คาร์บ และไขมัน',known?'known':'unknown')}${option('unknown','ยังไม่ทราบ Macro · เก็บเฉพาะแคลอรี่',known?'known':'unknown')}</select></label><div class="form-grid two"><label class="field"><span>พลังงานต่อเสิร์ฟ (kcal) *</span><input name="kcal" type="number" min="0" max="10000" step="0.1" required value="${e(food.kcal)}" /></label><label class="field"><span>โปรตีนต่อเสิร์ฟ (g)</span><input name="protein" type="number" min="0" max="1000" step="0.1" value="${known?e(food.protein):''}" /></label><label class="field"><span>คาร์บต่อเสิร์ฟ (g)</span><input name="carbs" type="number" min="0" max="1000" step="0.1" value="${known?e(food.carbs):''}" /></label><label class="field"><span>ไขมันต่อเสิร์ฟ (g)</span><input name="fat" type="number" min="0" max="1000" step="0.1" value="${known?e(food.fat):''}" /></label></div><p class="info-small">เปลี่ยนค่าของเมนูนี้ในคลังเพื่อใช้บันทึกมื้อถัดไปเท่านั้น <b>ประวัติมื้ออาหารและ Meal Templates ที่บันทึกไว้ก่อนหน้าจะไม่เปลี่ยน</b> · ค่า Macro ที่คุณแก้เองจะถือเป็นข้อมูลที่ผู้ใช้ระบุ ไม่ใช่ค่าที่ตรวจสอบทางห้องปฏิบัติการ</p></div>${modalButtons('บันทึกเมนูที่แก้ไข')}</form><div class="custom-food-delete"><button type="button" class="button button-plain danger" data-action="food-library-delete" data-id="${e(food.id)}">${ic('trash',15)} ลบเมนูนี้จากคลังส่วนตัว</button></div>`,'แก้ไขข้อมูลต่อ 1 เสิร์ฟ · ข้อมูลเก่าจะคงค่าเดิม');
+ }
  function refreshMealPreview(){
    const form=document.getElementById('meal-form');if(!form)return;
    const mode=form.elements.quantityMode.value,grams=num(form.elements.baseGrams.value),quantity=num(form.elements.quantity.value);
@@ -763,6 +770,14 @@
    if(a==='today-workout'){ui.workoutDate=C.today();ui.workoutDay=C.weekday(C.today());openSession();return;}
    if(a==='edit-session-date'){ui.workoutDate=date;ui.workoutDay=C.weekday(date);openSession();return;}
    if(a==='delete-session'){removeItem('sessions',x=>x.date===ui.workoutDate,'ลบบันทึกการฝึกของวันที่เลือก?');return;}
+   if(a==='food-library-edit'){openCustomFoodEditor(id);return;}
+   if(a==='food-library-delete'){
+     const food=state.customFoods.find(x=>x.id===id);if(!food)return;
+     if(!confirmed(`ลบ “${food.name}” ออกจากคลังอาหารส่วนตัว? ประวัติอาหารที่บันทึกแล้วจะยังอยู่ แต่จะเลือกเมนูนี้จากคลังไม่ได้อีก`))return;
+     state.customFoods=state.customFoods.filter(x=>x.id!==id);
+     state.favoriteFoodIds=(state.favoriteFoodIds||[]).filter(x=>x!==id);
+     closeModal();update();toast('ลบเมนูออกจากคลังส่วนตัวแล้ว · ประวัติมื้ออาหารยังอยู่');return;
+   }
    if(a==='food-favorite'){
      if(!id)return;
      const all=[...D.FOOD_LIBRARY,...state.customFoods];if(!all.some(x=>x.id===id))return;
@@ -990,6 +1005,16 @@
      const session={id:old?.id||C.uid(),date,day,type:old?.type||plan.type,title:old?.title||plan.title,duration,rpe,notes:get('notes'),exercises};
      if(old)state.sessions=state.sessions.filter(x=>x.id!==old.id);state.sessions.push(session);
      ui.workoutDate=date;ui.workoutDay=day;closeModal();update();toast('บันทึกการฝึกแล้ว');return;
+   }
+   if(form.id==='custom-food-form'){
+     const existing=state.customFoods.find(x=>x.id===form.dataset.id);
+     if(!existing){toast('ไม่พบเมนูที่ต้องการแก้ไข','error');return;}
+     try{
+       const updated=FoodEdit.update(existing,Object.fromEntries(fd),state.customFoods);
+       state.customFoods=state.customFoods.map(x=>x.id===existing.id?updated:x);
+       closeModal();update();toast('อัปเดตเมนูในคลังแล้ว · ประวัติบันทึกเก่าไม่เปลี่ยน');
+     }catch(err){toast(err.message||'กรุณาตรวจสอบข้อมูลเมนูอาหาร','error');}
+     return;
    }
    if(form.id==='meal-form'){
      const mode=get('quantityMode'),quantity=metric('quantity'),baseGrams=get('baseGrams')===''?null:metric('baseGrams');
