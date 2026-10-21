@@ -1,7 +1,7 @@
-/* RHYTHM v1.7.0 — Thai-first, optional Supabase account and cloud sync */
+/* RHYTHM v1.8.0 — Thai-first, optional Supabase account and cloud sync */
 (function(){
  'use strict';
- const C=window.FitCore,D=window.FitData,R=window.FitRecovery,Run=window.FitRun,I=window.FitInsights,G=window.FitGoals;
+ const C=window.FitCore,D=window.FitData,R=window.FitRecovery,Run=window.FitRun,I=window.FitInsights,G=window.FitGoals,WA=window.FitWorkoutAnalytics;
  let state=C.load();
  const sync=window.FitSync.create({
    getLocal:()=>C.load(),blank:()=>D.blankState(),validate:C.validateImported,
@@ -18,8 +18,8 @@
  let lastSyncMode='guest';
  let cloudBooting=!!(window.RHYTHM_SUPABASE_CONFIG?.url && window.RHYTHM_SUPABASE_CONFIG?.publishableKey);
  let route=location.hash.replace('#','')||'dashboard';
- const pages={dashboard:{label:'ภาพรวม',icon:'layout',caption:'มองภาพรวมของการฝึก อาหาร และการพักฟื้น'},workouts:{label:'แผนออกกำลังกาย',icon:'dumbbell',caption:'จัดตาราง Push / Pull / Legs / Run ได้ตามชีวิตจริง'},running:{label:'บันทึกการวิ่ง',icon:'route',caption:'บันทึกระยะทาง เวลา Pace และแนวโน้มการวิ่ง'},nutrition:{label:'โภชนาการ',icon:'utensils',caption:'บันทึกอาหารและติดตามพลังงานอย่างยืดหยุ่น'},sleep:{label:'การนอน',icon:'moon',caption:'ติดตามชั่วโมงนอนและระยะการนอนจากข้อมูลที่บันทึก'},recovery:{label:'Recovery & Lifestyle',icon:'sparkles',caption:'เชื่อมความรู้สึก การพักผ่อน และภาระการฝึกโดยไม่วินิจฉัยสุขภาพ'},routine:{label:'ตารางชีวิต',icon:'clock',caption:'ออกแบบวันของคุณ ตั้งแต่ตื่นจนเข้านอน'},progress:{label:'น้ำหนักและแนวโน้ม',icon:'chart',caption:'เรียนรู้จากแนวโน้ม ไม่ตัดสินด้วยข้อมูลวันเดียว'},goals:{label:'เป้าหมายอัจฉริยะ',icon:'target',caption:'เปลี่ยนข้อสังเกตเป็นเป้าหมายที่ติดตามผลได้'},insights:{label:'วิเคราะห์เชิงลึก',icon:'sparkles',caption:'เชื่อมข้อมูลสุขภาพที่บันทึก พร้อมเหตุผลและแนวทางต่อไป'},profile:{label:'โปรไฟล์และตั้งค่า',icon:'user',caption:'ปรับค่าตั้งต้น เป้าหมาย และการจัดการข้อมูล'}};
- const ui={runDate:C.today(),exerciseFocus:'',authMode:'login',workoutDay:C.weekday(C.today()),workoutDate:C.today(),foodDate:C.today(),sleepDate:C.today(),recoveryDate:C.today(),routineDay:C.weekday(C.today()),weightPeriod:30,search:'',foodCategory:'ทั้งหมด',foodLimit:60,insightsDays:14,insightsFocus:'all',mobileOpen:false,goalStatusFilter:"active"};
+ const pages={dashboard:{label:'ภาพรวม',icon:'layout',caption:'มองภาพรวมของการฝึก อาหาร และการพักฟื้น'},workouts:{label:'แผนออกกำลังกาย',icon:'dumbbell',caption:'จัดตาราง Push / Pull / Legs / Run ได้ตามชีวิตจริง'},running:{label:'บันทึกการวิ่ง',icon:'route',caption:'บันทึกระยะทาง เวลา Pace และแนวโน้มการวิ่ง'},nutrition:{label:'โภชนาการ',icon:'utensils',caption:'บันทึกอาหารและติดตามพลังงานอย่างยืดหยุ่น'},sleep:{label:'การนอน',icon:'moon',caption:'ติดตามชั่วโมงนอนและระยะการนอนจากข้อมูลที่บันทึก'},recovery:{label:'Recovery & Lifestyle',icon:'sparkles',caption:'เชื่อมความรู้สึก การพักผ่อน และภาระการฝึกโดยไม่วินิจฉัยสุขภาพ'},routine:{label:'ตารางชีวิต',icon:'clock',caption:'ออกแบบวันของคุณ ตั้งแต่ตื่นจนเข้านอน'},progress:{label:'น้ำหนักและแนวโน้ม',icon:'chart',caption:'เรียนรู้จากแนวโน้ม ไม่ตัดสินด้วยข้อมูลวันเดียว'},workoutAnalytics:{label:'วิเคราะห์การฝึก',icon:'chart',caption:'Personal Records, Volume, ความสม่ำเสมอ และพัฒนาการรายท่า'},goals:{label:'เป้าหมายอัจฉริยะ',icon:'target',caption:'เปลี่ยนข้อสังเกตเป็นเป้าหมายที่ติดตามผลได้'},insights:{label:'วิเคราะห์เชิงลึก',icon:'sparkles',caption:'เชื่อมข้อมูลสุขภาพที่บันทึก พร้อมเหตุผลและแนวทางต่อไป'},profile:{label:'โปรไฟล์และตั้งค่า',icon:'user',caption:'ปรับค่าตั้งต้น เป้าหมาย และการจัดการข้อมูล'}};
+ const ui={runDate:C.today(),exerciseFocus:'',authMode:'login',workoutDay:C.weekday(C.today()),workoutDate:C.today(),foodDate:C.today(),sleepDate:C.today(),recoveryDate:C.today(),routineDay:C.weekday(C.today()),weightPeriod:30,search:'',foodCategory:'ทั้งหมด',foodLimit:60,insightsDays:14,analyticsDays:90,analyticsExercise:'',insightsFocus:'all',mobileOpen:false,goalStatusFilter:"active"};
  const FONTS={sarabun:'Sarabun · Recommended',bai:'Bai Jamjuree',noto:'Noto Sans Thai',ibm:'IBM Plex Sans Thai',leelawadee:'Leelawadee UI',tahoma:'Tahoma',segoe:'Segoe UI / System',prompt:'Prompt',kanit:'Kanit',mitr:'Mitr',anakotmai:'Anakotmai',athiti:'Athiti',trirong:'Trirong (Serif)',itim:'Itim (Handwriting)',pattaya:'Pattaya (Display)',chonburi:'Chonburi (Display)'};
  const e=C.esc,ic=C.icon,n=C.nfmt,num=C.num,fmt=C.pretty;
  // Browser-local timer: never upload transient state into Supabase snapshots.
@@ -107,11 +107,11 @@
     </aside><div class="mobile-mask ${ui.mobileOpen?'visible':''}" data-action="mobile-close"></div>
     <div class="workspace"><header class="topbar"><div class="topbar-left"><button class="mob-menu icon-button" data-action="mobile-open" aria-label="เปิดเมนู">${ic('menu')}</button><div><div class="breadcrumb"><img class="topbar-logo" src="assets/rhythm-logo.png" alt="" /> RHYTHM <span>/</span> ${pg.label}</div><h1>${pg.label}</h1><p>${pg.caption}</p></div></div><div class="topbar-actions"><div class="today-chip">${ic('calendar',16)}<span>${e(fmt(C.today(),true))}</span></div><button class="icon-button theme-toggle" data-action="toggle-theme" aria-label="สลับธีม" title="สลับธีม">${ic(state.settings.theme==='dark'?'sun':'moon')}</button><button class="button button-primary top-quick" data-action="quick-add">${ic('plus',16)} <span>บันทึกน้ำหนัก</span></button></div></header>
      <div class="content">${cloudStrip()}${sync.isBlocked?cloudBlocker():state.demo?`<div class="demo-banner">${ic('info',17)} <div><strong>โหมดทดลอง:</strong> ตัวเลขและบันทึกที่เห็นเป็นข้อมูลสมมติสำหรับทดสอบเว็บ</div><button class="button button-mini" data-action="start-real">เริ่มใช้ข้อมูลของฉัน ${ic('arrow',15)}</button></div>`:''}${renderPage(m)}</div>
-     <footer class="footer"><span>RHYTHM <b>v1.7.0</b> · Personal Wellness Workspace</span><span>ประมาณการเพื่อการวางแผน ไม่ใช่คำแนะนำทางการแพทย์</span></footer>
+     <footer class="footer"><span>RHYTHM <b>v1.8.0</b> · Personal Wellness Workspace</span><span>ประมาณการเพื่อการวางแผน ไม่ใช่คำแนะนำทางการแพทย์</span></footer>
     </div></div>`;
    window.scrollTo(0,y);
  }
- function renderPage(m){return ({dashboard:()=>dashboard(m),workouts,running,goals, nutrition:()=>nutrition(m), sleep, recovery, routine, progress:()=>progress(m),insights,profile:()=>profile(m)})[route]();}
+ function renderPage(m){return ({dashboard:()=>dashboard(m),workouts,running,workoutAnalytics,goals, nutrition:()=>nutrition(m), sleep, recovery, routine, progress:()=>progress(m),insights,profile:()=>profile(m)})[route]();}
  const sectionHead=(title,sub,action='')=>`<div class="section-head"><div><h2>${title}</h2>${sub?`<p>${sub}</p>`:''}</div>${action}</div>`;
  const ghost=(action,label,icon='plus',attrs='')=>`<button class="button button-outline" data-action="${action}" ${attrs}>${ic(icon,16)} ${label}</button>`;
  const formatHour=mins=>mins===null?'—':`${Math.floor(mins/60)} ชม. ${Math.round(mins%60)} นาที`;
@@ -170,8 +170,54 @@
    <div class="deep-analysis-grid"><section class="panel deep-sleep-feature">${sectionHead('เจาะลึกการนอน',last?`บันทึกล่าสุด ${fmt(last.date)} · ${domains.sleep.range.label}`:'ยังไม่มีบันทึกการนอนในช่วงนี้',`<button class="text-link" data-route="sleep">บันทึกการนอน ${ic('arrow',15)}</button>`)}<div class="deep-sleep-main"><div><span>คืนล่าสุด</span><strong>${last?`${n(C.sleepDuration(last)/60,1)} <small>ชั่วโมง</small>`:'—'}</strong><p>เป้าหมายที่ตั้งไว้: ${n(domains.sleep.goalMinutes/60,1)} ชม. · แนะนำขั้นต่ำสำหรับผู้ใหญ่: 7 ชม.</p></div><div class="deep-sleep-big">${domains.sleep.count?`${domains.sleep.shortNights}<small>/${domains.sleep.count}</small>`:'—'}<span>คืนที่นอนต่ำกว่า 7 ชม.</span></div></div><div class="deep-stage-title">${ic('moon',17)} สัดส่วนช่วงการนอนล่าสุด</div>${stageContent}<div class="deep-stage-caution">${ic('info',17)} <span>นาฬิกาประเมินช่วงการนอนคลาดเคลื่อนได้ จึงไม่ตัดสินคุณภาพการฟื้นตัวจาก Deep/REM/Light เพียงคืนเดียว และการนอนหลับตื้นเป็นส่วนหนึ่งของวงจรการนอนปกติ</span></div></section>
    <section class="panel deep-next-panel">${sectionHead('เรื่องที่ควรเริ่มปรับก่อน','เลือกจากข้อมูลที่มี ไม่ใช่คำสั่งอัตโนมัติ')}${result.observations.filter(x=>['high','mid'].includes(x.severity)).slice(0,3).length?result.observations.filter(x=>['high','mid'].includes(x.severity)).slice(0,3).map((o,i)=>`<div class="deep-priority"><span>0${i+1}</span><div><strong>${e(o.title)}</strong><p>${e(o.next)}</p></div></div>`).join(''):`<div class="deep-priority"><span>${ic('info',16)}</span><div><strong>เริ่มจากเก็บข้อมูลอย่างสม่ำเสมอ</strong><p>เมื่อมีบันทึกหลายวัน ระบบจะช่วยสรุปแนวโน้มและประเด็นที่ควรทบทวนได้ละเอียดขึ้น</p></div></div>`}<div class="deep-limits">ข้อสังเกตจากการกรอกเอง ไม่ใช่คะแนนสุขภาพ การวินิจฉัย หรือคำสั่งเพิ่มความหนัก/ปรับแคลอรี่</div></section></div>
    <section class="panel deep-insight-library">${sectionHead('รายงานวิเคราะห์และแนวทางถัดไป',`${result.observations.length} ข้อสังเกต · เลือกเจาะลึกแต่ละหมวดได้`)}<div class="deep-filters" role="group" aria-label="กรองหมวดวิเคราะห์">${focuses.map(key=>`<button class="deep-filter ${ui.insightsFocus===key?'active':''}" data-action="insights-focus" data-value="${key}" aria-pressed="${ui.insightsFocus===key}">${key==='all'?'ทั้งหมด':e(headings[key][0])}</button>`).join('')}</div><div class="deep-observations">${visible.map(observationCard).join('')||'<p class="small-muted">ยังไม่มีข้อสังเกตสำหรับหมวดนี้</p>'}</div></section>
-   <section class="panel deep-trends">${sectionHead('กราฟข้อมูลย้อนหลัง','ใช้ข้อมูลที่บันทึกจริงเท่านั้น ไม่สร้างค่าของวันที่ไม่มีข้อมูล')}<div class="deep-trend-grid">${['sleep','nutrition','weight','workout','running','recovery'].filter(key=>ui.insightsFocus==='all'||ui.insightsFocus==='cross'||ui.insightsFocus===key).map(key=>`<article class="deep-chart-panel">${chartFor(key)}</article>`).join('')||'<p class="small-muted">กรุณาเลือกหมวดที่มีกราฟ</p>'}</div></section>
+   <section class="panel deep-trends">${sectionHead('กราฟข้อมูลย้อนหลัง','ใช้ข้อมูลที่บันทึกจริงเท่านั้น ไม่สร้างค่าของวันที่ไม่มีข้อมูล',`<button class="text-link" data-route="workoutAnalytics">วิเคราะห์การฝึกรายท่า ${ic('arrow',15)}</button>`)}<div class="deep-trend-grid">${['sleep','nutrition','weight','workout','running','recovery'].filter(key=>ui.insightsFocus==='all'||ui.insightsFocus==='cross'||ui.insightsFocus===key).map(key=>`<article class="deep-chart-panel">${chartFor(key)}</article>`).join('')||'<p class="small-muted">กรุณาเลือกหมวดที่มีกราฟ</p>'}</div></section>
    <section class="panel deep-data-quality">${sectionHead('ความครบถ้วนและข้อจำกัดของข้อมูล','ข้อมูลน้อยหมายถึงข้อสังเกตมีความไม่แน่นอนสูง')}<div class="deep-coverage-grid">${[['sleep','คืน'],['nutrition','วัน'],['weight','วัน'],['recovery','วัน']].map(([key,unit])=>{const d=domains[key],v=d.coverage;return `<div><div class="deep-quality-label"><strong>${e(headings[key][0])}</strong><span>${v.count}/${v.total} ${unit}</span></div><div class="deep-quality-track"><span style="width:${v.percent}%"></span></div><small>ความมั่นใจของข้อมูล: ${e(v.level)}</small></div>`;}).join('')}</div><p>การประเมินนี้อ้างอิงความครบถ้วนของการบันทึกเท่านั้น ไม่ใช่ความแม่นยำทางการแพทย์ของอุปกรณ์หรือความแน่นอนของความสัมพันธ์</p><div class="deep-source-links"><a href="https://www.cdc.gov/sleep/about/" target="_blank" rel="noopener noreferrer">CDC — ระยะเวลาการนอนตามอายุ ↗</a><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11511193/" target="_blank" rel="noopener noreferrer">การศึกษาความแม่นยำของ Wearables ↗</a></div></section>`;
+ }
+
+ function workoutAnalytics(){
+   const report=WA.analyse(state,{days:ui.analyticsDays}),list=report.exercises;
+   if(!list.some(x=>x.key===ui.analyticsExercise))ui.analyticsExercise=list[0]?.key||'';
+   const selected=list.find(x=>x.key===ui.analyticsExercise);
+   const maxWeekly=Math.max(1,...report.weeks.map(x=>x.sets));
+   const groupMax=Math.max(1,...report.muscles.map(x=>x.sets));
+   const metric=(label,value,description,icon)=>`<article class="panel wa-stat"><div class="wa-stat-label">${ic(icon,19)} <span>${e(label)}</span></div><strong>${e(value)}</strong><small>${e(description)}</small></article>`;
+   const kindLabel=item=>item.measure==='time'?'จับเวลา':item.loadType==='external'?'อุปกรณ์/น้ำหนัก':'น้ำหนักตัว/นับครั้ง';
+   const displayBest=item=>item.measure==='time'?C.formatDuration(item.maxSeconds):item.loadType==='external'?`${n(item.maxLoad,1)} kg`:`${n(item.maxReps)} ครั้ง`;
+   const nextLabel=selected?.measure==='time'?'เวลาที่มากที่สุดในวัน':selected?.loadType==='external'?'น้ำหนักสูงสุดของวัน':'จำนวนครั้งสูงสุดของวัน';
+   const chart=selected?C.lineChart(selected.byDate.map(d=>({date:d.date,value:selected.measure==='time'?d.bestSeconds:selected.loadType==='external'?d.bestLoad:d.bestReps})),{label:nextLabel}):'<div class="chart-empty">ยังไม่มีข้อมูลสำหรับเลือกท่า</div>';
+   const activeSessionHint=report.sessions>report.activeSessions?` · อีก ${report.sessions-report.activeSessions} Session ยังไม่มีเซตที่ยืนยัน`:'';
+   return `<div class="wa-header"><div><h2>พัฒนาการฝึกของคุณ</h2><p>วิเคราะห์เฉพาะเซตที่กด “ทำแล้ว” ไม่รวม Warm-up และไม่ใช้เซตในเทมเพลตมาสมมติว่าออกกำลังกายแล้ว</p></div><button class="button button-outline" data-route="workouts">${ic('dumbbell',16)} ไปบันทึกการฝึก</button></div>
+   <div class="wa-timebar"><div><strong>ช่วงข้อมูลย้อนหลัง</strong><small>${fmt(report.from)} – ${fmt(report.asOf)}</small></div><div class="wa-range-buttons">${[30,90,180].map(days=>`<button class="deep-period ${ui.analyticsDays===days?'selected':''}" data-action="wa-range" data-value="${days}" aria-pressed="${ui.analyticsDays===days}">${days} วัน</button>`).join('')}</div></div>
+   <div class="wa-kpis">${metric('เซตที่ทำจริง',`${n(report.workSets)} เซต`,`จาก ${report.loggedDays} วันฝึก${activeSessionHint}`,'check')}${metric('Volume (อุปกรณ์)',`${n(report.volume,1)}`, 'kg × ครั้ง · เฉพาะท่าถ่วงน้ำหนัก','dumbbell')}${metric('จำนวนครั้งน้ำหนักตัว',`${n(report.bodyweightReps)}`,'ไม่ประเมินน้ำหนักตัวเป็น kg','target')}${metric('เวลาท่าจับเวลา',`${n(report.timedSeconds/60,1)} นาที`,'นับเฉพาะเซตที่ทำจริง','clock')}</div>
+   <div class="wa-analysis-grid"><section class="panel wa-week-panel">${sectionHead('ความสม่ำเสมอรายสัปดาห์','จำนวนเซตที่ยืนยันแล้ว · สัปดาห์จันทร์–อาทิตย์')}<div class="wa-weeks">${report.weeks.map(w=>`<div class="wa-week"><span class="wa-week-value">${w.sets||'—'}</span><div class="wa-week-track"><span style="height:${w.sets?Math.max(4,Math.round(w.sets/maxWeekly*100)):0}%"></span></div><small>${C.shortDate(w.start)}</small><span class="wa-week-day">${w.days} วัน</span></div>`).join('')}</div><p class="wa-help">แท่งจำนวนเซตเป็นภาพรวม ไม่ใช่เกณฑ์ว่าควรฝึกหนักขึ้นหรือน้อยลง สัปดาห์ปัจจุบันยังไม่ครบ</p></section>
+   <section class="panel wa-muscle-panel">${sectionHead('สัดส่วนเซตตามกลุ่มท่า','จัดกลุ่มจากชื่อท่าและประเภทวันฝึกโดยประมาณ ไม่ใช่ปริมาณที่กล้ามเนื้อได้รับจริง')}${report.muscles.length?`<div class="wa-muscle-list">${report.muscles.map(g=>`<div class="wa-muscle-row"><span>${e(g.label)}</span><div class="wa-bar"><span style="width:${g.sets/groupMax*100}%"></span></div><b>${g.sets} เซต</b></div>`).join('')}</div>`:empty('dumbbell','ยังไม่มีข้อมูล','เริ่มบันทึกเซตจริงใน Workout Planner')}</section></div>
+   <section class="panel wa-exercises">${sectionHead('ความแข็งแรงรายท่า & Personal Best','เลือกท่าที่เคยทำเพื่อเปรียบเทียบค่าสูงสุดและรายละเอียดต่อวัน')}
+   ${list.length?`<div class="wa-exercise-control"><label for="wa-exercise-select">ท่าที่ต้องการวิเคราะห์</label><select id="wa-exercise-select" class="wa-select">${list.map(ex=>option(ex.key,`${ex.name} · ${ex.setCount} เซต`,ui.analyticsExercise)).join('')}</select></div>`:''}
+   ${selected?`<div class="wa-detail-head"><div><h3>${e(selected.name)}</h3><span>${e(kindLabel(selected))} · ${selected.days} วันฝึก · ${selected.setCount} เซต</span></div><div class="wa-best"><small>Personal Best ในช่วงนี้</small><strong>${e(displayBest(selected))}</strong></div></div>
+   <div class="wa-mini-kpis">${metric('จำนวนครั้งรวม',`${n(selected.totalReps)} ครั้ง`,'สำหรับท่านับครั้ง','check')}${metric('เวลาออกแรงรวม',`${n(selected.totalSeconds/60,1)} นาที`,'สำหรับท่าจับเวลา','clock')}${metric('Volume ของท่านี้',`${n(selected.volume,1)}`,'kg × ครั้ง เฉพาะอุปกรณ์','dumbbell')}${metric('Estimated 1RM',selected.maxEst1RM?`${n(selected.maxEst1RM,1)} kg`:'—','ประมาณด้วยสูตร Epley เมื่อ ≤ 10 reps','chart')}</div>
+   <div class="wa-line-area"><div class="wa-line-title"><strong>${e(nextLabel)}</strong><span>ค่าสูงสุดของแต่ละวันที่บันทึก</span></div>${chart}</div>
+   <div class="wa-exercise-note"><strong>${selected.days>=3?(selected.direction==='up'?'แนวโน้มเพิ่มขึ้น':selected.direction==='down'?'ผลล่าสุดต่ำกว่าครั้งแรก':'ค่าสูงสุดทรงตัว'):'รอข้อมูลเพิ่ม'}:</strong> ${e(selected.detail)} · การเปลี่ยนแปลงอาจเกี่ยวกับจำนวนครั้ง เทคนิค อุปกรณ์ ความเหนื่อย และระยะพัก จึงไม่ใช่ข้อสรุปสุขภาพ</div>
+   <div class="wa-history-wrap"><table class="wa-table"><thead><tr><th>วันที่</th><th>เซต</th><th>จำนวนครั้งสูงสุด</th><th>น้ำหนักสูงสุด</th><th>เวลาสูงสุด</th><th>Volume</th></tr></thead><tbody>${selected.byDate.slice().reverse().slice(0,20).map(d=>`<tr><td>${fmt(d.date)}</td><td>${n(d.sets)}</td><td>${d.bestReps?n(d.bestReps):'—'}</td><td>${selected.loadType==='external'?`${n(d.bestLoad,1)} kg`:'—'}</td><td>${d.bestSeconds?C.formatDuration(d.bestSeconds):'—'}</td><td>${n(d.volume,1)}</td></tr>`).join('')}</tbody></table></div>`:empty('chart','ยังไม่มีสถิติรายท่า','เมื่อบันทึกเซตจริงแล้วจะเริ่มเห็นกราฟ Personal Best และตารางย้อนหลัง')}
+   </section>
+   <section class="panel wa-recommendations">${sectionHead('ข้อสังเกตและแนวทางถัดไป','อ้างอิงเฉพาะข้อมูลที่บันทึก ไม่ใช่คำสั่งให้เพิ่มน้ำหนักหรือฝึกหนักขึ้น')}<div class="wa-notes">${report.notes.map(x=>`<article class="wa-note"><div class="wa-note-icon">${ic(x.level==='good'?'check':'info',17)}</div><div><h3>${e(x.title)}</h3><p>${e(x.evidence)}</p><div><b>ลองทำต่อ:</b> ${e(x.next)}</div></div></article>`).join('')}</div><div class="wa-disclaimer">ข้อจำกัด: Volume เป็น kg × reps เฉพาะน้ำหนักอุปกรณ์; ไม่เทียบตรงกับท่าน้ำหนักตัวหรือจับเวลา · Estimated 1RM เป็นเพียงค่าประมาณ · กล้ามเนื้อจัดกลุ่มจากชื่อท่าจึงอาจไม่ตรงทุกกรณี · ไม่ได้ประเมินการบาดเจ็บหรือความพร้อมทางการแพทย์</div></section>`;
+ }
+ // Repaint only the affected reports when the category changes. Keep the filter DOM,
+ // keyboard focus, horizontal filter scroll, and document's current reading position.
+ function setInsightsFocus(value){
+   if(!['all','sleep','nutrition','weight','workout','running','recovery','cross'].includes(value))return;
+   ui.insightsFocus=value;
+   const library=document.querySelector('.deep-insight-library'),trends=document.querySelector('.deep-trends');
+   if(route!=='insights'||!library||!trends){render(true);return;}
+   const oldTop=library.getBoundingClientRect().top;
+   const fresh=document.createElement('div');fresh.innerHTML=insights();
+   const newObservations=fresh.querySelector('.deep-observations'),newTrends=fresh.querySelector('.deep-trend-grid');
+   if(!newObservations||!newTrends){render(true);return;}
+   library.querySelector('.deep-observations').replaceWith(newObservations);
+   trends.querySelector('.deep-trend-grid').replaceWith(newTrends);
+   library.querySelectorAll('.deep-filter').forEach(btn=>{const on=btn.dataset.value===value;btn.classList.toggle('active',on);btn.setAttribute('aria-pressed',String(on));});
+   // Preserve location if browser scroll anchoring adjusts for cards disappearing.
+   const delta=library.getBoundingClientRect().top-oldTop;
+   if(Math.abs(delta)>1)window.scrollBy(0,delta);
  }
 
  function dashboard(m){
@@ -555,8 +601,9 @@
    if(a==='open-routine'){openRoutine();return;}
    if(a==='edit-routine'){openRoutine(id);return;}
    if(a==='delete-routine'){removeItem('routines',x=>x.id===id,'ลบกิจกรรมนี้จากทุกวันที่เลือกไว้?');return;}
-   if(a==='insights-days'){ui.insightsDays=Number(el.dataset.value);render(false);return;}
-   if(a==='insights-focus'){ui.insightsFocus=el.dataset.value;render(false);return;}
+   if(a==='insights-days'){ui.insightsDays=Number(el.dataset.value);render(true);return;}
+   if(a==='insights-focus'){setInsightsFocus(el.dataset.value);return;}
+   if(a==='wa-range'){if(![30,90,180].includes(Number(el.dataset.value)))return;ui.analyticsDays=Number(el.dataset.value);render(true);return;}
    if(a==='period'){ui.weightPeriod=Number(el.dataset.value);render(true);return;}
    if(a==='edit-weight'){openWeight(id);return;}
    if(a==='delete-weight'){removeItem('weights',x=>x.id===id,'ลบบันทึกน้ำหนักนี้?');return;}
@@ -583,6 +630,7 @@
  });
  document.addEventListener('change',async event=>{
    const el=event.target;
+   if(el.id==='wa-exercise-select'){ui.analyticsExercise=el.value;render(true);return;}
    if(el.dataset.picker&&C.isDate(el.value)){ui[el.dataset.picker]=el.value;if(el.dataset.picker==='workoutDate')ui.workoutDay=C.weekday(el.value);render(true);return;}
    if(el.id==='goal-kind'){
      const spec=G.KINDS[el.value],f=el.closest('form');if(!spec||!f)return;

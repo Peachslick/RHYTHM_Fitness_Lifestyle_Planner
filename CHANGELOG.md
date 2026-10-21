@@ -1,3 +1,12 @@
+## V1.8.0 — Advanced Workout Analytics & Deep Insights Filter Scroll Fix (2026-10-21)
+
+- Added read-only advanced workout analytics engine in `js/workout-analytics.js`; no database schema change.
+- Added navigation page with 30/90/180-day exercise records, training volume, timed/bodyweight totals, weekly confirmed-set bars, approximate exercise group distribution, best performances and per-exercise trend charts.
+- Excludes unconfirmed template rows and warm-up sets; estimates 1RM only for weighted reps <=10.
+- Replaced deep-insights category filter's full reset-to-top render with focused DOM updates that keep the report in view, preserve keyboard focus, and retain horizontal filter scroll.
+- Tests: `tests/test-v180.cjs` new; stale progress route label in existing app smoke test corrected.
+- Compatibility: V1.7.0 state and Supabase JSON kept unchanged; no SQL migration.
+
 # V1.7.0 — Smart Goals & Recommendations
 
 - หน้าใหม่ เป้าหมายอัจฉริยะ: Personal Goals, Insight-based Suggestions, ค่าจริงย้อนหลัง, ตัวกรองสถานะ, Reflection และสรุปความคืบหน้า

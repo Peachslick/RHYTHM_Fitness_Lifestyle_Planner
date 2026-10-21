@@ -25,7 +25,7 @@ function click({action=null,route=null,id='',date='',day='',value=''}){
 function submit(id,fields,dataId=''){
  listeners.submit({target:{id,mock:fields,dataset:{id:dataId,foodid:''}},preventDefault(){}});
 }
-for(const [route,title] of Object.entries({workouts:'แผนออกกำลังกาย',nutrition:'โภชนาการ',sleep:'การนอน',routine:'ตารางชีวิต',progress:'แนวโน้มและเป้าหมาย',profile:'โปรไฟล์และตั้งค่า'})){
+for(const [route,title] of Object.entries({workouts:'แผนออกกำลังกาย',nutrition:'โภชนาการ',sleep:'การนอน',routine:'ตารางชีวิต',progress:'น้ำหนักและแนวโน้ม',profile:'โปรไฟล์และตั้งค่า'})){
  click({route});assert(dom.app.innerHTML.includes(`<h1>${title}</h1>`),`render ${route}`);
 }
 click({route:'workouts'});click({action:'edit-day'});assert(dom['modal-root'].innerHTML.includes('day-form'),'opens program editor');
