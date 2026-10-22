@@ -27,5 +27,5 @@ let html=dom.app.innerHTML;ok(html.includes('ความแข็งแรง�
 const click=(action,value)=>{const el={dataset:{action,value},closest:q=>q==='[data-route]'?null:el};listeners.click({target:el,preventDefault(){}});};
 click('wa-range','30');ok(dom.app.innerHTML.includes('30 วัน'),'range renders');
 // Headless VM cannot construct a real DOM; a separate Playwright integration test checks scroll position.
-const routeEl={target:{closest:q=>q==='[data-route]'?{dataset:{route:'insights'}}:null},preventDefault(){}};listeners.click(routeEl);click('insights-focus','sleep');ok(dom.app.innerHTML.includes('รายงานวิเคราะห์และแนวทางถัดไป'),'insights focus route still works');
+const routeEl={target:{closest:q=>q==='[data-route]'?{dataset:{route:'insights'}}:null},preventDefault(){}};listeners.click(routeEl);click('hub-tab','sleep');ok(dom.app.innerHTML.includes('PERSONAL ANALYSIS'),'legacy link opens hub and sleep tab');
 console.log(`PASS: ${checks} V1.8.0 weighted/bodyweight/timed analytics, confirmed-only, PR and UI smoke assertions`);

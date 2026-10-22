@@ -29,10 +29,10 @@ r2=I.assemble(s2,{days:7,asOf:now});eq(r2.domains.recovery.count,3,'checkin coun
 const sr={id:'r1',date:now,type:'easy',distanceKm:5,durationSeconds:1800,rpe:6,notes:''};s2.runs=[sr,{...sr,id:'r2',distanceKm:3,durationSeconds:1200}];r2=I.assemble(s2,{days:7,asOf:now});eq(r2.domains.running.count,2,'two runs');eq(r2.domains.running.totalKm,8,'total run km');eq(r2.domains.running.averagePace,'6:15 นาที/กม.','weighted pace 3000 / 8');
 const old=D.blankState();delete old.runs;delete old.checkins;ok(C.validateImported(old),'V1.0 legacy import still valid');ok(C.validateImported(s),'sleep stages update import valid');
 // App checks: dashboard renders, navigation/filtering/widow controls interact, and no data mutation.
-ok(dom.app.innerHTML.includes('วิเคราะห์เชิงลึก'),'new insights route renders');ok(dom.app.innerHTML.includes('รายงานวิเคราะห์และแนวทางถัดไป'),'observations present');
+ok(dom.app.innerHTML.includes('ศูนย์วิเคราะห์'),'legacy insights URL redirects into Unified Hub');ok(dom.app.innerHTML.includes('สิ่งที่ควรติดตามต่อ'),'observations appear in hub overview');
 const appBefore=dom.app.innerHTML;
 function click(action,value){const el={dataset:{action,value},closest:sel=>sel==='[data-route]'?null:el};listeners.click({target:el,preventDefault(){}});}
-click('insights-days','30');ok(dom.app.innerHTML.includes('30 วัน')&&!dom.app.innerHTML.includes('NaN'),'30 day selected renders');
-click('insights-focus','sleep');ok(dom.app.innerHTML.includes('deep-filter active')&&dom.app.innerHTML.includes('เจาะลึกการนอน'),'sleep filter works');
+click('hub-days','30');ok(dom.app.innerHTML.includes('30 วัน')&&!dom.app.innerHTML.includes('NaN'),'30 day selected in unified hub');
+click('hub-tab','sleep');ok(dom.app.innerHTML.includes('การนอน')&&dom.app.innerHTML.includes('PERSONAL ANALYSIS'),'sleep tab in hub renders');
 const event={target:{closest:sel=>sel==='[data-route]'?{dataset:{route:'dashboard'}}:null},preventDefault(){}};listeners.click(event);ok(dom.app.innerHTML.includes('สร้างจังหวะที่ใช่'),'dashboard navigation works');
 console.log(`PASS: ${checks} V1.6.0 deterministic personal insights, stage limitations and UI assertions`);

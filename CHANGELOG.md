@@ -1,3 +1,23 @@
+# V1.9.6 — Unified Analytics Hub (22/10/2026)
+
+- เพิ่มหน้า **ศูนย์วิเคราะห์** (Unified Analytics Hub) พร้อม Hero แบบใหม่, กราฟภาพรวม, คะแนนความครบถ้วนของบันทึก และการ์ดแนวทางถัดไปจากกฎวิเคราะห์เดิม
+- รวมทางเข้า 3 หน้าวิเคราะห์ใน Sidebar เป็นหน้าเดียว (แท็บ ภาพรวม, การนอน, โภชนาการ, น้ำหนัก, การฝึก, การวิ่ง, Recovery, ความสัมพันธ์) แต่ **ยังเก็บสูตร/รายงานเดิมทั้งหมด**
+- คงการเปิดลิงก์เก่า `#insights`, `#workoutAnalytics`, `#metabolism` โดยพาเข้าสู่แท็บที่เกี่ยวข้องใน `#analyticsHub`
+- เปลี่ยนแท็บโดยไม่วาด Sidebar/ทั้งแอปใหม่ และไม่สั่ง Scroll กลับหัวหน้า
+- แยกตัวเลือกช่วงเวลา: ภาพรวม/หมวดทั่วไป 7/14/30 วัน; การฝึก 30/90/180 วัน; โภชนาการ 14/28/56 วัน — ตัวเลือกแต่ละด้านใช้สูตรเดิม
+- ไม่มีการเพิ่มฐานข้อมูล, เปลี่ยน SQL, แก้ Cloud Snapshot หรือเขียนผลวิเคราะห์ลง Supabase
+- อัปเดตคู่มือและ Regression Tests (รวม legacy-route compatibility)
+
+## วิธีอัปเดต
+
+สำรองข้อมูล JSON ก่อนและตรวจ Cloud Pending/Conflict → สำรอง Repository V1.9.5 → นำไฟล์ **Update Only** ไปทับโดยคงโครงสร้างโฟลเดอร์ → Push GitHub → ตรวจ Vercel deployment และทดสอบลิงก์ #analyticsHub รวมถึงการซิงค์จริง
+
+## ข้อจำกัด
+
+ค่า kcal/TDEE/estimated 1RM/REM-Deep/ความพร้อมพักฟื้นเป็นข้อมูลประมาณการตามวิธีที่อธิบายในคู่มือเดิม ไม่ใช่การวัดทางคลินิกหรือคำสั่งอัตโนมัติให้ปรับการฝึก/อาหาร
+
+---
+
 ## V1.9.5 — Daily Experience & Smart Autofill (2026-10-21)
 
 - Daily-first Dashboard: status and shortcuts for sleep, nutrition, workout/rest, recovery, and weight; optional logs never counted as missed requirements.

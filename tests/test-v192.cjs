@@ -25,7 +25,7 @@ test('repeats guard duplicate source',app.includes('x.copiedFrom===original.id')
 test('repeat meals are capped',app.includes('recentMeals.length===6'));
 test('guide mobile responsive',css.includes('.guide-data-grid,.guide-analysis-links{grid-template-columns:1fr}'));
 test('side groups truly hide',css.includes('.side-group-content[hidden]{display:none!important}'));
-test('new asset caches',(html.includes('styles.css?v=1.9.2')||html.includes('styles.css?v=1.9.3')||html.includes('styles.css?v=1.9.4')||html.includes('styles.css?v=1.9.5'))&&(html.includes('app.js?v=1.9.2')||html.includes('app.js?v=1.9.3')||html.includes('app.js?v=1.9.4')||html.includes('app.js?v=1.9.5')));
+test('new asset caches',(html.includes('styles.css?v=1.9.2')||html.includes('styles.css?v=1.9.3')||html.includes('styles.css?v=1.9.4')||html.includes('styles.css?v=1.9.5')||html.includes('styles.css?v=1.9.6'))&&(html.includes('app.js?v=1.9.2')||html.includes('app.js?v=1.9.3')||html.includes('app.js?v=1.9.4')||html.includes('app.js?v=1.9.5')||html.includes('app.js?v=1.9.6')));
 test('user guide documents recovery',guide.includes('Recovery และ Cross-Insights'));
 test('user guide documents cloud conflict',guide.includes('Conflict'));
 console.log(`V1.9.2 UX: ${cases} static contract assertions passed`);

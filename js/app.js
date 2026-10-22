@@ -1,4 +1,4 @@
-/* RHYTHM v1.9.3 — Thai-first, optional Supabase account and cloud sync */
+/* RHYTHM v1.9.6 — Thai-first, optional Supabase account and cloud sync */
 (function(){
  'use strict';
  const Daily=window.FitDaily,C=window.FitCore,D=window.FitData,R=window.FitRecovery,Run=window.FitRun,I=window.FitInsights,G=window.FitGoals,WA=window.FitWorkoutAnalytics,M=window.FitMetabolism,U=window.FitUX,FoodEdit=window.FitCustomFoodEditor;
@@ -19,8 +19,8 @@
  let cloudBooting=!!(window.RHYTHM_SUPABASE_CONFIG?.url && window.RHYTHM_SUPABASE_CONFIG?.publishableKey);
  let route=location.hash.replace('#','')||'dashboard';
  let sidebarScrollTop=0;
- const pages={dashboard:{label:'ภาพรวม',icon:'layout',caption:'มองภาพรวมของการฝึก อาหาร และการพักฟื้น'},workouts:{label:'แผนออกกำลังกาย',icon:'dumbbell',caption:'จัดตาราง Push / Pull / Legs / Run ได้ตามชีวิตจริง'},running:{label:'บันทึกการวิ่ง',icon:'route',caption:'บันทึกระยะทาง เวลา Pace และแนวโน้มการวิ่ง'},nutrition:{label:'โภชนาการ',icon:'utensils',caption:'บันทึกอาหารและติดตามพลังงานอย่างยืดหยุ่น'},sleep:{label:'การนอน',icon:'moon',caption:'ติดตามชั่วโมงนอนและระยะการนอนจากข้อมูลที่บันทึก'},recovery:{label:'Recovery & Lifestyle',icon:'sparkles',caption:'เชื่อมความรู้สึก การพักผ่อน และภาระการฝึกโดยไม่วินิจฉัยสุขภาพ'},routine:{label:'ตารางชีวิต',icon:'clock',caption:'ออกแบบวันของคุณ ตั้งแต่ตื่นจนเข้านอน'},progress:{label:'น้ำหนักและแนวโน้ม',icon:'chart',caption:'เรียนรู้จากแนวโน้ม ไม่ตัดสินด้วยข้อมูลวันเดียว'},metabolism:{label:'วิเคราะห์พลังงานและโภชนาการ',icon:'flame',caption:'เข้าใจ TDEE มื้ออาหาร และการเปลี่ยนแปลงน้ำหนักตามข้อมูลจริง'},workoutAnalytics:{label:'วิเคราะห์การฝึก',icon:'chart',caption:'Personal Records, Volume, ความสม่ำเสมอ และพัฒนาการรายท่า'},goals:{label:'เป้าหมายอัจฉริยะ',icon:'target',caption:'เปลี่ยนข้อสังเกตเป็นเป้าหมายที่ติดตามผลได้'},insights:{label:'วิเคราะห์เชิงลึก',icon:'sparkles',caption:'เชื่อมข้อมูลสุขภาพที่บันทึก พร้อมเหตุผลและแนวทางต่อไป'},guide:{label:'เริ่มต้นและคู่มือ',icon:'info',caption:'เริ่มใช้ง่ายขึ้น · รู้ว่าต้องบันทึกอะไรเพื่อวิเคราะห์แต่ละด้าน'},profile:{label:'โปรไฟล์และตั้งค่า',icon:'user',caption:'ปรับค่าตั้งต้น เป้าหมาย และการจัดการข้อมูล'}};
- const ui={runDate:C.today(),exerciseFocus:'',authMode:'login',workoutDay:C.weekday(C.today()),workoutDate:C.today(),foodDate:C.today(),sleepDate:C.today(),recoveryDate:C.today(),routineDay:C.weekday(C.today()),weightPeriod:30,search:'',foodCategory:'ทั้งหมด',foodLimit:60,insightsDays:14,analyticsDays:90,analyticsExercise:'',metabolismDays:28,insightsFocus:'all',mobileOpen:false,goalStatusFilter:"active",menuOpen:{logs:true,analysis:false},wizardDraft:null,wizardStep:0,liveDraft:null,liveActive:false};
+ const pages={dashboard:{label:'ภาพรวม',icon:'layout',caption:'มองภาพรวมของการฝึก อาหาร และการพักฟื้น'},workouts:{label:'แผนออกกำลังกาย',icon:'dumbbell',caption:'จัดตาราง Push / Pull / Legs / Run ได้ตามชีวิตจริง'},running:{label:'บันทึกการวิ่ง',icon:'route',caption:'บันทึกระยะทาง เวลา Pace และแนวโน้มการวิ่ง'},nutrition:{label:'โภชนาการ',icon:'utensils',caption:'บันทึกอาหารและติดตามพลังงานอย่างยืดหยุ่น'},sleep:{label:'การนอน',icon:'moon',caption:'ติดตามชั่วโมงนอนและระยะการนอนจากข้อมูลที่บันทึก'},recovery:{label:'Recovery & Lifestyle',icon:'sparkles',caption:'เชื่อมความรู้สึก การพักผ่อน และภาระการฝึกโดยไม่วินิจฉัยสุขภาพ'},routine:{label:'ตารางชีวิต',icon:'clock',caption:'ออกแบบวันของคุณ ตั้งแต่ตื่นจนเข้านอน'},progress:{label:'น้ำหนักและแนวโน้ม',icon:'chart',caption:'เรียนรู้จากแนวโน้ม ไม่ตัดสินด้วยข้อมูลวันเดียว'},analyticsHub:{label:'ศูนย์วิเคราะห์',icon:'chart',caption:'ภาพรวม · ข้อมูลย้อนหลัง · แนวทางถัดไปในหน้าเดียว'},metabolism:{label:'วิเคราะห์พลังงานและโภชนาการ',icon:'flame',caption:'เข้าใจ TDEE มื้ออาหาร และการเปลี่ยนแปลงน้ำหนักตามข้อมูลจริง'},workoutAnalytics:{label:'วิเคราะห์การฝึก',icon:'chart',caption:'Personal Records, Volume, ความสม่ำเสมอ และพัฒนาการรายท่า'},goals:{label:'เป้าหมายอัจฉริยะ',icon:'target',caption:'เปลี่ยนข้อสังเกตเป็นเป้าหมายที่ติดตามผลได้'},insights:{label:'วิเคราะห์เชิงลึก',icon:'sparkles',caption:'เชื่อมข้อมูลสุขภาพที่บันทึก พร้อมเหตุผลและแนวทางต่อไป'},guide:{label:'เริ่มต้นและคู่มือ',icon:'info',caption:'เริ่มใช้ง่ายขึ้น · รู้ว่าต้องบันทึกอะไรเพื่อวิเคราะห์แต่ละด้าน'},profile:{label:'โปรไฟล์และตั้งค่า',icon:'user',caption:'ปรับค่าตั้งต้น เป้าหมาย และการจัดการข้อมูล'}};
+ const ui={runDate:C.today(),exerciseFocus:'',authMode:'login',workoutDay:C.weekday(C.today()),workoutDate:C.today(),foodDate:C.today(),sleepDate:C.today(),recoveryDate:C.today(),routineDay:C.weekday(C.today()),weightPeriod:30,search:'',foodCategory:'ทั้งหมด',foodLimit:60,insightsDays:14,analyticsDays:90,analyticsExercise:'',metabolismDays:28,insightsFocus:'all',hubDays:14,hubTab:'overview',mobileOpen:false,goalStatusFilter:"active",menuOpen:{logs:true,analysis:false},wizardDraft:null,wizardStep:0,liveDraft:null,liveActive:false};
  const FONTS={sarabun:'Sarabun · Recommended',bai:'Bai Jamjuree',noto:'Noto Sans Thai',ibm:'IBM Plex Sans Thai',leelawadee:'Leelawadee UI',tahoma:'Tahoma',segoe:'Segoe UI / System',prompt:'Prompt',kanit:'Kanit',mitr:'Mitr',anakotmai:'Anakotmai',athiti:'Athiti',trirong:'Trirong (Serif)',itim:'Itim (Handwriting)',pattaya:'Pattaya (Display)',chonburi:'Chonburi (Display)'};
  const e=C.esc,ic=C.icon,n=C.nfmt,num=C.num,fmt=C.pretty;
  // Browser-local timer: never upload transient state into Supabase snapshots.
@@ -94,7 +94,7 @@
 
  const NAV_GROUPS=[
    {id:'logs',title:'บันทึกและวางแผน',items:['workouts','running','nutrition','sleep','recovery','routine','progress']},
-   {id:'analysis',title:'วิเคราะห์และพัฒนา',items:['insights','workoutAnalytics','metabolism','goals']}
+   {id:'analysis',title:'วิเคราะห์และพัฒนา',items:['analyticsHub','goals']}
  ];
  function sideLink(key){const pg=pages[key];return `<a href="#${key}" class="nav-item ${route===key?'active':''}" data-route="${key}" ${route===key?'aria-current="page"':''}>${ic(pg.icon,19)}<span>${pg.label}</span></a>`;}
  function sidebarNavigation(){
@@ -114,7 +114,7 @@
    else if(kind==='recovery'){ui.recoveryDate=C.today();openCheckin();}
    else if(kind==='run'){ui.runDate=C.today();openRun();}
  }
- function navigate(page){if(!pages[page])page='dashboard';for(const g of NAV_GROUPS)if(g.items.includes(page))ui.menuOpen[g.id]=true;route=page;ui.mobileOpen=false;if(location.hash!==`#${page}`)history.replaceState(null,'',`#${page}`);render(false);}
+ function navigate(page){const legacy={insights:'overview',workoutAnalytics:'workout',metabolism:'nutrition'};if(legacy[page]){ui.hubTab=legacy[page];page='analyticsHub';}if(!pages[page])page='dashboard';for(const g of NAV_GROUPS)if(g.items.includes(page))ui.menuOpen[g.id]=true;route=page;ui.mobileOpen=false;if(location.hash!==`#${page}`)history.replaceState(null,'',`#${page}`);render(false);}
  function render(preserve=true){
    if(cloudBooting){document.getElementById('app').innerHTML='<div class="boot"><img class="boot-logo" src="assets/rhythm-logo.png" alt="RHYTHM" /><p>กำลังตรวจสอบเซสชัน RHYTHM…</p></div>';return;}
    if(!pages[route])route='dashboard'; const y=preserve?window.scrollY:0;
@@ -132,13 +132,13 @@
     </aside><div class="mobile-mask ${ui.mobileOpen?'visible':''}" data-action="mobile-close"></div>
     <div class="workspace"><header class="topbar"><div class="topbar-left"><button class="mob-menu icon-button" data-action="mobile-open" aria-label="เปิดเมนู">${ic('menu')}</button><div><div class="breadcrumb"><img class="topbar-logo" src="assets/rhythm-logo.png" alt="" /> RHYTHM <span>/</span> ${pg.label}</div><h1>${pg.label}</h1><p>${pg.caption}</p></div></div><div class="topbar-actions"><div class="today-chip">${ic('calendar',16)}<span>${e(fmt(C.today(),true))}</span></div><button class="icon-button theme-toggle" data-action="toggle-theme" aria-label="สลับธีม" title="สลับธีม">${ic(state.settings.theme==='dark'?'sun':'moon')}</button><button class="button button-primary top-quick" data-action="quick-menu" aria-label="เปิดเมนูบันทึกด่วน">${ic('plus',16)} <span>บันทึกด่วน</span></button></div></header>
      <div class="content">${cloudStrip()}${sync.isBlocked?cloudBlocker():state.demo?`<div class="demo-banner">${ic('info',17)} <div><strong>โหมดทดลอง:</strong> ตัวเลขและบันทึกที่เห็นเป็นข้อมูลสมมติสำหรับทดสอบเว็บ</div><button class="button button-mini" data-action="start-real">เริ่มใช้ข้อมูลของฉัน ${ic('arrow',15)}</button></div>`:''}${renderPage(m)}</div>
-     <footer class="footer"><span>RHYTHM <b>v1.9.5</b> · Personal Wellness Workspace</span><span>ประมาณการเพื่อการวางแผน ไม่ใช่คำแนะนำทางการแพทย์</span></footer>
+     <footer class="footer"><span>RHYTHM <b>v1.9.6</b> · Personal Wellness Workspace</span><span>ประมาณการเพื่อการวางแผน ไม่ใช่คำแนะนำทางการแพทย์</span></footer>
     </div></div>`;
    const newSidebar=document.getElementById('sidebar');
    if(newSidebar)newSidebar.scrollTop=sidebarScrollTop;
    window.scrollTo({top:y,behavior:'instant'});
  }
- function renderPage(m){return ({dashboard:()=>dashboard(m),workouts,running,workoutAnalytics,goals,metabolism,nutrition:()=>nutrition(m), sleep, recovery, routine, progress:()=>progress(m),insights,guide:()=>userGuide(m),profile:()=>profile(m)})[route]();}
+ function renderPage(m){return ({dashboard:()=>dashboard(m),workouts,running,analyticsHub,workoutAnalytics,goals,metabolism,nutrition:()=>nutrition(m), sleep, recovery, routine, progress:()=>progress(m),insights,guide:()=>userGuide(m),profile:()=>profile(m)})[route]();}
  const sectionHead=(title,sub,action='')=>`<div class="section-head"><div><h2>${title}</h2>${sub?`<p>${sub}</p>`:''}</div>${action}</div>`;
  const ghost=(action,label,icon='plus',attrs='')=>`<button class="button button-outline" data-action="${action}" ${attrs}>${ic(icon,16)} ${label}</button>`;
  const formatHour=mins=>mins===null?'—':`${Math.floor(mins/60)} ชม. ${Math.round(mins%60)} นาที`;
@@ -173,6 +173,96 @@
    const p=G.progress(g,state);
    showModal('ทบทวนเป้าหมาย',`<form id="goal-review-form" data-id="${e(g.id)}"><div class="goal-review-kpi"><strong>${p.value===null?'ยังไม่มีข้อมูล':n(p.value,1)+' '+e(p.unit)}</strong><small>เป้าหมาย ${e(n(g.target,1))} ${e(p.unit)} · ${e(p.window)}</small></div><div class="form-grid"><label class="field"><span>ความรู้สึกต่อความคืบหน้า</span><select name="rating">${[1,2,3,4,5].map(v=>option(v,`${v}/5`,3)).join('')}</select></label><label class="field"><span>สิ่งที่ได้ลองปรับ / ข้อสังเกต</span><textarea name="note" required maxlength="300" rows="4" placeholder="เช่น ลองนอนเร็วขึ้น 15 นาที และตื่นสดชื่นกว่าเดิม"></textarea></label></div>${modalButtons('บันทึกการทบทวน')}</form>`,'บันทึกความคิดเห็นของคุณ ไม่แทนข้อมูลที่วัดได้จริง');
  }
+
+ // Unified Analytics Hub: read-only surface, all metrics come from existing verified engines.
+ // Older report pages remain in source for compatibility, but only the hub is shown in navigation.
+ const HUB_TABS=[
+   ['overview','ภาพรวม','layout'],['sleep','การนอน','moon'],['nutrition','โภชนาการ','utensils'],
+   ['weight','น้ำหนัก','target'],['workout','การฝึก','dumbbell'],['running','การวิ่ง','route'],
+   ['recovery','Recovery','sparkles'],['cross','ความสัมพันธ์','chart']
+ ];
+ const HUB_META={
+   sleep:{name:'การนอน',icon:'moon',note:'ชั่วโมงนอนและระยะการนอนจากนาฬิกาเป็นข้อมูลที่บันทึกเอง',route:'sleep',btn:'บันทึกการนอน',unit:'ชั่วโมง / คืน',target:7},
+   weight:{name:'น้ำหนักและเป้าหมาย',icon:'target',note:'เฉลี่ยจากวันที่ชั่งจริง ไม่มีการเติมค่าระหว่างวัน',route:'progress',btn:'บันทึกน้ำหนัก',unit:'กิโลกรัม'},
+   running:{name:'การวิ่ง',icon:'route',note:'ระยะทางและ Pace จากค่าที่บันทึก ไม่ได้ใช้ GPS',route:'running',btn:'บันทึกการวิ่ง',unit:'กิโลเมตร / วัน'},
+   recovery:{name:'Recovery & Lifestyle',icon:'sparkles',note:'เป็นการประเมินความรู้สึก ไม่ใช่การวินิจฉัย',route:'recovery',btn:'บันทึก Recovery',unit:'คะแนนความสดชื่น 1–5'}
+ };
+ function hubObservation(o){
+   const label={sleep:'การนอน',nutrition:'โภชนาการ',weight:'น้ำหนัก',workout:'การฝึก',running:'การวิ่ง',recovery:'Recovery',cross:'ความสัมพันธ์'}[o.domain]||'ข้อมูล';
+   return `<article class="hub-observation"><div class="hub-observation-label"><span>${e(label)}</span><small>${e(o.confidence)} · ความเชื่อมั่น</small></div><h3>${e(o.title)}</h3><p>${e(o.evidence)}</p><div class="hub-next">${ic('arrow',16)}<span>${e(o.next)}</span></div></article>`;
+ }
+ function hubTrend(key,domain){
+   const meta=HUB_META[key]||{name:'ข้อมูล',note:'แสดงเฉพาะวันที่บันทึก',unit:'ค่า'};
+   const target=key==='sleep'?7:key==='weight'?domain.targetKg:null;
+   return `<div class="hub-trend-head"><div><small>TREND / ${e(meta.unit)}</small><h3>${e(meta.name)}</h3></div><span class="hub-tiny-dot"></span></div><div class="hub-chart">${C.lineChart(domain.trend||[],{label:meta.unit,target})}</div><p>${e(meta.note)}</p>`;
+ }
+ function hubCoverage(result){
+   const d=result.domains;
+   const sources=[['sleep','การนอน',d.sleep.coverage],['nutrition','อาหาร',d.nutrition.coverage],['weight','น้ำหนัก',d.weight.coverage],['recovery','Recovery',d.recovery.coverage]];
+   return `<section class="panel hub-quality">${sectionHead('Data confidence','ความครอบคลุมของวันที่บันทึก — ไม่ใช่คะแนนสุขภาพ')}<div class="hub-quality-grid">${sources.map(([key,title,c])=>`<div class="hub-quality-item"><div class="hub-quality-top"><span>${title}</span><b>${c.count}/${c.total} วัน</b></div><div class="hub-quality-track"><span style="width:${Math.max(0,Math.min(100,c.percent))}%"></span></div><small>${e(c.level)} · ความครอบคลุมของบันทึก</small></div>`).join('')}</div></section>`;
+ }
+ function analyticsHubBody(){
+   const result=I.assemble(state,{days:ui.hubDays}),domains=result.domains;
+   const tab=ui.hubTab;
+   if(tab==='workout')return `<div class="hub-detail" id="hub-detail">${workoutAnalytics()}</div>`;
+   if(tab==='nutrition')return `<div class="hub-detail" id="hub-detail">${metabolism()}</div>`;
+   const statCards=[
+     ['moon','SLEEP / AVERAGE',domains.sleep.averageMinutes===null?'—':n(domains.sleep.averageMinutes/60,1)+' h',`${domains.sleep.count} คืนใน ${ui.hubDays} วัน`],
+     ['flame','FOOD / LOGGED DAYS',domains.nutrition.averageKcal===null?'—':n(domains.nutrition.averageKcal)+' kcal',`${domains.nutrition.count} วันที่มีบันทึก`],
+     ['dumbbell','TRAINING / SESSIONS',n(domains.workout.count),`${n(domains.workout.sets)} เซตที่บันทึก`],
+     ['route','RUNNING / DISTANCE',n(domains.running.totalKm,1)+' km',`${domains.running.count} รอบวิ่ง`]
+   ];
+   if(tab==='overview'){
+     const priorities=result.observations.filter(x=>['high','mid'].includes(x.severity)).slice(0,3);
+     const quick=priorities.length?priorities:result.observations.slice(0,3);
+     return `<div class="hub-overview">
+      <div class="hub-stats">${statCards.map(([icon,label,value,note])=>`<article class="hub-stat"><div class="hub-stat-label">${ic(icon,20)}<span>${label}</span></div><strong>${e(value)}</strong><small>${e(note)}</small></article>`).join('')}</div>
+      <div class="hub-main-grid"><section class="panel hub-primary-trends">${sectionHead('Your trends','ภาพรวมแนวโน้มจากข้อมูลที่บันทึกจริง')}<div class="hub-mini-charts">${['sleep','weight','running'].map(key=>`<article class="hub-mini-chart">${hubTrend(key,domains[key])}</article>`).join('')}</div></section>
+      <section class="panel hub-focus-panel"><div class="hub-section-kicker">WHAT TO FOCUS ON</div><h2>สิ่งที่ควรติดตามต่อ</h2><p class="hub-subtle">${result.observations.length} ข้อสังเกต · ข้อมูลจาก ${result.summary.domainsWithData} ใน 6 หมวด</p>${quick.length?quick.map((o,i)=>`<div class="hub-priority"><span>0${i+1}</span><div><b>${e(o.title)}</b><p>${e(o.next)}</p></div></div>`).join(''):'<p class="hub-subtle">เริ่มบันทึกการนอน อาหาร หรือการฝึกเพื่อสร้างข้อสังเกตส่วนตัว</p>'}<button type="button" class="button button-outline full" data-route="goals">${ic('target',16)} ไปที่เป้าหมายอัจฉริยะ</button></section></div>
+      <div class="hub-domain-grid">${HUB_TABS.filter(x=>x[0]!=='overview').map(([key,title,icon])=>`<button type="button" class="hub-domain-card" data-action="hub-tab" data-value="${key}"><span class="hub-domain-symbol">${ic(icon,22)}</span><span><strong>${e(title)}</strong><small>สำรวจสถิติและข้อสังเกต</small></span>${ic('arrow',17)}</button>`).join('')}</div>
+      ${hubCoverage(result)}
+      <p class="hub-disclaimer">ตัวเลขเป็นค่าประมาณตามข้อมูลที่บันทึก ไม่ได้แปลว่าผู้ใช้ไม่กิน/ไม่ฝึกในวันที่เว้นว่าง และไม่ใช่การวินิจฉัยทางการแพทย์</p></div>`;
+   }
+   const keys=tab==='cross'?['sleep','nutrition','weight','workout','running','recovery']:[tab];
+   const observations=tab==='cross'?result.observations.filter(x=>x.domain==='cross'):result.observations.filter(x=>x.domain===tab);
+   const key=tab==='cross'?null:tab,info=key?HUB_META[key]:null;
+   const values={sleep:[domains.sleep.averageMinutes===null?'—':n(domains.sleep.averageMinutes/60,1)+' ชม.',`${domains.sleep.count} คืน`],weight:[domains.weight.averageKg===null?'—':n(domains.weight.averageKg,1)+' kg',`${domains.weight.count} วัน`],running:[n(domains.running.totalKm,1)+' km',`${domains.running.count} ครั้ง`],recovery:[domains.recovery.energy===null?'—':n(domains.recovery.energy,1)+'/5',`${domains.recovery.count} Check-in`]};
+   return `<div class="hub-focus-view"><div class="hub-focus-lead"><div class="hub-focus-title"><span class="hub-focus-mark">${ic(info?.icon||'chart',27)}</span><div><small>PERSONAL ANALYSIS / ${ui.hubDays} DAYS</small><h2>${e(info?.name||'ความสัมพันธ์ระหว่างข้อมูล')}</h2><p>${e(info?.note||'เปรียบเทียบข้อมูลหลายด้านโดยไม่สรุปว่าเป็นสาเหตุและผลเมื่อข้อมูลไม่พอ')}</p></div></div>${info?`<button class="button button-outline" data-route="${info.route}">${ic('plus',16)} ${e(info.btn)}</button>`:''}</div>
+      ${values[key]?`<div class="hub-focus-kpis"><article><span>ค่าในช่วงที่เลือก</span><strong>${e(values[key][0])}</strong></article><article><span>จำนวนข้อมูลที่ใช้</span><strong>${e(values[key][1])}</strong></article><article><span>จำนวนข้อสังเกต</span><strong>${observations.length}</strong></article></div>`:''}
+      <div class="hub-focus-charts">${keys.map(k=>`<section class="panel hub-chart-card">${hubTrend(k,domains[k])}</section>`).join('')}</div>
+      <section class="panel hub-findings">${sectionHead('วิเคราะห์และแนวทางถัดไป',`${observations.length} ข้อสังเกต · มีหลักฐานและความมั่นใจประกอบ`)}<div class="hub-findings-grid">${observations.length?observations.map(hubObservation).join(''):`<div class="hub-empty">${ic('info',23)}<strong>ยังไม่มีข้อมูลเพียงพอสำหรับข้อสรุป</strong><p>เพิ่มบันทึกต่อเนื่องหลายวัน แล้วระบบจะวิเคราะห์ใหม่จากข้อมูลจริงโดยอัตโนมัติ</p></div>`}</div></section>
+      ${hubCoverage(result)}<p class="hub-disclaimer">ข้อสังเกตอ้างอิงบันทึกส่วนบุคคลและเป็นเพียงแนวทางให้ทดลองปรับ ไม่ใช่ความสัมพันธ์เชิงเหตุและผลหรือคำวินิจฉัย</p></div>`;
+ }
+ function analyticsHub(){
+   if(!HUB_TABS.some(x=>x[0]===ui.hubTab))ui.hubTab='overview';
+   const r=I.assemble(state,{days:ui.hubDays});
+   return `<div class="hub-root"><header class="hub-hero"><div class="hub-hero-left"><div class="hub-brandline">${ic('chart',18)} RHYTHM / INSIGHTS COMMAND CENTER</div><h2>เข้าใจทุกจังหวะ<br><em>ของการเติบโต</em></h2><p>การนอน · การฝึก · โภชนาการ · น้ำหนัก · การวิ่ง · การพักฟื้น<br>รวมการวิเคราะห์ที่สำคัญไว้ในพื้นที่เดียว</p><div class="hub-hero-footer"><span>${ic('calendar',16)} ${e(fmt(r.from))} – ${e(fmt(r.asOf))}</span><span>${ic('check',16)} ${r.summary.domainsWithData} / 6 หมวดมีข้อมูล</span></div></div><div class="hub-hero-ring"><div class="hub-ring-circle" style="--hub-progress:${r.summary.domainsWithData/6*100}%"><div><strong>${r.summary.domainsWithData}<small>/6</small></strong><span>DATA DOMAINS</span></div></div><p>ยิ่งบันทึกสม่ำเสมอ ข้อสังเกตยิ่งมีหลักฐานมากขึ้น</p></div></header>
+    <div class="hub-toolbar"><div class="hub-toolbar-copy"><span class="hub-toolbar-icon">${ic('sparkles',19)}</span><div><b>Explore your data</b><small>แตะแท็บเพื่อเปลี่ยนมุมมองได้ทันที</small></div></div>${['workout','nutrition'].includes(ui.hubTab)?`<div class="hub-periods hub-periods-note"><span>ปรับช่วงเวลาภายในรายงานด้านล่าง</span></div>`:`<div class="hub-periods" role="group" aria-label="ช่วงเวลาสำหรับภาพรวม"><span>ภาพรวม</span>${[7,14,30].map(days=>`<button type="button" data-action="hub-days" data-value="${days}" aria-pressed="${ui.hubDays===days}" class="${ui.hubDays===days?'selected':''}">${days} วัน</button>`).join('')}</div>`}</div>
+    <nav class="hub-tabbar" aria-label="หมวดการวิเคราะห์"><div class="hub-tab-scroll" role="tablist" aria-label="เลือกหมวดวิเคราะห์">${HUB_TABS.map(([key,name,icon])=>`<button type="button" role="tab" id="hub-tab-${key}" class="hub-tab ${ui.hubTab===key?'is-active':''}" data-action="hub-tab" data-value="${key}" aria-selected="${ui.hubTab===key}" aria-controls="hub-dynamic">${ic(icon,17)}<span>${name}</span></button>`).join('')}</div></nav>
+    <div id="hub-dynamic" role="tabpanel" aria-labelledby="hub-tab-${ui.hubTab}" tabindex="0">${analyticsHubBody()}</div></div>`;
+ }
+ function refreshHub(){
+   if(route!=='analyticsHub'){render(true);return;}
+   const anchor=document.querySelector('.hub-tabbar');const before=anchor?.getBoundingClientRect().top??0;
+   const host=document.querySelector('.hub-root');if(!host){render(true);return;}
+   host.outerHTML=analyticsHub(); // replace only the analytics component; keep sidebar and document scroll
+   const now=host.querySelector('.hub-tabbar')?.getBoundingClientRect().top??before;
+   // Avoid jumping back to the top when the user selects another category.
+   if(Number.isFinite(before)&&Number.isFinite(now)&&Math.abs(now-before)>2)window.scrollBy(0,now-before);
+ }
+ function setHubTab(next){
+   if(!HUB_TABS.some(x=>x[0]===next)||ui.hubTab===next)return;
+   ui.hubTab=next;
+   if(route!=='analyticsHub'){navigate('analyticsHub');return;}
+   const anchor=document.querySelector('.hub-tabbar'),before=anchor?.getBoundingClientRect().top??0;
+   const host=document.getElementById('hub-dynamic');if(!host){render(true);return;}
+   const toolbar=document.querySelector('.hub-toolbar');if(toolbar){const helper=document.createElement('div');helper.innerHTML=analyticsHub();const updated=helper.querySelector('.hub-periods');const existing=toolbar.querySelector('.hub-periods');if(updated&&existing)existing.replaceWith(updated);}
+   host.innerHTML=analyticsHubBody();host.setAttribute('aria-labelledby',`hub-tab-${next}`);
+   document.querySelectorAll('.hub-tab').forEach(el=>{const active=el.dataset.value===next;el.classList.toggle('is-active',active);el.setAttribute('aria-selected',String(active));});
+   const now=anchor?.getBoundingClientRect().top??before;
+   if(Number.isFinite(now)&&Number.isFinite(before)&&Math.abs(now-before)>2)window.scrollBy(0,now-before);
+ }
+
  function insights(){
    const result=I.assemble(state,{days:ui.insightsDays}),domains=result.domains;
    const headings={sleep:['การนอน','moon','เวลานอน · ช่วงการนอน'],nutrition:['อาหารและพลังงาน','utensils','แคลอรี่ · โปรตีน'],weight:['น้ำหนักและเป้าหมาย','target','น้ำหนักเฉลี่ย · การเปลี่ยนแปลง'],workout:['การฝึกและกล้ามเนื้อ','dumbbell','Training Volume · RPE'],running:['การวิ่ง','route','ระยะทาง · Pace'],recovery:['การพักฟื้น','sparkles','พลังงาน · ความเหนื่อย'],cross:['ความสัมพันธ์ระหว่างข้อมูล','chart','Sleep × Recovery']};
@@ -523,9 +613,9 @@
    const ready=items.filter(x=>x.ready).length;
    return `<div class="guide-hero"><div><h2>ใช้ RHYTHM ให้คล่อง เริ่มจากสิ่งที่สำคัญ</h2><p>ไม่ต้องกรอกทุกอย่างในวันเดียว · เลือกบันทึกเฉพาะสิ่งที่ต้องการติดตาม แล้วค่อยเพิ่มข้อมูลเมื่ออยากวิเคราะห์ลึกขึ้น</p></div><button class="button button-accent" data-action="quick-menu">${ic('plus',17)} บันทึกข้อมูลตอนนี้</button></div>
       <section class="panel guide-overview"><div><span class="section-overline">DATA READINESS · ย้อนหลัง 14 วัน</span><h2>พร้อมวิเคราะห์เบื้องต้น ${ready} / ${items.length} ด้าน</h2><p>ตัวเลขนี้วัดเพียงปริมาณข้อมูลขั้นต่ำ ไม่ได้แปลว่าบันทึกครบทุกมื้อหรือผลวิเคราะห์แม่นยำแล้ว</p></div><div class="guide-progress"><span style="width:${ready/items.length*100}%"></span></div></section>
-      <section class="panel guide-steps">${sectionHead('เริ่มต้น 3 ขั้นตอน','เน้นกรอกครั้งเดียวแล้วใช้ข้อมูลร่วมกันหลายหน้า')}<div class="guide-steps-grid"><div><span>01</span><h3>ตั้งโปรไฟล์</h3><p>กรอกอายุ ส่วนสูง น้ำหนัก และระดับกิจกรรมเพื่อประเมินเป้าหมายพลังงาน</p><button class="text-link" data-action="wizard-start">ตั้งค่าแบบทีละขั้น ${ic('arrow',15)}</button></div><div><span>02</span><h3>บันทึกสิ่งที่ทำจริง</h3><p>อาหาร การนอน น้ำหนัก และการฝึก เพิ่มข้อมูลที่สำคัญกับเป้าหมายของคุณ</p><button class="text-link" data-action="quick-menu">เปิดบันทึกด่วน ${ic('arrow',15)}</button></div><div><span>03</span><h3>อ่านผลและตั้งเป้าหมาย</h3><p>เริ่มจากวิเคราะห์เชิงลึก แล้วไปดูรายละเอียดด้านที่สนใจหรือตั้งเป้าหมาย</p><button class="text-link" data-route="insights">ดูผลวิเคราะห์ ${ic('arrow',15)}</button></div></div></section>
-      <section class="panel guide-data-section">${sectionHead('แต่ละระบบต้องกรอกอะไรบ้าง?','แสดงข้อมูลจริงในช่วง 14 วันล่าสุด · เปิดหน้าบันทึกหรือดูผลได้ทันที')}<div class="guide-data-grid">${items.map(x=>`<article class="guide-data-card"><div class="guide-data-title"><span class="guide-data-icon">${ic(x.icon,19)}</span><div><h3>${x.label}</h3><small>${e(x.value)}</small></div><span class="guide-status ${x.ready?'is-ready':''}">${x.ready?'มีข้อมูลเริ่มต้น':'ควรบันทึกเพิ่ม'}</span></div><div class="guide-data-info"><strong>ต้องกรอก</strong><p>${e(x.entry)}</p><strong>ระบบนำไปวิเคราะห์</strong><p>${e(x.analysis)}</p><small>${e(x.why)}</small></div><div class="guide-data-actions"><button class="button button-outline" data-route="${x.key}">เปิดหน้านี้ ${ic('arrow',14)}</button>${x.key==='profile'?'':`<button class="button button-plain" data-route="${x.key==='nutrition'?'metabolism':x.key==='workouts'?'workoutAnalytics':'insights'}">ดูวิเคราะห์</button>`}</div></article>`).join('')}</div></section>
-      <section class="panel guide-clarity">${sectionHead('หน้าวิเคราะห์ที่หน้าตาคล้ายกัน ต่างกันอย่างไร?','เลือกจากสิ่งที่ต้องการรู้ ไม่ต้องเข้าไปทุกหน้าทุกวัน')}<div class="guide-analysis-links"><button data-route="insights">${ic('sparkles',19)}<span><strong>วิเคราะห์เชิงลึก</strong><small>ภาพรวมสุขภาพและความสัมพันธ์ข้ามข้อมูล</small></span>${ic('arrow',15)}</button><button data-route="workoutAnalytics">${ic('dumbbell',19)}<span><strong>วิเคราะห์การฝึก</strong><small>เซต น้ำหนัก ความแข็งแรง และ Personal Best</small></span>${ic('arrow',15)}</button><button data-route="metabolism">${ic('flame',19)}<span><strong>วิเคราะห์พลังงาน</strong><small>TDEE บันทึกอาหาร Macro และแนวโน้มน้ำหนัก</small></span>${ic('arrow',15)}</button><button data-route="goals">${ic('target',19)}<span><strong>เป้าหมายอัจฉริยะ</strong><small>นำข้อสังเกตมาสร้างเป้าหมายและทบทวนผล</small></span>${ic('arrow',15)}</button></div></section>
+      <section class="panel guide-steps">${sectionHead('เริ่มต้น 3 ขั้นตอน','เน้นกรอกครั้งเดียวแล้วใช้ข้อมูลร่วมกันหลายหน้า')}<div class="guide-steps-grid"><div><span>01</span><h3>ตั้งโปรไฟล์</h3><p>กรอกอายุ ส่วนสูง น้ำหนัก และระดับกิจกรรมเพื่อประเมินเป้าหมายพลังงาน</p><button class="text-link" data-action="wizard-start">ตั้งค่าแบบทีละขั้น ${ic('arrow',15)}</button></div><div><span>02</span><h3>บันทึกสิ่งที่ทำจริง</h3><p>อาหาร การนอน น้ำหนัก และการฝึก เพิ่มข้อมูลที่สำคัญกับเป้าหมายของคุณ</p><button class="text-link" data-action="quick-menu">เปิดบันทึกด่วน ${ic('arrow',15)}</button></div><div><span>03</span><h3>อ่านผลและตั้งเป้าหมาย</h3><p>เปิดศูนย์วิเคราะห์ แล้วเลือกแท็บการนอน โภชนาการ การฝึก หรือด้านที่สนใจ</p><button class="text-link" data-route="insights">เปิดศูนย์วิเคราะห์ ${ic('arrow',15)}</button></div></div></section>
+      <section class="panel guide-data-section">${sectionHead('แต่ละระบบต้องกรอกอะไรบ้าง?','แสดงข้อมูลจริงในช่วง 14 วันล่าสุด · เปิดหน้าบันทึกหรือดูผลได้ทันที')}<div class="guide-data-grid">${items.map(x=>`<article class="guide-data-card"><div class="guide-data-title"><span class="guide-data-icon">${ic(x.icon,19)}</span><div><h3>${x.label}</h3><small>${e(x.value)}</small></div><span class="guide-status ${x.ready?'is-ready':''}">${x.ready?'มีข้อมูลเริ่มต้น':'ควรบันทึกเพิ่ม'}</span></div><div class="guide-data-info"><strong>ต้องกรอก</strong><p>${e(x.entry)}</p><strong>ระบบนำไปวิเคราะห์</strong><p>${e(x.analysis)}</p><small>${e(x.why)}</small></div><div class="guide-data-actions"><button class="button button-outline" data-route="${x.key}">เปิดหน้านี้ ${ic('arrow',14)}</button>${x.key==='profile'?'':`<button class="button button-plain" data-route="${x.key==='nutrition'?'metabolism':x.key==='workouts'?'workoutAnalytics':'insights'}">เปิดศูนย์วิเคราะห์</button>`}</div></article>`).join('')}</div></section>
+      <section class="panel guide-clarity">${sectionHead('ศูนย์วิเคราะห์: ดูอะไรได้บ้าง?','ตอนนี้อยู่ในหน้าเดียว เลือกแท็บเพื่อดูผลแบบละเอียด')}<div class="guide-analysis-links"><button data-route="insights">${ic('sparkles',19)}<span><strong>ภาพรวมและความสัมพันธ์</strong><small>แท็บแรกของศูนย์วิเคราะห์</small></span>${ic('arrow',15)}</button><button data-route="workoutAnalytics">${ic('dumbbell',19)}<span><strong>แท็บการฝึก</strong><small>เซต น้ำหนัก ความแข็งแรง และ Personal Best</small></span>${ic('arrow',15)}</button><button data-route="metabolism">${ic('flame',19)}<span><strong>แท็บโภชนาการ</strong><small>TDEE บันทึกอาหาร Macro และแนวโน้มน้ำหนัก</small></span>${ic('arrow',15)}</button><button data-route="goals">${ic('target',19)}<span><strong>เป้าหมายอัจฉริยะ</strong><small>นำข้อสังเกตมาสร้างเป้าหมายและทบทวนผล</small></span>${ic('arrow',15)}</button></div></section>
       <div class="insight-inline">${ic('info',18)}<p>ข้อมูลที่ไม่ได้บันทึกไม่ใช่ค่า 0 · จำนวนวันมีบันทึกไม่ยืนยันว่าครบทุกมื้อ · TDEE และสัดส่วนการนอนจากอุปกรณ์เป็นค่าประมาณ · ข้อสังเกตไม่ใช่คำวินิจฉัย</p></div>`;
  }
  function profile(m){
@@ -879,6 +969,8 @@
    if(a==='open-routine'){openRoutine();return;}
    if(a==='edit-routine'){openRoutine(id);return;}
    if(a==='delete-routine'){removeItem('routines',x=>x.id===id,'ลบกิจกรรมนี้จากทุกวันที่เลือกไว้?');return;}
+   if(a==='hub-tab'){setHubTab(el.dataset.value);return;}
+   if(a==='hub-days'){if(![7,14,30].includes(Number(el.dataset.value)))return;ui.hubDays=Number(el.dataset.value);refreshHub();return;}
    if(a==='insights-days'){ui.insightsDays=Number(el.dataset.value);render(true);return;}
    if(a==='insights-focus'){setInsightsFocus(el.dataset.value);return;}
    if(a==='wa-range'){if(![30,90,180].includes(Number(el.dataset.value)))return;ui.analyticsDays=Number(el.dataset.value);render(true);return;}
@@ -1128,7 +1220,8 @@
    }
  });
  function CATEGORIES_OK(key){return Object.prototype.hasOwnProperty.call(D.CATEGORIES,key);}
- window.addEventListener('hashchange',()=>{const next=location.hash.slice(1)||'dashboard';for(const group of NAV_GROUPS)if(group.items.includes(next))ui.menuOpen[group.id]=true;route=next;render(false);});
+ window.addEventListener('hashchange',()=>{let next=location.hash.slice(1)||'dashboard';const legacy={insights:'overview',workoutAnalytics:'workout',metabolism:'nutrition'};if(legacy[next]){ui.hubTab=legacy[next];next='analyticsHub';history.replaceState(null,'','#analyticsHub');}for(const group of NAV_GROUPS)if(group.items.includes(next))ui.menuOpen[group.id]=true;route=next;render(false);});
+ if(['insights','workoutAnalytics','metabolism'].includes(route)){ui.hubTab={insights:'overview',workoutAnalytics:'workout',metabolism:'nutrition'}[route];route='analyticsHub';history.replaceState(null,'','#analyticsHub');}
  render(false);
  void sync.init().finally(()=>{cloudBooting=false;lastSyncMode=sync.mode;render(false);});
 })();

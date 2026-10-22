@@ -27,6 +27,6 @@ s.meals=s.meals.filter(m=>m.date===today);r=M.analyse(s,{asOf:today,days:28});eq
 sidebarScroll=485;const nav=page=>listeners.click({preventDefault(){},target:{closest:q=>q==='[data-route]'?{dataset:{route:page}}:null}});
 nav('nutrition');eq(sidebarScroll,485,'sidebar kept on navigation');ok(app.innerHTML.includes('Smart Nutrition'),'navigated nutrition');nav('metabolism');eq(sidebarScroll,485,'sidebar kept when returning');ok(app.innerHTML.includes('Metabolism & Nutrition Insights'),'new page rendered');
 const click=(action,value)=>listeners.click({target:{closest:q=>q==='[data-route]'?null:{dataset:{action,value}}},preventDefault(){}});
-click('metabolism-period','56');ok(app.innerHTML.includes('56 วัน'),'range click');eq(sidebarScroll,485,'sidebar kept on in-page rerender');eq(loc.hash,'#metabolism','route remains');
+click('metabolism-period','56');ok(app.innerHTML.includes('56 วัน'),'range click');eq(sidebarScroll,485,'sidebar kept on in-page rerender');eq(loc.hash,'#analyticsHub','legacy metabolism route migrated into unified hub');
 ok(app.innerHTML.includes('ข้อมูลไม่พอ'),'source quality states surfaced');
 console.log('PASS: '+checks+' V1.9.0 metabolism, data quality, pure analytics, sidebar preservation and UI smoke assertions');
