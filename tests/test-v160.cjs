@@ -5,7 +5,7 @@ const dom={'app':{innerHTML:''},'modal-root':{innerHTML:'',children:[]},'toast-r
 const document={documentElement:{dataset:{}},body:{classList:{add(){},remove(){}}},getElementById:id=>dom[id],querySelector:()=>null,querySelectorAll:()=>[],addEventListener:(name,fn)=>listeners[name]=fn};
 const location={hash:'#insights'},history={replaceState:(a,b,p)=>location.hash=p};
 const ctx={console,Date,Math,Intl,Number,JSON,Array,Object,String,Set,Map,Blob,parseInt,parseFloat,document,location,history,localStorage:{getItem:k=>local.get(k)||null,setItem:(k,v)=>local.set(k,v)},sessionStorage:{getItem:()=>null,setItem:()=>{}},setTimeout:()=>1,clearTimeout:()=>{},confirm:()=>true};ctx.window=ctx;ctx.scrollY=0;ctx.scrollTo=()=>{};ctx.addEventListener=(k,f)=>listeners['window:'+k]=f;vm.createContext(ctx);
-for(const file of ['js/data.js','js/core.js','js/recovery.js','js/running.js','js/timer.js','js/sync.js','js/insights.js','js/app.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),ctx,{filename:file});
+for(const file of ['js/data.js','js/core.js','js/recovery.js','js/running.js','js/timer.js','js/sync.js','js/insights.js','js/daily-experience.js','js/app.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),ctx,{filename:file});
 const {FitCore:C,FitInsights:I,FitData:D}=ctx;
 let checks=0;const eq=(a,b,msg)=>{assert.equal(a,b,msg);checks++},ok=(a,msg)=>{assert.ok(a,msg);checks++};
 const now=C.today(),s=D.blankState();

@@ -13,7 +13,7 @@ const ctx={console,Date,Math,Intl,Number,JSON,Array,Object,String,Set,Map,Blob,p
 ctx.window=ctx;ctx.scrollY=0;ctx.scrollTo=()=>{};ctx.addEventListener=(k,f)=>listeners['window:'+k]=f;
 ctx.FormData=class{constructor(form){this.values=form.mock||{}}get(k){return this.values[k]??null}getAll(k){return this.values[k]??[]}has(k){return Object.hasOwn(this.values,k)}};
 vm.createContext(ctx);
-for(const file of ['js/data.js','js/core.js','js/sync.js','js/running.js','js/timer.js','js/app.js'])vm.runInContext(fs.readFileSync(path.join(base,file),'utf8'),ctx,{filename:file});
+for(const file of ['js/data.js','js/core.js','js/sync.js','js/running.js','js/timer.js','js/daily-experience.js','js/app.js'])vm.runInContext(fs.readFileSync(path.join(base,file),'utf8'),ctx,{filename:file});
 let checks=0;const ok=(cond,msg)=>{assert.ok(cond,msg);checks++;},eq=(a,b,msg)=>{assert.equal(a,b,msg);checks++;};
 const R=ctx.FitRun,C=ctx.FitCore,T=ctx.FitTimer;
 eq(R.parseDuration('30','0'),1800,'30 mins');eq(R.parseDuration('1','30'),90,'1:30');eq(R.parseDuration('0','59'),59,'59sec');eq(R.parseDuration('12','60'),null,'seconds 60 invalid');eq(R.parseDuration('',''),null,'blank invalid');eq(R.parseDuration('-1','2'),null,'negative minutes');eq(R.parseDuration('1.5','0'),null,'decimal minutes');eq(R.parseDuration('0','0'),null,'zero invalid');eq(R.parseDuration('2880','0'),172800,'48 hr supported');eq(R.parseDuration('2881','0'),null,'over 48h');

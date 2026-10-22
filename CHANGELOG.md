@@ -1,3 +1,13 @@
+## V1.9.5 — Daily Experience & Smart Autofill (2026-10-21)
+
+- Daily-first Dashboard: status and shortcuts for sleep, nutrition, workout/rest, recovery, and weight; optional logs never counted as missed requirements.
+- Smart meal reuse modal: recurring foods, meal templates, last logged breakfasts/lunches/dinners/snacks; explicit confirmation and duplicate-source prompts.
+- Last-value prefills: bedtime/wake times, previous recorded weight, last running distance/duration, prior completed non-warmup workout sets. Suggested values are editable and never auto-saved.
+- Live Workout shows the last real set as reference and uses its reps/time/external load as editable defaults; rest days do not prompt a workout.
+- Removed redundant Dashboard guide card; Daily Experience appears before the large hero.
+- Read-only `js/daily-experience.js`; no new SQL tables, no Cloud config modifications, no changes to historical snapshots.
+- Added regression assertions and Chromium desktop/mobile interaction verification; localhost blocked, so browser tested by source injection, Supabase real account untested.
+
 ## V1.9.4 — Custom Food Editor (2026-10-21)
 
 - Added edit control on **customFoods** rows in Nutrition Food Library, separate from the Add (+) button; core/HDmall entries remain read-only in the library.
