@@ -432,3 +432,24 @@
 @media(max-width:630px){.hub-hero{padding:25px 20px;flex-direction:column;align-items:flex-start;gap:22px}.hub-hero h2{font-size:31px}.hub-hero-ring{width:100%;flex:initial;display:flex;gap:14px;align-items:center;text-align:left}.hub-ring-circle{width:98px;height:98px;flex:0 0 98px;margin:0}.hub-ring-circle>div{width:79px;height:79px}.hub-ring-circle strong{font-size:31px}.hub-ring-circle strong small{font-size:13px}.hub-ring-circle span{font-size:7px}.hub-hero-ring p{margin:0;font-size:10px;max-width:180px}.hub-brandline{font-size:9px;letter-spacing:.08em}.hub-toolbar{padding:12px;align-items:stretch;flex-direction:column}.hub-toolbar-copy{margin-bottom:2px}.hub-periods{align-self:flex-start}.hub-tabbar{margin-bottom:13px;border-radius:12px}.hub-tab-scroll{gap:3px}.hub-tab{min-height:39px;padding:9px 10px}.hub-stats{gap:8px}.hub-stat{padding:14px}.hub-stat-label{font-size:9px}.hub-stat>strong{font-size:23px}.hub-mini-charts{grid-template-columns:1fr}.hub-mini-chart:first-child{grid-column:auto}.hub-domain-grid{gap:8px}.hub-domain-card{padding:11px;gap:8px}.hub-domain-symbol{width:31px;height:31px}.hub-domain-card small{display:none}.hub-focus-lead{align-items:stretch;flex-direction:column;padding:18px}.hub-focus-title{gap:10px}.hub-focus-title h2{font-size:18px}.hub-focus-mark{width:42px;height:42px}.hub-focus-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.hub-focus-kpis article{padding:12px}.hub-focus-kpis strong{font-size:20px}.hub-focus-charts,.hub-findings-grid{grid-template-columns:1fr}.hub-observation{padding:15px}.hub-quality-grid{gap:12px}.hub-mini-chart{padding:12px}.hub-focus-panel{padding:19px 17px}}
 @media(max-width:370px){.hub-hero-footer{gap:8px}.hub-domain-grid{grid-template-columns:1fr}.hub-stats{grid-template-columns:1fr 1fr}.hub-periods button{padding:8px}}
 .hub-periods-note{background:var(--surface-3);border-color:var(--line);padding:9px 12px}.hub-periods-note span{padding:0;font-weight:650;letter-spacing:0;white-space:normal}
+
+/* V1.9.6.1 — Exercise-wide set confirmation and compact session modal. */
+.session-ex-title{align-items:center}
+.session-ex-title-text{display:flex;flex-direction:column;gap:5px;min-width:0}
+.session-ex-title-text strong{font-size:14px;line-height:1.4}
+.session-ex-title-text small{font-size:11px;line-height:1.5}
+.session-ex-quick-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.session-all-label{display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-size:12px;font-weight:750;color:var(--accent-deep);background:var(--surface);border:1px solid var(--line);padding:7px 10px;border-radius:9px;white-space:nowrap}
+.session-all-label:focus-within{outline:2px solid var(--accent-strong);outline-offset:2px}
+.session-all-label input{width:17px;height:17px;margin:0;accent-color:#208458;cursor:pointer}
+.session-all-label input:disabled{cursor:not-allowed}
+.session-set-counter{font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.session-collapse{border:0;background:none;color:var(--ink-soft);font:inherit;font-size:11px;font-weight:700;padding:8px 4px;cursor:pointer;display:flex;gap:5px;align-items:center;white-space:nowrap}
+.session-collapse[aria-expanded="false"] svg{transform:rotate(-90deg)}
+.session-collapse:hover{color:var(--accent-deep)}
+.session-collapse:focus-visible{outline:2px solid var(--accent-strong);border-radius:6px}
+.session-ex-content[hidden]{display:none!important}
+.session-set-progress{height:4px;background:var(--line);border-radius:99px;overflow:hidden;margin:-2px 0 13px}
+.session-set-progress>span{display:block;width:0;height:100%;background:#2c9b6e;border-radius:99px;transition:width .2s ease}
+@media(max-width:670px){.session-ex-title{display:block}.session-ex-title-text{margin-bottom:10px}.session-ex-quick-actions{justify-content:flex-start;gap:7px}.session-all-label{font-size:11px;padding:8px 9px}.session-collapse{margin-left:auto}.session-set-counter{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.session-set-progress>span{transition:none}}

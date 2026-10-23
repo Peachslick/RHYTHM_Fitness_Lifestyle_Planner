@@ -1,4 +1,4 @@
-/* RHYTHM v1.9.6 — Thai-first, optional Supabase account and cloud sync */
+/* RHYTHM v1.9.6.1 — Thai-first, optional Supabase account and cloud sync */
 (function(){
  'use strict';
  const Daily=window.FitDaily,C=window.FitCore,D=window.FitData,R=window.FitRecovery,Run=window.FitRun,I=window.FitInsights,G=window.FitGoals,WA=window.FitWorkoutAnalytics,M=window.FitMetabolism,U=window.FitUX,FoodEdit=window.FitCustomFoodEditor;
@@ -132,7 +132,7 @@
     </aside><div class="mobile-mask ${ui.mobileOpen?'visible':''}" data-action="mobile-close"></div>
     <div class="workspace"><header class="topbar"><div class="topbar-left"><button class="mob-menu icon-button" data-action="mobile-open" aria-label="เปิดเมนู">${ic('menu')}</button><div><div class="breadcrumb"><img class="topbar-logo" src="assets/rhythm-logo.png" alt="" /> RHYTHM <span>/</span> ${pg.label}</div><h1>${pg.label}</h1><p>${pg.caption}</p></div></div><div class="topbar-actions"><div class="today-chip">${ic('calendar',16)}<span>${e(fmt(C.today(),true))}</span></div><button class="icon-button theme-toggle" data-action="toggle-theme" aria-label="สลับธีม" title="สลับธีม">${ic(state.settings.theme==='dark'?'sun':'moon')}</button><button class="button button-primary top-quick" data-action="quick-menu" aria-label="เปิดเมนูบันทึกด่วน">${ic('plus',16)} <span>บันทึกด่วน</span></button></div></header>
      <div class="content">${cloudStrip()}${sync.isBlocked?cloudBlocker():state.demo?`<div class="demo-banner">${ic('info',17)} <div><strong>โหมดทดลอง:</strong> ตัวเลขและบันทึกที่เห็นเป็นข้อมูลสมมติสำหรับทดสอบเว็บ</div><button class="button button-mini" data-action="start-real">เริ่มใช้ข้อมูลของฉัน ${ic('arrow',15)}</button></div>`:''}${renderPage(m)}</div>
-     <footer class="footer"><span>RHYTHM <b>v1.9.6</b> · Personal Wellness Workspace</span><span>ประมาณการเพื่อการวางแผน ไม่ใช่คำแนะนำทางการแพทย์</span></footer>
+     <footer class="footer"><span>RHYTHM <b>v1.9.6.1</b> · Personal Wellness Workspace</span><span>ประมาณการเพื่อการวางแผน ไม่ใช่คำแนะนำทางการแพทย์</span></footer>
     </div></div>`;
    const newSidebar=document.getElementById('sidebar');
    if(newSidebar)newSidebar.scrollTop=sidebarScrollTop;
@@ -710,9 +710,28 @@
    return `<div class="set-entry set-entry-adaptive ${draft?'set-entry-suggested':''}" data-template="${draft?'true':'false'}"><span class="set-number" aria-hidden="true">เซต</span>${timed?`<div class="session-duration-field"><span>เวลาจริงต่อเซต</span><div class="duration-pair"><label><span>นาที</span><input data-set="minutes" type="number" inputmode="numeric" min="0" max="600" step="1" placeholder="0" value="${row?parts.minutes:''}" /></label><label><span>วินาที (0–59)</span><input data-set="remaining-seconds" type="number" inputmode="numeric" min="0" max="59" step="1" placeholder="0" value="${row?parts.seconds:''}" /></label></div></div>`:`<label><span>จำนวนครั้งจริง</span><input data-set="reps" type="number" min="1" max="100" step="1" placeholder="เช่น 10" value="${row?e(row.reps??''):''}" /></label>`}${weighted?`<label><span>น้ำหนักอุปกรณ์ (kg)</span><input data-set="load" type="number" min="0" max="1000" step="0.5" placeholder="เช่น 20" value="${row?e(row.load??''):''}" /></label>`:(timed?'':`<div class="set-bodyweight-label">${kind.loadType==='bodyweight'?'น้ำหนักตัว · ไม่ต้องกรอก kg':'ไม่มีน้ำหนักอุปกรณ์'}</div>`)}<div class="set-flags"><label class="set-completed"><input data-set="completed" type="checkbox" ${done?'checked':''}/><span>ทำแล้ว</span></label><label class="set-warmup"><input data-set="warmup" type="checkbox" ${row?.warmup?'checked':''}/><span>Warm-up</span></label></div><button type="button" class="tiny-icon danger remove-set" data-action="session-remove-set" aria-label="ลบเซต">${ic('trash',15)}</button></div>`;
  }
 
+ // Keep the exercise-wide checkbox and live counter aligned with all set rows.
+ // This only changes the form state: no workout is counted until Session is saved.
+ function refreshSessionSetControls(block){
+   if(!block)return;
+   const rows=[...block.querySelectorAll('.set-entry')];
+   const done=rows.filter(row=>!!row.querySelector('[data-set="completed"]')?.checked).length;
+   const all=block.querySelector('[data-session-select-all]');
+   if(all){
+     all.disabled=!rows.length;
+     all.checked=rows.length>0&&done===rows.length;
+     all.indeterminate=done>0&&done<rows.length;
+   }
+   const count=block.querySelector('[data-session-set-count]');
+   if(count)count.textContent=`ทำแล้ว ${done}/${rows.length} เซต`;
+   const progress=block.querySelector('[data-session-progress]');
+   if(progress)progress.style.width=rows.length?`${done/rows.length*100}%`:'0%';
+ }
+
  function openSession(){
    const date=ui.workoutDate,plan=C.planOn(state,date),existing=state.sessions.find(s=>s.date===date),exercises=existing?.exercises||plan.exercises;
-   showModal(existing?'แก้ไขบันทึกการฝึก':'บันทึกการฝึกจริง',`<form id="session-form"><div class="form-grid two"><label class="field"><span>วันที่ฝึก</span><input name="date" type="date" max="${C.today()}" required value="${e(date)}" /></label><label class="field"><span>เวลา (นาที)</span><input name="duration" type="number" min="0" max="600" required value="${e(existing?.duration??(plan.type==='rest'?0:60))}" /></label><label class="field"><span>RPE (1–10)</span><input name="rpe" type="number" min="1" max="10" value="${e(existing?.rpe??7)}" /></label><label class="field"><span>โปรแกรม</span><input value="${e(existing?.title||plan.title)}" disabled /></label></div><h3 class="modal-subheading">เซตที่ทำจริง</h3><p class="form-help"><b>ดึงจำนวนเซตและค่าเป้าหมายจากเทมเพลตแล้ว</b> · ช่องที่เพิ่มมาใหม่ยังไม่ถือว่าฝึกจริง กรุณาตรวจค่าและติ๊ก ‘ทำแล้ว’ เฉพาะเซตที่ฝึกสำเร็จ จึงจะนับในสถิติ</p><p class="form-help">ท่าน้ำหนักตัว เช่น Push-up ให้กรอกจำนวนครั้งอย่างเดียว · ท่าจับเวลา เช่น Plank กรอกนาทีและวินาทีแยกกัน · คำนวณ Volume kg·reps เฉพาะท่าที่ใช้น้ำหนักอุปกรณ์</p><div class="session-exercises">${exercises.length?exercises.map((ex,i)=>`<div class="session-ex" data-exindex="${i}"><div class="session-ex-title"><strong>${e(ex.name)}</strong><small>เป้าหมาย ${e(ex.sets)} × ${exerciseGoal(ex)} · ${exerciseLoadLabel(ex)}</small></div><div class="set-list">${C.prefillSessionSets(ex,ex.setLog||[]).map(row=>sessionSetItem(row,ex)).join('')}</div><button type="button" class="button button-outline set-add" data-action="session-add-set">${ic('plus',14)} เพิ่มเซตจริง</button></div>`).join(''):'<p class="form-help">ไม่มีท่าในแผน บันทึกเวลาพักหรือกิจกรรมได้ตามปกติ</p>'}</div><label class="field"><span>บันทึกเพิ่มเติม</span><textarea name="notes" maxlength="600" rows="3">${e(existing?.notes||'')}</textarea></label>${modalButtons(existing?'อัปเดต':'บันทึกการฝึก')}</form>`,`${fmt(date)} · ${existing?.title||plan.title}`);
+   showModal(existing?'แก้ไขบันทึกการฝึก':'บันทึกการฝึกจริง',`<form id="session-form"><div class="form-grid two"><label class="field"><span>วันที่ฝึก</span><input name="date" type="date" max="${C.today()}" required value="${e(date)}" /></label><label class="field"><span>เวลา (นาที)</span><input name="duration" type="number" min="0" max="600" required value="${e(existing?.duration??(plan.type==='rest'?0:60))}" /></label><label class="field"><span>RPE (1–10)</span><input name="rpe" type="number" min="1" max="10" value="${e(existing?.rpe??7)}" /></label><label class="field"><span>โปรแกรม</span><input value="${e(existing?.title||plan.title)}" disabled /></label></div><h3 class="modal-subheading">เซตที่ทำจริง</h3><p class="form-help"><b>ดึงจำนวนเซตและค่าเป้าหมายจากเทมเพลตแล้ว</b> · ช่องที่เพิ่มมาใหม่ยังไม่ถือว่าฝึกจริง กด ‘ทำแล้วทุกเซต’ ที่หัวท่าเพื่อเลือกหรือยกเลิกทั้งหมดได้ หรือเลือกเฉพาะเซตที่ฝึกสำเร็จ จึงจะนับในสถิติ</p><p class="form-help">ท่าน้ำหนักตัว เช่น Push-up ให้กรอกจำนวนครั้งอย่างเดียว · ท่าจับเวลา เช่น Plank กรอกนาทีและวินาทีแยกกัน · คำนวณ Volume kg·reps เฉพาะท่าที่ใช้น้ำหนักอุปกรณ์</p><div class="session-exercises">${exercises.length?exercises.map((ex,i)=>`<div class="session-ex" data-exindex="${i}"><div class="session-ex-title"><div class="session-ex-title-text"><strong>${e(ex.name)}</strong><small>เป้าหมาย ${e(ex.sets)} × ${exerciseGoal(ex)} · ${exerciseLoadLabel(ex)}</small></div><div class="session-ex-quick-actions"><label class="session-all-label"><input type="checkbox" data-session-select-all aria-label="ทำแล้วทุกเซตของ ${e(ex.name)}" /><span>ทำแล้วทุกเซต</span></label><span class="session-set-counter" data-session-set-count aria-live="polite">ทำแล้ว 0/${Math.max(ex.sets||0,(ex.setLog||[]).length)} เซต</span><button type="button" class="session-collapse" data-action="session-toggle-details" aria-expanded="true" aria-controls="session-set-group-${i}">ยุบเซต ${ic('chevron-down',14)}</button></div></div><div class="session-set-progress" role="presentation"><span data-session-progress></span></div><div class="session-ex-content" id="session-set-group-${i}"><div class="set-list">${C.prefillSessionSets(ex,ex.setLog||[]).map(row=>sessionSetItem(row,ex)).join('')}</div><button type="button" class="button button-outline set-add" data-action="session-add-set">${ic('plus',14)} เพิ่มเซตจริง</button></div></div>`).join(''):'<p class="form-help">ไม่มีท่าในแผน บันทึกเวลาพักหรือกิจกรรมได้ตามปกติ</p>'}</div><label class="field"><span>บันทึกเพิ่มเติม</span><textarea name="notes" maxlength="600" rows="3">${e(existing?.notes||'')}</textarea></label>${modalButtons(existing?'อัปเดต':'บันทึกการฝึก')}</form>`,`${fmt(date)} · ${existing?.title||plan.title}`);
+   document.querySelectorAll('#session-form .session-ex').forEach(refreshSessionSetControls);
  }
  function openMeal(foodId=null,mealId=null){
    const existing=mealId?state.meals.find(x=>x.id===mealId):null;
@@ -911,8 +930,9 @@
    if(a==='select-workday'){ui.workoutDay=Number(el.dataset.day);ui.workoutDate=C.weekDates(ui.workoutDate)[ui.workoutDay];render(true);return;}
    if(a==='reschedule'){openReschedule();return;}
    if(a==='clear-override'){if(!confirmed('คืนตารางวันที่เลือกตามเทมเพลตปกติ? (ไม่ลบประวัติการฝึก)'))return;if(state.scheduleOverrides)delete state.scheduleOverrides[ui.workoutDate];update();toast('คืนตารางปกติแล้ว');return;}
-   if(a==='session-add-set'){const list=el.closest('.session-ex')?.querySelector('.set-list');if(!list)return;if(list.children.length>=30){toast('ไม่เกิน 30 เซตต่อท่า','error');return;}const block=el.closest('.session-ex'),i=Number(block?.dataset.exindex),date=ui.workoutDate,previous=state.sessions.find(x=>x.date===date)?.exercises||C.planOn(state,date).exercises;list.insertAdjacentHTML('beforeend',sessionSetItem(null,previous[i]));return;}
-   if(a==='session-remove-set'){el.closest('.set-entry')?.remove();return;}
+   if(a==='session-add-set'){const block=el.closest('.session-ex'),list=block?.querySelector('.set-list');if(!list)return;if(list.children.length>=30){toast('ไม่เกิน 30 เซตต่อท่า','error');return;}const i=Number(block.dataset.exindex),date=ui.workoutDate,previous=state.sessions.find(x=>x.date===date)?.exercises||C.planOn(state,date).exercises;list.insertAdjacentHTML('beforeend',sessionSetItem(null,previous[i]));refreshSessionSetControls(block);return;}
+   if(a==='session-remove-set'){const block=el.closest('.session-ex');el.closest('.set-entry')?.remove();refreshSessionSetControls(block);return;}
+   if(a==='session-toggle-details'){const block=el.closest('.session-ex'),content=block?.querySelector('.session-ex-content');if(!content)return;content.hidden=!content.hidden;el.setAttribute('aria-expanded',String(!content.hidden));el.innerHTML=content.hidden?`แสดงเซต ${ic('chevron-down',14)}`:`ยุบเซต ${ic('chevron-down',14)}`;return;}
    if(a==='edit-day'){openDay();return;}
    if(a==='open-exercise'){openExercise();return;}
    if(a==='open-exercise-library'){openExerciseLibrary();return;}
@@ -1001,6 +1021,16 @@
  });
  document.addEventListener('change',async event=>{
    const el=event.target;
+   if(el.matches?.('[data-session-select-all]')){
+     const block=el.closest('.session-ex');
+     block?.querySelectorAll('[data-set="completed"]').forEach(checkbox=>{checkbox.checked=el.checked;});
+     refreshSessionSetControls(block);
+     return;
+   }
+   if(el.matches?.('[data-set="completed"]')){
+     refreshSessionSetControls(el.closest('.session-ex'));
+     return;
+   }
    if(el.id==='wa-exercise-select'){ui.analyticsExercise=el.value;render(true);return;}
    if(el.dataset.picker&&C.isDate(el.value)){ui[el.dataset.picker]=el.value;if(el.dataset.picker==='workoutDate')ui.workoutDay=C.weekday(el.value);render(true);return;}
    if(el.id==='goal-kind'){
